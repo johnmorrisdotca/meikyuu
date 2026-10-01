@@ -5,7 +5,7 @@ title: "Translation: "
 labels: translation
 ---
 
-Every Japanese string is in the package's words, `src/strings.ts` (`MEIKYUU_STRINGS.ja`), or the demo's table, `demo/demo.js` (`WORDS.ja`), beside its English.
+Every string of the board is listed beside its English in `docs/strings-ja.md`. Every Japanese string is in the package's words, `src/strings.ts` (`MEIKYUU_STRINGS.ja`), or the demo's table, `demo/demo.js` (`WORDS.ja`), beside its English.
 
 **Which string** (its name in that table, such as `arrowsBlocked` or `hintBack`):
 

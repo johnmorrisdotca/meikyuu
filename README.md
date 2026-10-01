@@ -55,6 +55,20 @@ And in a page, a level to play, by touch and mouse, with nothing else to set up:
   shapes cut out of a grid, and a measure of how hard what came out is.
 - **Pages that just want a picture**: a maze, with its line and its solution, drawn as SVG text with no page needed.
 
+## Features
+
+- **A thousand mazes, then arrow puzzles and mixed ones.** 1,000 maze levels, 300 arrow levels and 100 mixed levels, each list ordered so that no level is easier than the one before.
+- **Every shape.** Squares, hexagons, triangles and circles, and shapes cut out of them (a heart, a leaf, a star, a ring, a diamond, a cross, a moon), from a few cells to thousands.
+- **Four ways to play**: in and out through the wall, find the goal, out from the centre, and collect the keys on the way.
+- **Seven algorithms** with a texture each, one generator over any cell graph, and a measure of how hard what came out is.
+- **A level is a recipe**, a short string that rebuilds the same maze in every browser and every Node, for ever. Never a drawing.
+- **Drawn as SVG text**, in an entry of its own: six boards and five line colours, with the maze, the line, a hint and the solution.
+- **Played by drawing a line** with a finger or the mouse: it follows the corridors, cannot pass a wall, and drawing back shortens it. Zoom and pan for the big ones, a hint, undo, and keys on the keyboard, as one function call (`mountMeikyuu`) or one tag (`<meikyuu-board>`).
+- **Optional sounds**, made in the browser by the Web Audio API: no recordings, so nothing to fetch and nothing to credit.
+- **Reduced motion respected**, and nothing the player touches can be selected.
+- **English and Japanese** in the board's words, the shapes' names and the demo.
+- **No dependencies**, no network requests, and nothing stored outside the page it is in.
+
 ## The ways to play
 
 Each is a declared field of a level, never inferred from the shape. A way to play decides where the line starts and ends.
@@ -110,7 +124,7 @@ A level is a recipe, such as `square:12x9:wilson:to-goal:48213` (shape, size, al
 the same maze every time, on every browser, because every choice a generator makes comes from a seeded integer stream (mulberry32) and none from the geometry.
 The list is made on a desk by `scripts/meikyuu-levels.ts` and kept as data in `src/levels/`.
 
-- **Small and quick first, huge and slow last.** Level 1 is a three-by-three; level 1,000 has about nine thousand cells. 217 levels are small (under 150 cells), 231 medium (under 800), 285 large (under 4,000) and 267 huge.
+- **Small and quick first, huge and slow last.** Level 1 is a three-by-three; level 1,000 has 8,514 cells. 217 levels are small (under 150 cells), 231 medium (under 800), 285 large (under 4,000) and 267 huge.
 - **Mixed.** The shapes and the ways to play arrive as the list goes on (squares first, then circles, hexagons, triangles, and the cut-out shapes one after another; in and out first, then the goal, the centre and keys), and then keep coming: in every quarter of the list, every shape and every way to play turns up.
   Maze levels by shape: square 148, circle 84, triangle 84, hex 81, hexagon 76, pyramid 73, heart 71, leaf 70, ring 69, diamond 66, cross 64, star 63, moon 51; by way to play: `to-goal` 262, `enter-leave` 261, `centre-out` 257, `keys` 220.
 - **Difficulty is measured** (`measureMaze`) from the passages alone, in whole numbers: the cells on the way through, the places on it where the line could have gone another way, the lengths of the wrong branches that leave it, the dead ends, the `river` (the share of cells with exactly two passages), and for keys the detour to fetch them. They are added to an `effort`, an estimate in cells drawn: the way, plus the wrong turns (a person at a fork goes the wrong way half the time and walks to the end of it and back), plus two for every fork, plus the keys. `ratingOf` puts it on a scale of 1 to 100 where doubling the effort adds the same each time.
@@ -165,6 +179,95 @@ hintMaze(game).cells;                 // the next stretch of the right way, and 
 
 A cell the line is on again cuts the line back to it, so a line never crosses itself. Arrow puzzles are `newArrowGame`, `tapArrow` (`removed`, `blocked`, `locked`), `hintArrow`, `undoArrow`, and mixed ones are `buildMixed` with `withMaze`
 unlocking the arrows when the labyrinth's button is reached.
+
+### On a server, in a page and in a framework
+
+A server that wants to trust a level takes a recipe and rebuilds the maze, with no page at all:
+
+```ts
+import { buildMaze, parseRecipe, solutionOf } from "@johnmorrisdotca/meikyuu";
+
+const recipe = parseRecipe(codeFromTheBrowser);        // null when it is not a recipe
+if (recipe === null || recipe.w > 200 || recipe.h > 200) throw new Error("not a maze this site makes");
+const solution = solutionOf(buildMaze(recipe));        // the one way through, cell by cell
+```
+
+(A recipe names its own size and the package puts no ceiling on it, so a server that takes recipes from other people should refuse sizes it does not want, as above. The levels' own lists never go past a few thousand cells.)
+
+One tag, no bundler:
+
+```html
+<script type="module" src="https://cdn.jsdelivr.net/npm/@johnmorrisdotca/meikyuu@1/dist/element-define.js"></script>
+<meikyuu-board level="40" board="wood"></meikyuu-board>
+<script>
+  document.querySelector("meikyuu-board").addEventListener("meikyuu-solve", (event) => console.log(event.detail.moves));
+</script>
+```
+
+With a bundler, `import "@johnmorrisdotca/meikyuu/element/define"` once, in code that runs in the browser, and `<meikyuu-board>` is a tag like any other. The tag draws itself in the page's own DOM, so the page's CSS reaches it. Its attributes are read again when they change, and it speaks through DOM events (`meikyuu-move`, `meikyuu-solve`, `meikyuu-key`, `meikyuu-unlock`, `meikyuu-bump`, `meikyuu-lose`) that carry a `detail`.
+
+```jsx
+// React 19
+import { useEffect, useRef } from "react";
+import "@johnmorrisdotca/meikyuu/element/define";
+
+export function Maze({ level, onSolved }) {
+  const board = useRef(null);
+  useEffect(() => {
+    const listen = (event) => onSolved(event.detail.moves);
+    board.current?.addEventListener("meikyuu-solve", listen);
+    return () => board.current?.removeEventListener("meikyuu-solve", listen);
+  }, [onSolved]);
+  return <meikyuu-board ref={board} level={String(level)} board="wood" />;
+}
+```
+
+```vue
+<!-- Vue 3: tell the compiler the tag is not a Vue component -->
+<script setup>
+import "@johnmorrisdotca/meikyuu/element/define";
+defineProps({ level: Number });
+</script>
+<template>
+  <meikyuu-board :level="level" board="wood" @meikyuu-solve="(event) => console.log(event.detail.moves)" />
+</template>
+<!-- in vite.config: vue({ template: { compilerOptions: { isCustomElement: (tag) => tag.startsWith("meikyuu-") } } }) -->
+```
+
+```svelte
+<!-- Svelte 5 -->
+<script>
+  import "@johnmorrisdotca/meikyuu/element/define";
+  let { level } = $props();
+  let board;
+  $effect(() => {
+    const listen = (event) => console.log(event.detail.moves);
+    board.addEventListener("meikyuu-solve", listen);
+    return () => board.removeEventListener("meikyuu-solve", listen);
+  });
+</script>
+<meikyuu-board bind:this={board} level={level} board="wood"></meikyuu-board>
+```
+
+```ts
+// Angular: a standalone component with CUSTOM_ELEMENTS_SCHEMA
+import { Component, CUSTOM_ELEMENTS_SCHEMA } from "@angular/core";
+import "@johnmorrisdotca/meikyuu/element/define";
+
+@Component({
+  selector: "app-maze",
+  standalone: true,
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
+  template: `<meikyuu-board level="40" board="wood" (meikyuu-solve)="solved($event)"></meikyuu-board>`,
+})
+export class Maze {
+  solved(event: Event) { console.log((event as CustomEvent).detail.moves); }
+}
+```
+
+In Next.js or any server-rendering framework, import the define entry from a client component, so the tag is defined in the browser. Or skip the tag and call `mountMeikyuu(element, options)` from `@johnmorrisdotca/meikyuu/play` in an effect: the handle it returns has `destroy()`.
+
+These recipes are written to the tag's documented attributes and events; they are not built from the packed tarball by this repository's tests, which play the tag in a bare page in Chromium and WebKit.
 
 ## Drawing
 
@@ -250,6 +353,70 @@ Every export of every entry point, with its signature and its doc comment, is in
 `pnpm levels` runs `scripts/meikyuu-levels.ts`, which writes `src/levels/mazes.data.ts` (about ten minutes); `node scripts/meikyuu-arrows.ts` writes `arrows.data.ts` and `mixed.data.ts` (about a minute).
 Both are seeded, so the same run writes the same files. A level once published keeps its number: a published list is only ever added to at the end, never rewritten.
 
+## Theming
+
+Nothing here is branded. The drawing and the playable board are coloured by custom properties, and a page sets only the ones it wants different. The default board, `paper`, follows the device's light or dark setting; `data-theme="light"` or `"dark"` on `<html>` forces one. A named board other than paper (`wood`, `green`, `blue`, `red`, `black`) writes its own paper, wall, frame and dots on the drawing, so to set those yourself keep the board `paper`; the line's colour (`trail`) is chosen by name (`green`, `blue`, `red`, `violet`, `orange`) or as any CSS colour, on any board.
+
+**The drawing** (`drawMaze`, `drawArrows`), custom properties on `.meikyuu`. The dark values apply to the `paper` board:
+
+| Property | What it colours | Light | Dark |
+| --- | --- | --- | --- |
+| `--mk-paper` | the paper | `#fbf8f1` | `#262a27` |
+| `--mk-wall` | the walls (and the outline of the goal and the keys) | `#1f2320` | `#ece8dc` |
+| `--mk-frame` | the frame round the shape | `#a98954` | `#6b5632` |
+| `--mk-trail` | the line the player draws | `#2e8b57` | `#6fcf97` |
+| `--mk-start` | the start, and an entrance door | `#2f7a4f` | `#6fcf97` |
+| `--mk-goal` | the goal, an exit door, the solution when it is shown, and a solved line | `#e0b43b` | the same |
+| `--mk-key` | a key | `#e0b43b` | the same |
+| `--mk-hint` | the stretch a hint lights | `#f2a900` | the same |
+| `--mk-bad` | a hint to draw back, and the arrows in a bump | `#b5452c` | the same |
+| `--mk-dot` | the faint dots of an arrow board | `rgba(0,0,0,.14)` | `rgba(255,255,255,.14)` |
+| `--mk-ink` | set for a page that draws its own text over the board; no part of the drawing reads it yet | `#1f2320` | `#ece8dc` |
+
+**The playable board** (`mountMeikyuu` and `<meikyuu-board>`) wears the drawing's properties, and six of its own on `.meikyuu-play`:
+
+| Property | What it colours | Light | Dark |
+| --- | --- | --- | --- |
+| `--mkp-ink` | text, the focus ring, and a selected tab | `#1f2320` | `#ece8dc` |
+| `--mkp-muted` | the words under the board | `#6b6f68` | `#a09d93` |
+| `--mkp-rule` | borders | `#ddd6c6` | `#3a3d38` |
+| `--mkp-surface` | the buttons | `#fbf8f1` | `#1d201e` |
+| `--mkp-accent` | the hearts, and a warning in the words under the board | `#b5452c` | `#ff8a6b` |
+| `--mkp-good` | the progress line once solved | `#2f7a4f` | `#6fcf97` |
+
+```css
+.meikyuu { --mk-goal: #d94f70; --mk-hint: #3b82f6; }
+.meikyuu-play { --mkp-accent: #8a1c1c; }
+```
+
+The demo's own page is the worked example: its green felt and its cloth patches are the family's stylesheet, [`demo/family.css`](./demo/family.css), which is the same file byte for byte in every sibling's demo, and a test holds it to its hash. With reduced motion asked for, nothing in the board moves.
+
+## Limits
+
+All of these are held by tests, and the ones with a name are exported.
+
+| Limit | Value | Where |
+| --- | --- | --- |
+| Levels | 1,000 maze levels, 300 arrow levels, 100 mixed | `MEIKYUU_MAZE_LEVELS`, `MEIKYUU_ARROW_LEVELS`, `MEIKYUU_MIXED_LEVELS` |
+| The biggest maze in the lists | 8,923 cells (level 967); the smallest is 9 (level 1) | `levelOf("maze", n).cells` |
+| A maze's size words | small under 150 cells, medium under 800, large under 4,000, huge beyond | `sizeOf`, `MEIKYUU_SIZES` |
+| A recipe's size | at least 2 a side; **no upper limit**, so a server taking recipes from people should set its own | `parseRecipe` |
+| Shapes, ways to play, algorithms | 13 shapes, 4 ways to play, 7 algorithms (Eller's: square mazes only) | `MEIKYUU_SHAPES`, `MEIKYUU_MODES`, `MEIKYUU_ALGORITHMS` |
+| Arrow boards | 8 pictures | `ARROW_SHAPES` |
+| Hearts in an arrow puzzle | 3 | `ARROW_HEARTS` |
+| Effort, the measure of difficulty | from 9 to 5,400, rated 1 to 100 | `EFFORT_LEAST`, `EFFORT_MOST`, `ratingOf` |
+| How far a board zooms in | until a cell is 72 pixels wide, and out to the whole maze fitted | `MOST_CELL_PIXELS`, `scaleLimits` |
+
+A maze of thousands of cells is cut into tiles on the page so that only the walls on screen are drawn: a big maze stays smooth on a phone.
+
+## Browser support
+
+Any browser with ES2020 modules, custom elements, Pointer Events, `ResizeObserver` and CSS `aspect-ratio`: Chrome and Edge 88, Safari 15, Firefox 89, all from 2021 on. The sounds need the Web Audio API and are off unless asked for. The element draws in the page's own DOM, with no shadow DOM. The demo is played in a real Chromium at a phone's width (with touch) and a desk's, and in WebKit, Safari's engine, at a phone's width, including pinch, wheel and drag; Firefox is not in that run. The package itself (the rules, the making and the levels) needs no DOM: it runs in Node 22 or later (CI tests 22 and 24). Deno and Bun are not tested.
+
+## Languages
+
+English and Japanese, chosen by the `language` option, the host's `lang` or the page's, and followed when the page's `lang` changes. The demo has a chooser of its own and takes the browser's language on a first visit. The board's words and the names of the shapes and the ways to play (`MEIKYUU_STRINGS`) are in both. **Japanese: included; not yet reviewed by a native reader. Corrections welcome.** Every string is listed beside its English in [docs/strings-ja.md](./docs/strings-ja.md), and there is an [issue template](https://github.com/johnmorrisdotca/meikyuu/issues/new?template=fix-a-translation.md) for fixing one. Any other language is a table of your own, passed beside these two.
+
 ## Architecture
 
 Everything that decides a maze or a game is a plain function over a cell graph, with no DOM. The drawing is SVG text in an entry of its own,
@@ -314,6 +481,34 @@ Meikyuu is a package of the family that [itsutsu.com](https://itsutsu.com)'s gam
 [Think Labyrinth](https://www.astrolog.org/labyrnth/algrithm.htm) for the vocabulary of textures. Only prose was read, never anyone's code, and `docs/MAZES.md` links all of it. The arrow puzzles are a genre of
 tapping puzzle; this package's rules and its way of making them backwards are its own.
 
+### Used by
+
+Nobody is listed yet. Using Meikyuu in something? Open an *Add my project* issue and we will add you.
+
+### The family
+
+Meikyuu is one of sixteen packages, each made for the same site, each MIT, each at
+[github.com/johnmorrisdotca](https://github.com/johnmorrisdotca):
+
+- [Korokoro](https://github.com/johnmorrisdotca/korokoro) (コロコロ, the sound of something small rolling): dice, with notation, exact odds and games.
+- [Kyuubu](https://github.com/johnmorrisdotca/kyuubu) (キューブ, how Japanese says "cube"): a turning cube for the browser, 2×2 to 7×7.
+- [Hitotsu](https://github.com/johnmorrisdotca/hitotsu) (一つ, "one"): a colour-card game, named for the call a player makes with one card left.
+- [Toranpu](https://github.com/johnmorrisdotca/toranpu) (トランプ, the everyday Japanese word for a deck of playing cards): card games as pure rules.
+- [Tane](https://github.com/johnmorrisdotca/tane) (種, a seed, the kind you plant): seeded random numbers and daily seeds.
+- [Narabe](https://github.com/johnmorrisdotca/narabe) (並べ, "line them up"): a rules engine for gomoku, Reversi, Go, checkers and many more.
+- [Tenka](https://github.com/johnmorrisdotca/tenka) (天下, "under heaven"): a world-conquest game for two to six.
+- [Kumimoji](https://github.com/johnmorrisdotca/kumimoji) (組み文字, "letters put together"): a crossword tile race in English and Japanese.
+- [Tsunagi](https://github.com/johnmorrisdotca/tsunagi) (繋ぎ, "joining"): a line-joining puzzle.
+- [Jarajara](https://github.com/johnmorrisdotca/jarajara) (ジャラジャラ, the rattle of mahjong tiles being shuffled): mahjong tiles and a matching solitaire.
+- [Suido](https://github.com/johnmorrisdotca/suido) (水道, "waterworks"): a pipe puzzle.
+- [Domino](https://github.com/johnmorrisdotca/domino) (ドミノ, the Japanese word for dominoes): dominoes and Mexican Train.
+- [Kotoba](https://github.com/johnmorrisdotca/kotoba) (言葉, "words"): word lists and word-game rules.
+- [Sugoroku](https://github.com/johnmorrisdotca/sugoroku) (双六, backgammon's Japanese name): backgammon and its variants.
+- [Kazu](https://github.com/johnmorrisdotca/kazu) (数, "number"): grid number puzzles, Sudoku and five more.
+- [Meikyuu](https://github.com/johnmorrisdotca/meikyuu) (迷宮, "labyrinth"): mazes to draw a line through.
+
+**This package is Meikyuu.** The demos of all sixteen share one header and footer, so each links the rest.
+
 ## Roadmap
 
 1.0.0 is complete for all three kinds, as far as it goes. What is **done**: the mazes (every shape and way to play, the seven algorithms, the measure, the 1,000 levels, drawing,
@@ -336,6 +531,16 @@ pnpm test:demo      # build the demo and play it in a real browser, at a phone's
 pnpm site           # build the demo into site/, as the Pages workflow publishes it
 pnpm levels         # remake the maze list (slow: about ten minutes)
 ```
+
+## Contributing
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md). The commands are under [Development](#development).
+
+Please follow the [code of conduct](./CODE_OF_CONDUCT.md). A recipe that makes the builder run for long or use a great deal of memory, or markup that gets out of the drawing, is for the [security policy](./SECURITY.md), not a public issue.
+
+## Changes
+
+See [CHANGELOG.md](./CHANGELOG.md).
 
 ## Licence
 
