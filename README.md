@@ -188,11 +188,11 @@ A server that wants to trust a level takes a recipe and rebuilds the maze, with 
 import { buildMaze, parseRecipe, solutionOf } from "@johnmorrisdotca/meikyuu";
 
 const recipe = parseRecipe(codeFromTheBrowser);        // null when it is not a recipe
-if (recipe === null || recipe.w > 200 || recipe.h > 200) throw new Error("not a maze this site makes");
+if (recipe === null) throw new Error("not a maze this site makes");   // also null for a maze past MEIKYUU_MOST_CELLS
 const solution = solutionOf(buildMaze(recipe));        // the one way through, cell by cell
 ```
 
-(A recipe names its own size and the package puts no ceiling on it, so a server that takes recipes from other people should refuse sizes it does not want, as above. The levels' own lists never go past a few thousand cells.)
+(A recipe names its own size, so `parseRecipe` refuses one that would lay out more than `MEIKYUU_MOST_CELLS` cells, or ask for more than `MEIKYUU_MOST_KEYS` keys, before anything is built. A server that wants a lower ceiling checks `layoutCells(recipe.shape, recipe.w, recipe.h)` itself.)
 
 One tag, no bundler:
 
@@ -400,7 +400,9 @@ All of these are held by tests, and the ones with a name are exported.
 | Levels | 1,000 maze levels, 300 arrow levels, 100 mixed | `MEIKYUU_MAZE_LEVELS`, `MEIKYUU_ARROW_LEVELS`, `MEIKYUU_MIXED_LEVELS` |
 | The biggest maze in the lists | 8,923 cells (level 967); the smallest is 9 (level 1) | `levelOf("maze", n).cells` |
 | A maze's size words | small under 150 cells, medium under 800, large under 4,000, huge beyond | `sizeOf`, `MEIKYUU_SIZES` |
-| A recipe's size | at least 2 a side; **no upper limit**, so a server taking recipes from people should set its own | `parseRecipe` |
+| A recipe's size | at least 2 a side, and at most 40,000 cells laid out (counting, for a shape cut out of a square, the whole square): a little over twice the biggest level's 19,321; `parseRecipe` refuses more | `MEIKYUU_MOST_CELLS`, `layoutCells` |
+| Keys in a recipe | 10, twice the most any level uses | `MEIKYUU_MOST_KEYS` |
+| An arrow board's size | at most 4,000 cells: a little over twice the biggest level's 1,849 | `MEIKYUU_MOST_ARROW_CELLS`, `parseArrowRecipe` |
 | Shapes, ways to play, algorithms | 13 shapes, 4 ways to play, 7 algorithms (Eller's: square mazes only) | `MEIKYUU_SHAPES`, `MEIKYUU_MODES`, `MEIKYUU_ALGORITHMS` |
 | Arrow boards | 8 pictures | `ARROW_SHAPES` |
 | Hearts in an arrow puzzle | 3 | `ARROW_HEARTS` |

@@ -1,7 +1,7 @@
 import { carveMaze, MEIKYUU_ALGORITHMS, type Links, type MeikyuuAlgorithm } from "./algorithms.ts";
 import { boundaryCells, centreCell, MEIKYUU_SHAPES, type Grid, type MeikyuuShape } from "./grid.ts";
 import { below, seededRandom, shuffled, type Random } from "./random.ts";
-import { gridOf } from "./shapes.ts";
+import { gridOf, ringCounts } from "./shapes.ts";
 
 /**
  * A MAZE: a grid, the passages carved through it (always a spanning tree, so exactly one way between
@@ -63,7 +63,41 @@ export function recipeCode(recipe: MazeRecipe): string {
   return `${recipe.shape}:${size}:${recipe.algorithm}:${mode}:${recipe.seed}`;
 }
 
-/** A recipe from its code, or null when it is not one. */
+/**
+ * The most cells a recipe may lay out: a little over twice what the biggest level does (19,321, a heart, leaf, star
+ * or moon cut from a raster 139 across). A recipe names its own size, and a server that takes recipes from other
+ * people must not be asked to build a maze of millions of cells, so `parseRecipe` refuses one that would.
+ */
+export const MEIKYUU_MOST_CELLS = 40_000;
+
+/** The most keys a recipe may ask for: twice the most any level uses (five). */
+export const MEIKYUU_MOST_KEYS = 10;
+
+/**
+ * How many cells laying out a recipe's grid takes, counted before anything is built: the grid's own cells for
+ * squares, hexagons, triangles and circles, and the whole raster for a shape cut out of one (a cut-out shape
+ * keeps fewer, but is built from all of them). A hexagon of radius `w` is cut from a hex grid `2w + 1` across,
+ * and a pyramid of `w` rows from a triangle grid twice as wide as it is tall.
+ */
+export function layoutCells(shape: MeikyuuShape, w: number, h: number): number {
+  switch (shape) {
+    case "square":
+    case "hex":
+    case "triangle":
+      return w * h;
+    case "circle":
+      // Every ring holds at least one cell, so more rings than the most cells is already too many.
+      return w > MEIKYUU_MOST_CELLS ? Infinity : ringCounts(w).reduce((total, count) => total + count, 0);
+    case "hexagon":
+      return (2 * w + 1) * (2 * w + 1);
+    case "pyramid":
+      return (2 * ((w - 1) % 2 === 0 ? w - 1 : w) + 1) * w;
+    default:
+      return w * w;
+  }
+}
+
+/** A recipe from its code, or null when it is not one, or names a maze bigger than `MEIKYUU_MOST_CELLS` or more keys than `MEIKYUU_MOST_KEYS`. */
 export function parseRecipe(code: string): MazeRecipe | null {
   const parts = code.split(":");
   if (parts.length !== 5) return null;
@@ -76,7 +110,9 @@ export function parseRecipe(code: string): MazeRecipe | null {
   const h = sizes[2] === undefined ? w : Number(sizes[2]);
   const isRowless = ROWLESS.includes(shape as MeikyuuShape);
   if (isRowless !== (sizes[2] === undefined) || w < 2 || h < 2) return null;
+  if (layoutCells(shape as MeikyuuShape, w, h) > MEIKYUU_MOST_CELLS) return null;
   const keys = modes[1] === "keys" ? Math.max(1, Number(modes[2] ?? 1)) : undefined;
+  if (keys !== undefined && keys > MEIKYUU_MOST_KEYS) return null;
   return { shape: shape as MeikyuuShape, w, h, algorithm: algorithm as MeikyuuAlgorithm, mode: modes[1] as MeikyuuMode, seed: Number(seed), ...(keys === undefined ? {} : { keys }) };
 }
 

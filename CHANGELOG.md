@@ -9,6 +9,7 @@ The first release.
   algorithms carve a perfect maze from a seed: `backtracker`, `hunt`, `growing`, `prim`, `kruskal`, `wilson` and `eller` (squares only). Four ways to play, each a declared field
   of a level: `enter-leave`, `to-goal`, `centre-out` and `keys`. A recipe, `square:12x9:wilson:to-goal:48213`, rebuilds the same maze in every
   browser and every Node.
+- **Recipes have a ceiling.** `parseRecipe` returns null for a recipe that would lay out more than `MEIKYUU_MOST_CELLS` (40,000) cells or ask for more than `MEIKYUU_MOST_KEYS` (10) keys, and `parseArrowRecipe` for a board past `MEIKYUU_MOST_ARROW_CELLS` (4,000), so a server that takes recipes from other people cannot be asked to build a maze of millions of cells. This is in 1.0.0 itself: it was added before the first publish.
 - **A difficulty measure** (`measureMaze`): the way through, the decisions on it, the wrong branches, dead ends, river and the cost of keys, added to an `effort`, and a rating from 1 to 100.
 - **The game as pure functions**: `pressMaze`, `dragMaze`, `liftMaze`, `tapMaze`, `undoMaze`, `restartMaze`, `hintMaze`.
 - **`@johnmorrisdotca/meikyuu/levels`**: 1,000 maze levels, each at least as hard as the one before, from a three-by-three to mazes of about nine thousand cells,

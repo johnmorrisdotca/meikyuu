@@ -53,6 +53,10 @@ export function arrowRecipeCode(recipe: ArrowRecipe): string {
   return `${recipe.shape}:${size}:${recipe.longest}:${recipe.seed}${recipe.locks === undefined || recipe.locks === 0 ? "" : `:${recipe.locks}`}`;
 }
 
+/** The most cells an arrow board may have: a little over twice the biggest level's (1,849). */
+export const MEIKYUU_MOST_ARROW_CELLS = 4_000;
+
+/** A recipe's arrow board from its code, or null when it is not one, or names a board bigger than `MEIKYUU_MOST_ARROW_CELLS`. */
 export function parseArrowRecipe(code: string): ArrowRecipe | null {
   const parts = code.split(":");
   if (parts.length < 4 || parts.length > 5) return null;
@@ -62,7 +66,7 @@ export function parseArrowRecipe(code: string): ArrowRecipe | null {
   if (sizes === null || !/^\d+$/.test(longest) || !/^\d+$/.test(seed) || (locks !== undefined && !/^\d+$/.test(locks))) return null;
   const w = Number(sizes[1]);
   const h = sizes[2] === undefined ? w : Number(sizes[2]);
-  if ((shape === "square") !== (sizes[2] !== undefined) || w < 2 || h < 2 || Number(longest) < 1) return null;
+  if ((shape === "square") !== (sizes[2] !== undefined) || w < 2 || h < 2 || w * h > MEIKYUU_MOST_ARROW_CELLS || Number(longest) < 1) return null;
   return { shape: shape as ArrowShape, w, h, longest: Number(longest), seed: Number(seed), ...(locks === undefined ? {} : { locks: Number(locks) }) };
 }
 

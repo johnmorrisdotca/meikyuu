@@ -7,12 +7,12 @@ import { describe, expect, it } from "vitest";
 
 import { MEIKYUU_ALGORITHMS } from "./algorithms.ts";
 import { ARROW_HEARTS } from "./arrowGame.ts";
-import { ARROW_SHAPES } from "./arrows.ts";
+import { ARROW_SHAPES, MEIKYUU_MOST_ARROW_CELLS } from "./arrows.ts";
 import { MEIKYUU_BOARD_NAMES, MEIKYUU_TRAIL_NAMES } from "./boards.ts";
 import { MeikyuuBoard } from "./element.ts";
 import { MEIKYUU_SHAPES } from "./grid.ts";
 import { MEIKYUU_ARROW_LEVELS, MEIKYUU_MAZE_LEVELS, MEIKYUU_MIXED_LEVELS, MEIKYUU_SIZES, sizeOf } from "./levels.ts";
-import { MEIKYUU_MODES, parseRecipe } from "./maze.ts";
+import { MEIKYUU_MODES, MEIKYUU_MOST_CELLS, MEIKYUU_MOST_KEYS, layoutCells, parseRecipe } from "./maze.ts";
 import { EFFORT_LEAST, EFFORT_MOST } from "./measure.ts";
 import { MEIKYUU_PLAY_STYLE } from "./playStyle.ts";
 import { MEIKYUU_STRINGS } from "./strings.ts";
@@ -145,8 +145,13 @@ describe("the README's promises", () => {
     expect(limits).toContain("small under 150 cells, medium under 800, large under 4,000, huge beyond");
     expect(parseRecipe("square:1x1:backtracker:to-goal:1")).toBeNull();
     expect(parseRecipe("square:2x2:backtracker:to-goal:1")).not.toBeNull();
-    expect(parseRecipe("square:100000x100000:backtracker:to-goal:1")).not.toBeNull();
-    expect(limits).toContain("at least 2 a side; **no upper limit**");
+    expect(parseRecipe("square:100000x100000:backtracker:to-goal:1")).toBeNull();
+    const biggestLaidOut = Math.max(...MEIKYUU_MAZE_LEVELS.map(({ recipe }) => layoutCells(recipe.shape, recipe.w, recipe.h)));
+    expect(limits).toContain(`at most ${MEIKYUU_MOST_CELLS.toLocaleString("en-US")} cells laid out`);
+    expect(limits).toContain(`the biggest level's ${biggestLaidOut.toLocaleString("en-US")}`);
+    expect(limits).toContain(`| Keys in a recipe | ${MEIKYUU_MOST_KEYS},`);
+    const biggestBoard = Math.max(...MEIKYUU_ARROW_LEVELS.map(({ recipe }) => recipe.w * recipe.h));
+    expect(limits).toContain(`at most ${MEIKYUU_MOST_ARROW_CELLS.toLocaleString("en-US")} cells: a little over twice the biggest level's ${biggestBoard.toLocaleString("en-US")}`);
     expect(limits).toContain(`| ${MEIKYUU_SHAPES.length} shapes, ${MEIKYUU_MODES.length} ways to play, ${MEIKYUU_ALGORITHMS.length} algorithms (Eller's: square mazes only) |`);
     expect(limits).toContain(`| ${ARROW_SHAPES.length} pictures |`);
     expect(limits).toContain(`| Hearts in an arrow puzzle | ${ARROW_HEARTS} |`);
@@ -166,5 +171,9 @@ describe("the README's promises", () => {
   it("has the files a visitor looks for: the package's own issue templates, its security policy, and the rest of what its README links", () => {
     for (const file of [".github/ISSUE_TEMPLATE/report-a-bug.md", ".github/ISSUE_TEMPLATE/suggest-a-feature.md", ".github/ISSUE_TEMPLATE/fix-a-translation.md", ".github/ISSUE_TEMPLATE/add-my-project.md", ".github/ISSUE_TEMPLATE/config.yml", "SECURITY.md"]) expect(existsSync(file), file).toBe(true);
     expect(readme).toContain("issues/new?template=fix-a-translation.md");
+  });
+
+  it("keeps SECURITY.md and CODE_OF_CONDUCT.md equal to the family's master text, a copy of which is kept in scripts/community", () => {
+    for (const file of ["SECURITY.md", "CODE_OF_CONDUCT.md"]) expect(readFileSync(file, "utf8"), file).toBe(readFileSync(`scripts/community/${file}`, "utf8"));
   });
 });
