@@ -1,0 +1,42 @@
+/* Meikyuu's own look, after family.css: the choosers, the board on its table, the settings and the gallery of shapes. */
+:root { --intro-room: 11rem; --intro-room-wide: 6rem; }
+.setup { margin-top: 10px; }
+.setup .fam-seg { max-width: 100%; }
+.setup .fam-seg button { font-size: .85rem; }
+.of { color: var(--muted); font-weight: 500; }
+.level-input { width: 5.6rem; text-align: center; font-weight: 700; font-variant-numeric: tabular-nums; appearance: textfield; -moz-appearance: textfield; }
+.level-input::-webkit-inner-spin-button, .level-input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+.info { margin: 10px 0 0; color: var(--muted); font-size: .85rem; min-height: 2.6em; }
+
+/* The board on its table: the play element on the family's felt, its words in the felt's ink. */
+#board { margin: 8px auto 0; max-width: min(100%, 640px); padding: 14px 14px 10px; min-width: 0;
+  --mkp-ink: var(--felt-ink); --mkp-surface: rgba(0,0,0,.28); --mkp-rule: rgba(255,255,255,.35); --mkp-muted: var(--felt-ink); --mkp-accent: #ffd23f; --mkp-good: #b9f1c9; }
+#board .mk-box { border-radius: 10px; }
+#board .mk-button, #board .mk-tab { box-shadow: inset 0 0 0 1px rgba(255,255,255,.35); border-color: transparent; }
+#board .mk-tab[aria-selected="true"] { background: var(--felt-ink); color: var(--felt-deep); }
+#board .mk-says, #board .mk-messages { opacity: .92; }
+#board .mk-banner { color: #1f4135; background: #fff8dc; }
+
+.settings { margin-top: 22px; display: grid; gap: 4px; }
+.settings h2 { margin: 12px 0 0; font-size: 1.05rem; }
+.settings h2:first-child { margin-top: 0; }
+.settings .fam-label { min-width: 6.2rem; }
+.patch { width: 18px; height: 18px; border-radius: 4px; border: 3px solid; display: inline-block; flex: none; }
+.swatch { width: 14px; height: 14px; border-radius: 50%; display: inline-block; flex: none; box-shadow: 0 0 0 1px rgba(0,0,0,.25); }
+
+/* The shapes, each one a maze of its own, to choose by. */
+.more .shapes { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 8px; max-width: 1100px; }
+.shapes li { min-width: 0; }
+.shapes button { width: 100%; display: grid; gap: 4px; justify-items: center; background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; padding: 6px; min-height: 44px; font-size: .75rem; font-weight: 600; text-align: center; }
+.shapes button:hover { border-color: var(--ink); }
+.shapes button[aria-pressed="true"] { border-color: var(--ink); box-shadow: 0 0 0 2px var(--ink); }
+.shapes svg { display: block; width: 100%; max-width: 84px; height: auto; pointer-events: none; }
+
+.uses { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; }
+.uses code { font-family: var(--mono); font-size: .85rem; overflow-wrap: anywhere; }
+.more .uses { grid-template-columns: 1fr; }
+.tag meikyuu-board { display: block; max-width: 420px; }
+@media (max-width: 520px) {
+  #board { padding: 10px 10px 8px; }
+  .settings .fam-label { min-width: 100%; }
+}
