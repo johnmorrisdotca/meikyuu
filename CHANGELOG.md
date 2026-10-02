@@ -6,6 +6,8 @@ All notable changes to this project are written here. The format follows
 
 ## [Unreleased]
 
+## [2.0.1] - 2026-10-02
+
 ### Fixed
 
 - **A mixed puzzle can be finished after the labyrinth is solved.** The report: the labyrinth solved, back on the arrows tab it read "3 arrows left. Hearts: 0 of 3." with nothing to tap, and no finish. The cause was the hearts, not the tab switch: the arrows that the locked arrow holds up cost a heart each time they were tapped, so a player who tapped them on the way to the button lost the puzzle (hearts spent, `meikyuu-lose`) before ever drawing the labyrinth; and the board then hid it. The word of what had just happened ("Out of hearts" or a bump) was carried to the other tab and replaced by "Unlocked!", so a lost puzzle on the arrows tab read as a plain one that would not move.
