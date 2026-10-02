@@ -1,4 +1,4 @@
-import { EDGE, EDGE_STEP, fitView, isFitted, keptView, pannedBy, pointAt, scaleLimits, viewBoxOf, visibleArea, zoomedAbout, type View, type ViewBox } from "./viewport.ts";
+import { edgeNudge, fitView, isFitted, keptView, pannedBy, pointAt, scaleLimits, viewBoxOf, visibleArea, zoomedAbout, type FitMode, type View, type ViewBox } from "./viewport.ts";
 import type { Box } from "./grid.ts";
 
 /**
@@ -7,7 +7,11 @@ import type { Box } from "./grid.ts";
  * board that is in it through `SurfaceHooks`. Two fingers pinch and move the view; one finger or the mouse
  * pressed where `press` says no moves the view, and where it says yes draws; the wheel zooms about the cursor.
  *
- * Needs a page. The arithmetic is `viewport.ts`'s, and is usable alone.
+ * Touch is arranged so that a page can still be scrolled: only the box itself asks the browser to leave touches to it (`touch-action: none`),
+ * one finger draws, two fingers (or one that did not begin on the line) move and pinch the view, and a line drawn to the edge of a zoomed
+ * box moves the view along (`edgePan`, which can be turned off). `panMode` makes every one-finger drag move the view, for a mouse or a
+ * finger that cannot find the line's end. A pinch that has nothing left to zoom out of asks the box's frame (`frame`) to shrink, which is
+ * how a page lets the player zoom out until its own margins show. Needs a page. The arithmetic is `viewport.ts`'s, and is usable alone.
  */
 export type Point = readonly [number, number];
 
@@ -36,18 +40,44 @@ export type Surface = {
   invalidate(): void;
   /** Point the box at another board (a new area), fitted. */
   setArea(area: Box): void;
+  /** Fit by width, by height or both; the view is fitted again. */
+  setFit(mode: FitMode): void;
+  fitMode(): FitMode;
+  /** Whether a line drawn to the edge moves the view along. */
+  setEdgePan(on: boolean): void;
+  /** Whether every one-finger drag moves the view, even one that begins on the line's end. */
+  setPanMode(on: boolean): void;
+  panMode(): boolean;
   /** The pixel of the box under a point of the board. */
   pixelOf(at: Point): Point;
   destroy(): void;
+};
+
+/** How a surface is arranged beyond the hooks. */
+export type SurfaceOptions = {
+  /** What Fit shows, and what the first view is: the whole board (default), its width, or its height. */
+  fit?: FitMode;
+  /** A line drawn to the edge of the box moves the view along. Default true. */
+  edgePan?: boolean;
+  /** Start with every one-finger drag moving the view. Default false. */
+  panMode?: boolean;
+  /**
+   * The frame round the box. A pinch the board has no more room for (smaller than the fit, or bigger while the frame is shrunk) is offered to
+   * it first when growing and last when shrinking; it answers whether it took the pinch.
+   */
+  frame?: { zoom(factor: number): boolean };
 };
 
 /** How far a pointer may move and still be a tap, in pixels, and how long it may take, in milliseconds. */
 const TAP_SLOP = 8;
 const TAP_TIME = 500;
 
-export function createSurface(box: HTMLElement, area: Box, hooks: SurfaceHooks, pad = 0.6): Surface {
+export function createSurface(box: HTMLElement, area: Box, hooks: SurfaceHooks, pad = 0.6, options: SurfaceOptions = {}): Surface {
   let size: ViewBox = { width: Math.max(1, box.clientWidth), height: Math.max(1, box.clientHeight), area };
-  let view: View = fitView(size, pad);
+  let fitMode: FitMode = options.fit ?? "both";
+  let edgePan = options.edgePan !== false;
+  let panAlways = options.panMode === true;
+  let view: View = fitView(size, pad, fitMode);
   let frame = 0;
   let mode: "none" | "draw" | "pan" | "pinch" = "none";
   const pointers = new Map<number, [number, number]>();
@@ -61,9 +91,19 @@ export function createSurface(box: HTMLElement, area: Box, hooks: SurfaceHooks, 
     const rect = box.getBoundingClientRect();
     const next: ViewBox = { width: Math.max(1, rect.width), height: Math.max(1, rect.height), area: size.area };
     if (next.width === size.width && next.height === size.height) return;
-    const wasFitted = isFitted(view, size, pad);
+    const wasFitted = isFitted(view, size, pad, fitMode);
+    // A box that changes size keeps how far in the view is relative to the whole board fitted, and the middle of what it shows: a box that
+    // is narrowed (a page widening its margins) keeps the same part of the board in view and does not crop the rest.
+    const wasFit = fitView(size, pad).scale;
+    const middleX = view.x + size.width / (2 * view.scale);
+    const middleY = view.y + size.height / (2 * view.scale);
+    const relative = view.scale / wasFit;
     size = next;
-    view = wasFitted ? fitView(size, pad) : keptView(view, size, pad);
+    if (wasFitted) view = fitView(size, pad, fitMode);
+    else {
+      const scale = relative * fitView(size, pad).scale;
+      view = keptView({ scale, x: middleX - size.width / (2 * scale), y: middleY - size.height / (2 * scale) }, size, pad);
+    }
     invalidate();
   };
   const local = (event: { clientX: number; clientY: number }): [number, number] => {
@@ -105,7 +145,7 @@ export function createSurface(box: HTMLElement, area: Box, hooks: SurfaceHooks, 
     started = event.timeStamp;
     moved = 0;
     panned = false;
-    if (event.button === 0 && hooks.press(at, pixel, event)) {
+    if (!panAlways && event.button === 0 && hooks.press(at, pixel, event)) {
       mode = "draw";
       last = at;
     } else mode = "pan";
@@ -125,7 +165,13 @@ export function createSurface(box: HTMLElement, area: Box, hooks: SurfaceHooks, 
       const wasMiddle: [number, number] = [(before[0] + before2[0]) / 2, (before[1] + before2[1]) / 2];
       let next = pannedBy(view, middle[0] - wasMiddle[0], middle[1] - wasMiddle[1], size, pad);
       const previous = Math.hypot(before[0] - before2[0], before[1] - before2[1]);
-      if (previous > 0 && distance > 0) next = zoomedAbout(next, distance / previous, middle[0], middle[1], size, pad);
+      if (previous > 0 && distance > 0) {
+        const factor = distance / previous;
+        const { least } = scaleLimits(size, pad);
+        // Fingers coming together with nothing left to zoom out of, or apart while the frame is shrunk: the frame takes the pinch.
+        const framed = options.frame !== undefined && ((factor < 1 && next.scale <= least + 1e-6) || factor > 1) ? options.frame.zoom(factor) : false;
+        if (!framed) next = zoomedAbout(next, factor, middle[0], middle[1], size, pad);
+      }
       pinchFrom = { distance };
       setView(next);
       return;
@@ -172,15 +218,14 @@ export function createSurface(box: HTMLElement, area: Box, hooks: SurfaceHooks, 
     setView(zoomedAbout(view, Math.exp(-event.deltaY * lines * (event.ctrlKey ? 0.01 : 0.0016)), px, py, size, pad));
   };
 
-  /** While a line is drawn near an edge of the box, the view moves toward it a little each frame, and the line carries on under the finger. */
+  /** While a line is drawn near an edge of the box, the view moves toward it a little each frame (more the nearer the edge), and the line carries on under the finger. */
   let nudgeFrame = 0;
   const nudge = (): void => {
     nudgeFrame = 0;
-    if (mode !== "draw") return;
+    if (mode !== "draw" || !edgePan) return;
     const pixel = [...pointers.values()][0];
     if (pixel === undefined) return;
-    const dx = pixel[0] < EDGE ? EDGE_STEP : size.width - pixel[0] < EDGE ? -EDGE_STEP : 0;
-    const dy = pixel[1] < EDGE ? EDGE_STEP : size.height - pixel[1] < EDGE ? -EDGE_STEP : 0;
+    const { dx, dy } = edgeNudge(pixel[0], pixel[1], size.width, size.height);
     if (dx !== 0 || dy !== 0) {
       const next = pannedBy(view, dx, dy, size, pad);
       if (next.x !== view.x || next.y !== view.y) {
@@ -194,7 +239,7 @@ export function createSurface(box: HTMLElement, area: Box, hooks: SurfaceHooks, 
   };
   const watch = (event: PointerEvent): void => {
     onMove(event);
-    if (mode === "draw" && nudgeFrame === 0) nudgeFrame = window.requestAnimationFrame(nudge);
+    if (mode === "draw" && edgePan && nudgeFrame === 0) nudgeFrame = window.requestAnimationFrame(nudge);
   };
 
   box.addEventListener("pointerdown", onDown);
@@ -208,19 +253,31 @@ export function createSurface(box: HTMLElement, area: Box, hooks: SurfaceHooks, 
   invalidate();
 
   return {
-    fit: () => setView(fitView(size, pad)),
+    fit: () => setView(fitView(size, pad, fitMode)),
     zoom: (factor) => setView(zoomedAbout(view, factor, size.width / 2, size.height / 2, size, pad)),
     state: () => {
       const { least, most } = scaleLimits(size, pad);
-      return { fitted: isFitted(view, size, pad), atMost: view.scale >= most - 1e-6, atLeast: view.scale <= least + 1e-6 };
+      return { fitted: isFitted(view, size, pad, fitMode), atMost: view.scale >= most - 1e-6, atLeast: view.scale <= least + 1e-6 };
     },
     view: () => view,
     invalidate,
     setArea: (next) => {
       size = { ...size, area: next };
-      view = fitView(size, pad);
+      view = fitView(size, pad, fitMode);
       invalidate();
     },
+    setFit: (next) => {
+      fitMode = next;
+      setView(fitView(size, pad, fitMode));
+    },
+    fitMode: () => fitMode,
+    setEdgePan: (on) => {
+      edgePan = on;
+    },
+    setPanMode: (on) => {
+      panAlways = on;
+    },
+    panMode: () => panAlways,
     pixelOf: (at) => [(at[0] - view.x) * view.scale, (at[1] - view.y) * view.scale],
     destroy: () => {
       window.cancelAnimationFrame(frame);

@@ -1,7 +1,9 @@
 import { MEIKYUU_BOARD_NAMES, MEIKYUU_TRAIL_NAMES, type MeikyuuBoardName, type MeikyuuTrailName } from "./boards.ts";
 import { MEIKYUU_KINDS, type MeikyuuKind } from "./levels.ts";
 import { mountMeikyuu, type MeikyuuMount } from "./mount.ts";
+import { MEIKYUU_ORIENTATIONS, type MeikyuuOrientation } from "./orientation.ts";
 import type { MeikyuuLanguage } from "./strings.ts";
+import { FIT_MODES, type FitMode } from "./viewport.ts";
 
 /**
  * THE `<meikyuu-board>` ELEMENT: a playable Meikyuu board in a tag, with no framework.
@@ -21,6 +23,10 @@ import type { MeikyuuLanguage } from "./strings.ts";
  *    (default), `blue`, `red`, `violet` or `orange`.
  *  - `tap`: a tap runs the line along the corridor to the next fork. `hints="off"`: no Hint button. `sound`: make sounds.
  *  - `controls="off"`: only the board. `zoom="off"`: no zoom pad.
+ *  - `ratio`: the shape of the box, `square` (default), `maze`, or width over height as a number or a fraction (`2/3` for a tall level).
+ *    `orientation`: `auto` (default), `portrait` or `landscape`. `gutter`: the page left beside the box, in pixels (24). `reserve`: what else
+ *    is on the screen, in pixels (200). `fit`: `both` (default), `width` or `height`. `pan`: every one-finger drag moves the view.
+ *    `edge-pan="off"`: a line drawn to the edge does not move the view. `turn-button`: show a Turn button.
  *  - `lang`: `en` or `ja`, or the page's.
  *
  * It fires `meikyuu-move`, `meikyuu-solve`, `meikyuu-key`, `meikyuu-unlock`, `meikyuu-bump` and `meikyuu-lose` (see
@@ -30,10 +36,19 @@ import type { MeikyuuLanguage } from "./strings.ts";
 const ElementBase: typeof HTMLElement = typeof HTMLElement === "undefined" ? (class {} as unknown as typeof HTMLElement) : HTMLElement;
 
 const isOn = (value: string | null, fallback = false): boolean => (value === null ? fallback : !["false", "off", "0", "no"].includes(value.toLowerCase()));
+/** A box shape written as `square`, `maze`, a number, or a fraction such as `2/3`. */
+function ratioOf(value: string | null): "square" | "maze" | number | undefined {
+  if (value === null || value === "square") return undefined;
+  if (value === "maze") return "maze";
+  const [top, bottom] = value.split("/");
+  const number = bottom === undefined ? Number(top) : Number(top) / Number(bottom);
+  return Number.isFinite(number) && number > 0 ? number : undefined;
+}
+const numberOf = (value: string | null): number | undefined => (value === null || value.trim() === "" || !Number.isFinite(Number(value)) ? undefined : Number(value));
 const oneOf = <T extends string>(value: string | null, allowed: readonly T[]): T | undefined => (allowed.includes(value as T) ? (value as T) : undefined);
 
 export class MeikyuuBoard extends ElementBase {
-  static observedAttributes = ["kind", "level", "recipe", "board", "trail", "tap", "hints", "sound", "controls", "zoom", "lang"];
+  static observedAttributes = ["kind", "level", "recipe", "board", "trail", "tap", "hints", "sound", "controls", "zoom", "lang", "ratio", "orientation", "gutter", "reserve", "fit", "pan", "edge-pan", "turn-button"];
 
   #mount: MeikyuuMount | null = null;
   #key = "";
@@ -85,7 +100,15 @@ export class MeikyuuBoard extends ElementBase {
     const recipe = this.getAttribute("recipe") ?? undefined;
     const controls = isOn(this.getAttribute("controls"), true);
     const zoom = isOn(this.getAttribute("zoom"), true);
-    const key = JSON.stringify([kind, level, recipe, controls, zoom]);
+    const ratio = ratioOf(this.getAttribute("ratio"));
+    const reserve = numberOf(this.getAttribute("reserve"));
+    const gutter = numberOf(this.getAttribute("gutter"));
+    const turnButton = isOn(this.getAttribute("turn-button"));
+    const key = JSON.stringify([kind, level, recipe, controls, zoom, ratio, reserve, gutter, turnButton]);
+    const orientation = oneOf<MeikyuuOrientation>(this.getAttribute("orientation"), MEIKYUU_ORIENTATIONS) ?? "auto";
+    const fit = oneOf<FitMode>(this.getAttribute("fit"), FIT_MODES) ?? "both";
+    const pan = isOn(this.getAttribute("pan"));
+    const edgePan = isOn(this.getAttribute("edge-pan"), true);
     const settings = {
       board: oneOf<MeikyuuBoardName>(this.getAttribute("board"), MEIKYUU_BOARD_NAMES),
       trail: oneOf<MeikyuuTrailName>(this.getAttribute("trail"), MEIKYUU_TRAIL_NAMES),
@@ -94,13 +117,19 @@ export class MeikyuuBoard extends ElementBase {
       sound: isOn(this.getAttribute("sound")),
       language: oneOf<MeikyuuLanguage>(this.getAttribute("lang"), ["en", "ja"] as const),
     };
+    const live = (mount: MeikyuuMount): void => {
+      mount.set(settings);
+      mount.orientation(orientation);
+      mount.pan(pan);
+      mount.edgePan(edgePan);
+    };
     if (key === this.#key && this.#mount !== null) {
-      this.#mount.set(settings);
+      live(this.#mount);
       return;
     }
     if (recipe === undefined && (level === undefined || !Number.isInteger(level))) return;
     this.#mount?.destroy();
     this.#key = key;
-    this.#mount = mountMeikyuu(this, { kind, level, recipe, ...settings, controls, zoom });
+    this.#mount = mountMeikyuu(this, { kind, level, recipe, ...settings, controls, zoom, ratio, reserve, gutter, fit, orientation, pan, edgePan, turnButton });
   }
 }

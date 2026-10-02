@@ -11,10 +11,24 @@ export type View = { x: number; y: number; scale: number };
 /** How a box of `width` by `height` pixels shows a board: the margin round it in cells, and how far in a view may go. */
 export type ViewBox = { width: number; height: number; area: Box };
 
-/** The view that shows the whole of the area, centred, with a margin of `pad` cells. */
-export function fitView(box: ViewBox, pad = 0.6): View {
-  const scale = Math.min(box.width / (box.area.w + 2 * pad), box.height / (box.area.h + 2 * pad));
-  return { scale, x: box.area.x + box.area.w / 2 - box.width / (2 * scale), y: box.area.y + box.area.h / 2 - box.height / (2 * scale) };
+/**
+ * What a fit makes visible: `both` the whole board (default); `width` the board as wide as the box, which for a board taller than the box
+ * is the top of it with the rest to move down to; `height` the board as tall as the box, the left of it for a board wider than the box.
+ */
+export const FIT_MODES = ["both", "width", "height"] as const;
+export type FitMode = (typeof FIT_MODES)[number];
+
+/** The view that shows the board as a mode says, with a margin of `pad` cells: centred where it fits, and at the top or left where it does not. */
+export function fitView(box: ViewBox, pad = 0.6, mode: FitMode = "both"): View {
+  const across = box.width / (box.area.w + 2 * pad);
+  const down = box.height / (box.area.h + 2 * pad);
+  const scale = mode === "width" ? across : mode === "height" ? down : Math.min(across, down);
+  const centreX = box.area.x + box.area.w / 2 - box.width / (2 * scale);
+  const centreY = box.area.y + box.area.h / 2 - box.height / (2 * scale);
+  // Where the board is bigger than the box in a direction, start at its near edge, not its middle.
+  const x = box.area.w + 2 * pad > box.width / scale + 1e-9 ? box.area.x - pad : centreX;
+  const y = box.area.h + 2 * pad > box.height / scale + 1e-9 ? box.area.y - pad : centreY;
+  return { scale, x, y };
 }
 
 /** The scales a view may have: the whole board fitted, to a cell this many pixels wide (at least a bit past the fit, so a small maze can still zoom). */
@@ -22,7 +36,7 @@ export const MOST_CELL_PIXELS = 72;
 
 export function scaleLimits(box: ViewBox, pad = 0.6): { least: number; most: number } {
   const fit = fitView(box, pad).scale;
-  return { least: fit * 0.9, most: Math.max(fit * 2, MOST_CELL_PIXELS) };
+  return { least: fit * 0.9, most: Math.max(fit * 2, MOST_CELL_PIXELS, fitView(box, pad, "width").scale, fitView(box, pad, "height").scale) };
 }
 
 /** A view kept where some of the board can be seen: its middle never leaves the area (with a margin). */
@@ -72,18 +86,23 @@ export function visibleArea(view: View, box: ViewBox): Box {
   return { x: view.x, y: view.y, w: box.width / view.scale, h: box.height / view.scale };
 }
 
-/** Whether the view is the whole board fitted. */
-export function isFitted(view: View, box: ViewBox, pad = 0.6): boolean {
-  return Math.abs(view.scale - fitView(box, pad).scale) < 1e-6;
+/** Whether the view is the board fitted, as the mode says. */
+export function isFitted(view: View, box: ViewBox, pad = 0.6, mode: FitMode = "both"): boolean {
+  return Math.abs(view.scale - fitView(box, pad, mode).scale) < 1e-6;
 }
 
-/** How near an edge of the box a line's end must be dragged to move the view, and how far each frame moves it, in pixels. */
+/** How near an edge of the box a line's end must be dragged to move the view, and the most the view moves in a frame there, in pixels. */
 export const EDGE = 44;
 export const EDGE_STEP = 7;
 
-/** How far to move the view in a frame for a finger at (px, py) of a box: the board moves the other way, toward the finger. */
+/**
+ * How far to move the view in a frame for a finger at (px, py) of a box: the board moves the other way, toward the finger. It is gentle: nothing
+ * at `EDGE` pixels from a side, rising in a line to `EDGE_STEP` pixels a frame at the side itself, so a finger that only brushes the edge
+ * of the box moves the view hardly at all, and one held at the very edge moves it steadily.
+ */
 export function edgeNudge(px: number, py: number, width: number, height: number): { dx: number; dy: number } {
-  const dx = px < EDGE ? EDGE_STEP : width - px < EDGE ? -EDGE_STEP : 0;
-  const dy = py < EDGE ? EDGE_STEP : height - py < EDGE ? -EDGE_STEP : 0;
+  const push = (distance: number): number => (distance >= EDGE ? 0 : EDGE_STEP * (1 - Math.max(0, distance) / EDGE));
+  const dx = push(px) - push(width - px);
+  const dy = push(py) - push(height - py);
   return { dx, dy };
 }

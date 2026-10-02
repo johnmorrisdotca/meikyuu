@@ -63,10 +63,37 @@ describe("the view of a board through a box", () => {
     expect(viewBoxOf(view, box)).toBe("10 20 80 80");
   });
 
-  it("nudges the view toward an edge a line is drawn near, and not otherwise", () => {
+  it("nudges the view toward an edge a line is drawn near, gently, more the nearer the edge, and not otherwise", () => {
     expect(edgeNudge(200, 200, 400, 400)).toEqual({ dx: 0, dy: 0 });
-    expect(edgeNudge(EDGE - 1, 200, 400, 400)).toEqual({ dx: EDGE_STEP, dy: 0 });
-    expect(edgeNudge(399, 399, 400, 400)).toEqual({ dx: -EDGE_STEP, dy: -EDGE_STEP });
-    expect(edgeNudge(200, 3, 400, 400)).toEqual({ dx: 0, dy: EDGE_STEP });
+    expect(edgeNudge(EDGE, 200, 400, 400)).toEqual({ dx: 0, dy: 0 });
+    // Brushing the edge of the near zone moves it hardly at all; at the side itself it moves EDGE_STEP a frame.
+    expect(edgeNudge(EDGE - 1, 200, 400, 400).dx).toBeGreaterThan(0);
+    expect(edgeNudge(EDGE - 1, 200, 400, 400).dx).toBeLessThan(EDGE_STEP / 20);
+    expect(edgeNudge(0, 200, 400, 400)).toEqual({ dx: EDGE_STEP, dy: 0 });
+    expect(edgeNudge(400, 400, 400, 400)).toEqual({ dx: -EDGE_STEP, dy: -EDGE_STEP });
+    expect(edgeNudge(EDGE / 2, 200, 400, 400).dx).toBeCloseTo(EDGE_STEP / 2, 6);
+    expect(edgeNudge(200, 0, 400, 400)).toEqual({ dx: 0, dy: EDGE_STEP });
+    // A box narrower than two edges pushes both ways and they cancel.
+    expect(edgeNudge(30, 200, 60, 400).dx).toBe(0);
+  });
+
+  it("fits by width or by height as well as the whole, from the top or the left where the board is bigger than the box", () => {
+    // A tall board in a wide box: by width it is bigger than the box, so the view starts at its top.
+    const tall: ViewBox = { width: 400, height: 300, area: { x: 0, y: 0, w: 20, h: 40 } };
+    const both = fitView(tall);
+    const wide = fitView(tall, 0.6, "width");
+    expect(both.scale).toBeCloseTo(300 / 41.2, 6);
+    expect(wide.scale).toBeCloseTo(400 / 21.2, 6);
+    expect(wide.scale).toBeGreaterThan(both.scale);
+    expect(wide.y).toBeCloseTo(-0.6, 6);
+    expect(isFitted(wide, tall, 0.6, "width")).toBe(true);
+    expect(isFitted(wide, tall)).toBe(false);
+    // By height it is the whole board, as the board's height is what limited it.
+    expect(fitView(tall, 0.6, "height")).toEqual(both);
+    // A wide board in a tall box: by height it starts at its left.
+    const flat: ViewBox = { width: 300, height: 400, area: { x: 0, y: 0, w: 40, h: 20 } };
+    expect(fitView(flat, 0.6, "height").x).toBeCloseTo(-0.6, 6);
+    // The zoom limits reach as far as the biggest fit.
+    expect(scaleLimits(tall).most).toBeGreaterThanOrEqual(wide.scale);
   });
 });

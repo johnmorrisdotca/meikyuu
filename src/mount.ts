@@ -4,12 +4,14 @@ import { makeArrows, parseArrowRecipe, type ArrowBoard, type ArrowRecipe } from 
 import type { MazeLook } from "./draw.ts";
 import { dragMaze, headOf, hintMaze, liftMaze, newMazeGame, pressMaze, restartMaze, undoMaze, type MazeGame } from "./game.ts";
 import { levelOf, type MeikyuuKind } from "./levels.ts";
+import { resolveTurn, type MeikyuuOrientation, type Turn } from "./orientation.ts";
 import { createMazeSurface, type MazeSurface } from "./mazeSurface.ts";
 import { buildMaze, parseRecipe, type Maze, type MazeRecipe } from "./maze.ts";
 import { buildMixed, parseMixedRecipe, type MixedRecipe } from "./mixed.ts";
 import { MEIKYUU_PLAY_STYLE } from "./playStyle.ts";
 import { createMeikyuuSounds, type MeikyuuSoundKind, type MeikyuuSounds } from "./sound.ts";
 import { meikyuuLanguageOf, meikyuuSay, type MeikyuuLanguage } from "./strings.ts";
+import type { FitMode } from "./viewport.ts";
 
 /**
  * A PLAYABLE MEIKYUU BOARD IN ANY PAGE: `mountMeikyuu(host, options)` draws a maze, an arrow puzzle or a
@@ -28,10 +30,23 @@ import { meikyuuLanguageOf, meikyuuSay, type MeikyuuLanguage } from "./strings.t
  * `meikyuu-move` after each stroke or tap, `meikyuu-solve` once when the puzzle is won, and `meikyuu-key`,
  * `meikyuu-unlock`, `meikyuu-bump` and `meikyuu-lose` for the smaller things.
  *
- * Needs a page. The rules are `game.ts`'s and `arrowGame.ts`'s and the drawing is `drawMaze`'s and
- * `drawArrows`'s, and each is usable alone. Nothing it draws can be selected, and its box stays one steady
- * square whatever is in it.
+ * THE BOX AND THE PAGE. The box is as wide as the host allows, less a gutter each side (`gutter`, 24 px) so that there is always some of the
+ * page beside it for a finger to scroll by: only the box itself asks the browser to keep touches (`touch-action: none`), everything round it
+ * scrolls the page. It is as tall as its `ratio` says (square by default; 2:3 for a tall maze) and never taller than the window less `reserve`.
+ * A pinch with nothing left to zoom out of, or the zoom pad's minus, widens the gutters a step at a time (to 72 px) so the page shows beside
+ * a maze that fills the window, and the pad's plus brings them back first. A maze that is taller than wide lies down on a screen that is
+ * wider than tall, and the other way (`orientation`): the maze, its line and its cells stay as they were made, so a line is the same line
+ * either way up. Needs a page. The rules are `game.ts`'s and `arrowGame.ts`'s and the drawing is `drawMaze`'s and
+ * `drawArrows`'s, and each is usable alone. Nothing it draws can be selected, and its box stays one steady shape whatever is in it.
  */
+
+/** The page left beside the box, in pixels: the least, and the most the zoom-out widens it to. */
+export const MEIKYUU_GUTTER = 24;
+export const MEIKYUU_GUTTER_MAX = 72;
+/** How much one press of Zoom out widens the gutters, and one press of Zoom in narrows them. */
+const MEIKYUU_GUTTER_STEP = 24;
+/** What a window is assumed to hold besides the box, in pixels: the page's header, and the board's buttons and lines of words. */
+export const MEIKYUU_RESERVE = 200;
 
 /** What is being played. */
 export type MeikyuuPuzzle =
@@ -54,6 +69,10 @@ export type MeikyuuEventDetail = {
   hearts: number | null;
   arrowsLeft: number | null;
   solved: boolean;
+  /** How a maze is shown now (`portrait` when it is taller than wide as shown), or null for arrows. */
+  orientation: "portrait" | "landscape" | null;
+  /** Whether the maze is shown turned from how it was made. */
+  turned: boolean;
 };
 
 export type MeikyuuMountOptions = MazeLook & {
@@ -71,6 +90,29 @@ export type MeikyuuMountOptions = MazeLook & {
   controls?: boolean;
   /** The zoom pad. Default true. (The wheel and the pinch always work.) */
   zoom?: boolean;
+  /**
+   * The shape of the box, width over height as the maze was made: `square` (default, one steady square whatever is drawn), `maze` (the
+   * maze's own, between 1:2 and 2:1), or a number such as 2 / 3 for the tall levels (`level.ratio`). A maze that is turned has the box turned
+   * with it.
+   */
+  ratio?: "square" | "maze" | number;
+  /**
+   * Which way up the maze is shown: `portrait` (stand a wide maze up), `landscape` (lay a tall one down), or `auto`, the default: lay a
+   * tall maze down when the room (the host's width and the window's height) fits it bigger that way. A square box and a square maze are never turned.
+   */
+  orientation?: MeikyuuOrientation;
+  /** The page left beside the box on each side, in pixels, at least. Default 24 (`MEIKYUU_GUTTER`). */
+  gutter?: number;
+  /** What the window holds besides the box, in pixels. Default 200 (`MEIKYUU_RESERVE`). The box is never taller than the window less this (and never under 60% of it). */
+  reserve?: number;
+  /** What Fit shows: the whole maze (`both`, default), its `width` or its `height`. */
+  fit?: FitMode;
+  /** A line drawn to the edge of a zoomed box moves the view along. Default true. */
+  edgePan?: boolean;
+  /** Start with every one-finger drag moving the view, not drawing (the Move button toggles it). Default false. */
+  pan?: boolean;
+  /** Show a Turn button in the pad, for a maze that is not square. Default false. */
+  turnButton?: boolean;
   /** Make a sound for each thing that happens. Default false. */
   sound?: boolean;
   /** The language the words are in. Left out, the host's own `lang`, or the page's, and it follows the page's. */
@@ -92,16 +134,26 @@ export type MeikyuuMount = {
   /** The arrow game as it stands, or null for a maze. */
   arrowGame: () => ArrowGame | null;
   /** Play another puzzle: a level or a recipe. Returns false when there is no such puzzle. */
-  load: (puzzle: { kind?: MeikyuuKind; level?: number; recipe?: MeikyuuMountOptions["recipe"] }) => boolean;
-  /** Change how it looks or is played: board, trail, tap, sound, hints, language. */
-  set: (changes: MazeLook & { tap?: boolean; sound?: boolean; hints?: boolean; language?: MeikyuuLanguage }) => void;
+  load: (puzzle: { kind?: MeikyuuKind; level?: number; recipe?: MeikyuuMountOptions["recipe"]; ratio?: MeikyuuMountOptions["ratio"] }) => boolean;
+  /** Change how it looks or is played: board, trail, tap, sound, hints, language, and the shape of the box (`ratio`). */
+  set: (changes: MazeLook & { tap?: boolean; sound?: boolean; hints?: boolean; language?: MeikyuuLanguage; ratio?: MeikyuuMountOptions["ratio"] }) => void;
   undo: () => void;
   restart: () => void;
   hint: () => void;
-  /** Zoom and move back to the whole board. */
-  fit: () => void;
+  /** Zoom and move back to the whole board (as `fit` says, if given), and the gutters back to their least. */
+  fit: (mode?: FitMode) => void;
+  /** Zoom in a step; if the gutters were widened, bring them in a step first. */
   zoomIn: () => void;
+  /** Zoom out a step; if the whole maze is already in the box, widen the gutters a step instead (to `MEIKYUU_GUTTER_MAX`). */
   zoomOut: () => void;
+  /** The gutter now, in pixels, and set it (between the least and `MEIKYUU_GUTTER_MAX`). */
+  gutter: (px?: number) => number;
+  /** Whether every one-finger drag moves the view; with an argument, turn that on or off. */
+  pan: (on?: boolean) => boolean;
+  /** Whether a line drawn to the edge moves the view along; with an argument, turn that on or off. */
+  edgePan: (on?: boolean) => boolean;
+  /** How the maze is shown: the setting, and what it came to (`portrait` or `landscape` as shown, and whether the maze is turned from how it was made). With an argument, change the setting. */
+  orientation: (setting?: MeikyuuOrientation) => { setting: MeikyuuOrientation; orientation: "portrait" | "landscape"; turned: boolean };
   /** For a mixed puzzle: look at the arrows or the labyrinth. */
   show: (board: "arrows" | "maze") => void;
   /** Take the board down: its listeners, its timers and everything it put in the host. */
@@ -165,6 +217,16 @@ export function mountMeikyuu(host: HTMLElement, options: MeikyuuMountOptions = {
   const withControls = options.controls !== false;
   const withZoom = options.zoom !== false;
   let sounds: MeikyuuSounds | null = options.sound === true ? createMeikyuuSounds() : null;
+  let orientationSetting: MeikyuuOrientation = options.orientation ?? "auto";
+  let ratioOption: NonNullable<MeikyuuMountOptions["ratio"]> = options.ratio ?? "square";
+  const gutterLeast = Math.max(0, options.gutter ?? MEIKYUU_GUTTER);
+  const gutterMost = Math.max(gutterLeast, MEIKYUU_GUTTER_MAX);
+  let gutterNow = gutterLeast;
+  const reserve = options.reserve ?? MEIKYUU_RESERVE;
+  let panOn = options.pan === true;
+  let edgePanOn = options.edgePan !== false;
+  let fitMode: FitMode = options.fit ?? "both";
+  let turnNow: Turn = 0;
   let explicitLanguage = options.language;
   let language: MeikyuuLanguage = explicitLanguage ?? meikyuuLanguageOf(host.closest("[lang]")?.getAttribute("lang") ?? document.documentElement.lang);
   const callbacks = options;
@@ -208,6 +270,8 @@ export function mountMeikyuu(host: HTMLElement, options: MeikyuuMountOptions = {
   const outButton = button("out", () => api.zoomOut(), pad);
   const inButton = button("in", () => api.zoomIn(), pad);
   const fitButton = button("fit", () => api.fit(), pad);
+  const panButton = button("pan", () => api.pan(!panOn), pad);
+  const turnButton = button("turn", () => api.orientation(turnNow === 1 ? (orientationSetting === "landscape" ? "portrait" : "landscape") : orientationSetting === "portrait" ? "landscape" : "portrait"), pad);
   outButton.textContent = "−";
   inButton.textContent = "+";
   const arrowsTab = button("tab-arrows", () => api.show("arrows"), tabs, "mk-tab");
@@ -241,6 +305,8 @@ export function mountMeikyuu(host: HTMLElement, options: MeikyuuMountOptions = {
     hearts: arrowGame?.hearts ?? null,
     arrowsLeft: arrowGame === null ? null : arrowsLeft(arrowGame),
     solved: puzzle.kind === "maze" ? mazeGame?.solved === true : arrowGame?.status === "cleared",
+    orientation: shownOrientation(),
+    turned: turnNow === 1,
   });
   const tell = (name: string, callback?: (detail: MeikyuuEventDetail) => void): void => {
     const info = detail();
@@ -248,6 +314,88 @@ export function mountMeikyuu(host: HTMLElement, options: MeikyuuMountOptions = {
     host.dispatchEvent(new CustomEvent(name, { detail: info, bubbles: true }));
   };
   const surfaceNow = (): MazeSurface | ArrowSurface | null => (viewing === "maze" ? mazeSurface : arrowSurface);
+
+  // The box: its shape, the page beside it, and which way up the maze is shown.
+  /** The shape of the box as the maze was made: width over height. */
+  const aspectNow = (): number => {
+    if (viewing !== "maze" || maze === null || ratioOption === "square") return 1;
+    if (ratioOption === "maze") return Math.min(2, Math.max(0.5, maze.grid.box.w / maze.grid.box.h));
+    return ratioOption > 0 ? ratioOption : 1;
+  };
+  /** The room a board may have: the host's width less the gutters, and the window's height less what else is on the page. */
+  const roomNow = (): { width: number; height: number } | null => {
+    if (host.clientWidth <= 0) return null;
+    const window_ = host.ownerDocument.defaultView ?? window;
+    const height = window_.visualViewport?.height ?? window_.innerHeight;
+    return { width: Math.max(1, host.clientWidth - 2 * gutterLeast), height: Math.max(height - reserve, height * 0.6) };
+  };
+  const resolveNow = (): Turn => (viewing !== "maze" || maze === null ? 0 : resolveTurn(orientationSetting, maze.grid.box, aspectNow(), roomNow()));
+  /** `portrait` when the maze is taller than wide as it is shown, `landscape` when it is wider. */
+  function shownOrientation(): "portrait" | "landscape" | null {
+    if (viewing !== "maze" || maze === null) return null;
+    const { w, h } = maze.grid.box;
+    return (turnNow === 1 ? h > w : w > h) ? "landscape" : "portrait";
+  }
+  /** Whether the maze has a shape worth turning: not square within a tenth. */
+  function isTurnable(): boolean {
+    if (maze === null) return false;
+    const ratio = maze.grid.box.w / maze.grid.box.h;
+    return ratio > 1.1 || ratio < 1 / 1.1;
+  }
+  /** Put the box's shape and gutters where the page's style reads them. */
+  function applyBox(): void {
+    const aspect = aspectNow();
+    wrap.style.setProperty("--mkp-aspect", String(turnNow === 1 ? 1 / aspect : aspect));
+    if (gutterNow !== gutterLeast || options.gutter !== undefined) host.style.setProperty("--mkp-gutter", `${gutterNow}px`);
+    else host.style.removeProperty("--mkp-gutter");
+    if (options.reserve !== undefined) host.style.setProperty("--mkp-reserve", `${reserve}px`);
+    host.dataset.turned = String(turnNow === 1);
+    const shown = shownOrientation();
+    if (shown === null) delete host.dataset.orientation;
+    else host.dataset.orientation = shown;
+    host.dataset.gutter = String(Math.round(gutterNow));
+  }
+  /** How much of the page shows beside the box now, in pixels: the nearer of its two sides to the window's edge. */
+  const visibleGutter = (): number => {
+    const rect = box.getBoundingClientRect();
+    return Math.max(0, Math.min(rect.left, (host.ownerDocument.defaultView ?? window).innerWidth - rect.right));
+  };
+  /** The gutters come in steps of `MEIKYUU_GUTTER_STEP` from the least: the first step past what shows now, or the last one below it. */
+  const stepUp = (from: number): number => Math.min(gutterMost, gutterLeast + Math.floor((from - gutterLeast) / MEIKYUU_GUTTER_STEP + 1) * MEIKYUU_GUTTER_STEP);
+  const stepDown = (from: number): number => Math.max(gutterLeast, gutterLeast + (Math.ceil((from - gutterLeast) / MEIKYUU_GUTTER_STEP) - 1) * MEIKYUU_GUTTER_STEP);
+  /** Whether a wider gutter would show: the page does not already show the widest beside the box. */
+  const frameCanWiden = (): boolean => gutterNow < gutterMost && visibleGutter() < gutterMost - 1;
+  function setGutter(px: number): number {
+    const next = Math.min(gutterMost, Math.max(gutterLeast, px));
+    if (Math.abs(next - gutterNow) < 0.01) return gutterNow;
+    gutterNow = next;
+    applyBox();
+    words();
+    return gutterNow;
+  }
+  /** A pinch the box has no room for: fingers together with the whole maze in the box widens the gutters, and fingers apart narrows them again. */
+  function frameZoom(factor: number): boolean {
+    const width = box.clientWidth || 1;
+    if (factor < 1) {
+      if (!frameCanWiden()) return false;
+      setGutter(Math.max(gutterNow, visibleGutter()) + (width * (1 - factor)) / 2);
+      return true;
+    }
+    if (gutterNow <= gutterLeast) return false;
+    setGutter(gutterNow - (width * (factor - 1)) / 2);
+    return true;
+  }
+  /** The window or the host changed size: a maze may now fit better the other way up. */
+  function reflow(): void {
+    if (viewing !== "maze" || maze === null || mazeSurface === null) return;
+    const next = resolveNow();
+    if (next === turnNow) return;
+    turnNow = next;
+    applyBox();
+    mazeSurface.turn(next);
+    words();
+    tell("meikyuu-orientation");
+  }
   const setMessage = (key: string | null, values: Record<string, string | number> = {}, warn = false): void => {
     message = key === null ? null : { key, values, warn };
   };
@@ -293,9 +441,16 @@ export function mountMeikyuu(host: HTMLElement, options: MeikyuuMountOptions = {
     inButton.setAttribute("aria-label", say("zoomIn"));
     pad.setAttribute("aria-label", say("zoomLabel"));
     pad.hidden = !withZoom;
-    fitButton.disabled = state?.fitted === true;
-    outButton.disabled = state?.atLeast === true;
-    inButton.disabled = state?.atMost === true;
+    fitButton.disabled = state?.fitted === true && gutterNow === gutterLeast;
+    outButton.disabled = state?.atLeast === true && !frameCanWiden();
+    inButton.disabled = state?.atMost === true && gutterNow <= gutterLeast;
+    panButton.textContent = say("pan");
+    panButton.setAttribute("aria-label", say("panLabel"));
+    panButton.setAttribute("aria-pressed", String(panOn));
+    turnButton.textContent = say("turn");
+    turnButton.setAttribute("aria-label", say("turnLabel"));
+    turnButton.hidden = options.turnButton !== true || maze === null || viewing !== "maze" || !isTurnable();
+    host.dataset.pan = String(panOn);
     const lost = !onMaze && arrowGame?.status === "lost";
     const finished = !onMaze && arrowGame?.status === "cleared";
     undoButton.disabled = onMaze ? mazeGame === null || mazeGame.undo.length === 0 : arrowGame === null || arrowGame.taken.length === 0 || lost;
@@ -337,13 +492,17 @@ export function mountMeikyuu(host: HTMLElement, options: MeikyuuMountOptions = {
     arrowSurface = null;
     const viewChanged = (): void => {
       const state = surfaceNow()?.surface.state();
-      fitButton.disabled = state?.fitted === true;
-      outButton.disabled = state?.atLeast === true;
-      inButton.disabled = state?.atMost === true;
+      fitButton.disabled = state?.fitted === true && gutterNow === gutterLeast;
+      outButton.disabled = state?.atLeast === true && !frameCanWiden();
+      inButton.disabled = state?.atMost === true && gutterNow <= gutterLeast;
     };
     if (viewing === "maze" && maze !== null) {
-      mazeSurface = createMazeSurface(box, { game: () => mazeGame!, change: onMazeChange, taps: () => tapExtends, viewChanged }, maze, look);
+      turnNow = resolveNow();
+      applyBox();
+      mazeSurface = createMazeSurface(box, { game: () => mazeGame!, change: onMazeChange, taps: () => tapExtends, viewChanged }, maze, look, turnNow, { fit: fitMode, edgePan: edgePanOn, panMode: panOn, frame: { zoom: frameZoom } });
     } else if (board !== null) {
+      turnNow = 0;
+      applyBox();
       arrowSurface = createArrowSurface(box, { tap: onArrowTap, viewChanged }, board, look);
       if (arrowGame !== null) arrowSurface.update(arrowGame, null);
     }
@@ -526,6 +685,14 @@ export function mountMeikyuu(host: HTMLElement, options: MeikyuuMountOptions = {
   });
   watching?.observe(document.documentElement, { attributes: true, attributeFilter: ["lang"] });
 
+  const looking = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(reflow);
+  looking?.observe(host);
+  const windowOf = host.ownerDocument.defaultView ?? window;
+  windowOf.addEventListener("resize", reflow);
+  windowOf.visualViewport?.addEventListener("resize", reflow);
+
+  const orientationNow = (): { setting: MeikyuuOrientation; orientation: "portrait" | "landscape"; turned: boolean } => ({ setting: orientationSetting, orientation: shownOrientation() ?? "portrait", turned: turnNow === 1 });
+
   const api: MeikyuuMount = {
     host,
     kind: () => puzzle.kind,
@@ -535,12 +702,19 @@ export function mountMeikyuu(host: HTMLElement, options: MeikyuuMountOptions = {
     load: (next) => {
       const made = puzzleOf(next);
       if (made === null) return false;
+      if (next.ratio !== undefined) ratioOption = next.ratio;
       begin(made);
       return true;
     },
     set: (changes) => {
-      const { tap, sound, hints, language: nextLanguage, ...nextLook } = changes;
+      const { tap, sound, hints, language: nextLanguage, ratio, ...nextLook } = changes;
       look = { ...look, ...nextLook };
+      if (ratio !== undefined && ratio !== ratioOption) {
+        ratioOption = ratio;
+        turnNow = resolveNow();
+        applyBox();
+        mazeSurface?.turn(turnNow);
+      }
       if (tap !== undefined) tapExtends = tap;
       if (hints !== undefined) withHints = hints;
       if (sound !== undefined) {
@@ -607,9 +781,47 @@ export function mountMeikyuu(host: HTMLElement, options: MeikyuuMountOptions = {
       }
       refresh();
     },
-    fit: () => surfaceNow()?.surface.fit(),
-    zoomIn: () => surfaceNow()?.surface.zoom(1.5),
-    zoomOut: () => surfaceNow()?.surface.zoom(1 / 1.5),
+    fit: (mode) => {
+      if (mode !== undefined && mazeSurface !== null) {
+        fitMode = mode;
+        mazeSurface.surface.setFit(mode);
+      } else surfaceNow()?.surface.fit();
+      setGutter(gutterLeast);
+      words();
+    },
+    zoomIn: () => {
+      if (gutterNow > gutterLeast) setGutter(stepDown(gutterNow));
+      else surfaceNow()?.surface.zoom(1.5);
+    },
+    zoomOut: () => {
+      const state = surfaceNow()?.surface.state();
+      if (state?.atLeast === true && frameCanWiden()) setGutter(stepUp(Math.max(gutterNow, visibleGutter())));
+      else surfaceNow()?.surface.zoom(1 / 1.5);
+    },
+    gutter: (px) => (px === undefined ? gutterNow : setGutter(px)),
+    pan: (on) => {
+      if (on !== undefined) {
+        panOn = on;
+        mazeSurface?.surface.setPanMode(on);
+        words();
+      }
+      return panOn;
+    },
+    edgePan: (on) => {
+      if (on !== undefined) {
+        edgePanOn = on;
+        mazeSurface?.surface.setEdgePan(on);
+      }
+      return edgePanOn;
+    },
+    orientation: (setting) => {
+      if (setting !== undefined && setting !== orientationSetting) {
+        orientationSetting = setting;
+        reflow();
+        words();
+      }
+      return orientationNow();
+    },
     show: (which) => {
       if (puzzle.kind !== "mixed" || which === viewing) return;
       viewing = which;
@@ -620,10 +832,15 @@ export function mountMeikyuu(host: HTMLElement, options: MeikyuuMountOptions = {
       arrowSurface?.destroy();
       sounds?.destroy();
       watching?.disconnect();
+      looking?.disconnect();
+      windowOf.removeEventListener("resize", reflow);
+      windowOf.visualViewport?.removeEventListener("resize", reflow);
       host.removeEventListener("keydown", onKey);
+      host.style.removeProperty("--mkp-gutter");
+      host.style.removeProperty("--mkp-reserve");
       host.replaceChildren();
       host.classList.remove("meikyuu-play");
-      for (const name of ["kind", "level", "view", "solved", "moves", "cells", "keys", "reached", "hearts", "left", "unlocked", "status"]) delete host.dataset[name];
+      for (const name of ["kind", "level", "view", "solved", "moves", "cells", "keys", "reached", "hearts", "left", "unlocked", "status", "orientation", "turned", "gutter", "pan"]) delete host.dataset[name];
     },
   };
 

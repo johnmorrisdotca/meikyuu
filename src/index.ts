@@ -24,6 +24,12 @@ export { buildMaze, isPerfect, layoutCells, MEIKYUU_MODES, MEIKYUU_MOST_CELLS, M
 export type { Door, MazeRecipe, Maze, MeikyuuMode } from "./maze.ts";
 export { EFFORT_LEAST, EFFORT_MOST, measureMaze, ratingOf } from "./measure.ts";
 export type { MazeMeasure } from "./measure.ts";
+export { DIFFICULTY_CEILINGS, DIFFICULTY_WEIGHTS, difficultyOf, easyFloorAt, isTooEasy, MEIKYUU_EASY_PLACES, MEIKYUU_LEAST } from "./difficulty.ts";
+export type { MazeDifficulty } from "./difficulty.ts";
+export { autoTurn, cellsAlong, MEIKYUU_ORIENTATIONS, resolveTurn, toDisplay, toLogical, turnedBox, turnFor, turnTransform, unturnedBox } from "./orientation.ts";
+export type { MeikyuuOrientation, Turn } from "./orientation.ts";
+export { lineToSteps, stepsToLine } from "./steps.ts";
+export { TALL_RATIO, TALL_SHAPES, TALL_WIDTHS, tallDimensions } from "./tall.ts";
 export { dragMaze, headOf, hintMaze, liftMaze, mazeProgress, newMazeGame, playSolution, pressMaze, restartMaze, tapMaze, undoMaze } from "./game.ts";
 export type { MazeGame } from "./game.ts";
 export { ARROW_SHAPES, ARROW_STEPS, MEIKYUU_MOST_ARROW_CELLS, arrowRecipeCode, blockersOf, makeArrows, measureArrows, parseArrowRecipe, peelRounds, rayOf } from "./arrows.ts";
