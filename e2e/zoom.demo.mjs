@@ -11,7 +11,7 @@ const centred = findMaze(({ maze, way, level }) => {
   const { box } = maze.grid;
   return level.cells > 900 && level.cells < 4000 && way.length >= 12 && Math.abs(x - (box.x + box.w / 2)) < box.w * 0.12 && Math.abs(y - (box.y + box.h / 2)) < box.h * 0.12 && way.slice(0, 6).every((cell, i) => i === 0 || maze.links[way[i - 1]].includes(cell));
 }, { from: 600, to: 900 });
-const hugeMaze = findMaze(() => true, { from: 1000, to: 1000 });
+const hugeMaze = findMaze(() => true, { from: 1024, to: 1024 });
 const BIG = centred.level.number;
 const mazeOf = () => centred;
 
@@ -78,9 +78,9 @@ test("a drag that starts anywhere but on the line moves the view, and draws noth
   await page.mouse.down();
   await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2, { steps: 5 });
   await page.mouse.up();
-  const [x1, y1] = (await svg.getAttribute("viewBox")).split(" ").map(Number);
-  expect(x1 - x0).toBeGreaterThan(0.5);
-  expect(y1 - y0).toBeGreaterThan(0.5);
+  // The view is drawn on the next frame, so wait for it rather than reading it the moment the mouse is up.
+  await expect.poll(async () => Number((await svg.getAttribute("viewBox")).split(" ")[0]) - x0).toBeGreaterThan(0.5);
+  await expect.poll(async () => Number((await svg.getAttribute("viewBox")).split(" ")[1]) - y0).toBeGreaterThan(0.5);
   await expect(page.locator(at("board"))).toHaveAttribute("data-cells", "0");
 });
 
@@ -109,7 +109,7 @@ test("a line is drawn while zoomed in, and a line held near the edge of the box 
 
 test("a huge maze stays smooth: only the walls on screen are in the page, and zooming it is quick", async ({ page }) => {
   const started = Date.now();
-  await open(page, "?kind=maze&level=1000");
+  await open(page, "?kind=maze&level=1024");
   expect(Date.now() - started).toBeLessThan(15000);
   const svg = svgOf(page);
   const cells = Number(await svg.getAttribute("data-cells"));
@@ -141,7 +141,7 @@ test("a huge maze stays smooth: only the walls on screen are in the page, and zo
 });
 
 test("a huge maze can be touched at the start: a finger within a thumb's width of the start draws", async ({ page }) => {
-  await open(page, "?kind=maze&level=1000");
+  await open(page, "?kind=maze&level=1024");
   const svg = svgOf(page);
   const { maze, way } = hugeMaze;
   const start = await cellPoint(svg, maze, way[0]);

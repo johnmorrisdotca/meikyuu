@@ -81,6 +81,11 @@ if (!isPerfect(maze.grid, maze.links)) throw new Error("level 12 is not a perfec
 if (measureMaze(maze).effort !== found.effort) throw new Error("level 12 measures " + measureMaze(maze).effort);
 if (!playSolution(newMazeGame(maze)).solved) throw new Error("level 12 is not solved by drawing its way");
 if (VERSION !== ${JSON.stringify(pkg.version)}) throw new Error("VERSION is " + VERSION);
+const { MEIKYUU_TALL_LEVELS } = await import(${JSON.stringify(`${pkg.name}/levels/tall`)});
+const { MEIKYUU_LEGACY_MAZE_LEVELS } = await import(${JSON.stringify(`${pkg.name}/levels/legacy`)});
+if (MEIKYUU_MAZE_LEVELS.length !== 1024 || MEIKYUU_TALL_LEVELS.length !== 1536 || MEIKYUU_LEGACY_MAZE_LEVELS.length !== 1000) throw new Error("the lists are not the sizes they should be");
+const tall = buildMaze(MEIKYUU_TALL_LEVELS[300].recipe);
+if (!isPerfect(tall.grid, tall.links) || !(tall.grid.box.w < tall.grid.box.h) || !playSolution(newMazeGame(tall)).solved) throw new Error("a tall level is not an upright perfect maze that can be solved");
 const { drawMaze } = await import(${JSON.stringify(`${pkg.name}/draw`)});
 const svg = drawMaze(maze);
 if (!svg.startsWith("<svg") || !svg.includes("mk-walls")) throw new Error("the drawing of level 12 is " + svg.slice(0, 80));

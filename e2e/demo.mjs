@@ -8,6 +8,7 @@ import { expect } from "@playwright/test";
 
 import { buildMaze, solutionOf } from "../dist/index.js";
 import { levelOf } from "../dist/levels.js";
+import { MEIKYUU_TALL_LEVELS } from "../dist/levels-tall.js";
 
 const site = join(dirname(fileURLToPath(import.meta.url)), "..", "site");
 const TYPES = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css", ".json": "application/json", ".svg": "image/svg+xml" };
@@ -62,8 +63,24 @@ export function mazeOf(number) {
   return { level, maze, way: solutionOf(maze) };
 }
 
+/** A tall level as the package has it: its recipe, its maze and its one way. */
+export function tallOf(number) {
+  const level = MEIKYUU_TALL_LEVELS[number - 1];
+  const maze = buildMaze(level.recipe);
+  return { level, maze, way: solutionOf(maze) };
+}
+
+/** The first tall level, by number, that passes the test. */
+export function findTall(want, { from = 1, to = MEIKYUU_TALL_LEVELS.length } = {}) {
+  for (let number = from; number <= to; number += 1) {
+    const found = tallOf(number);
+    if (want(found)) return found;
+  }
+  throw new Error("no such tall level");
+}
+
 /** The first maze level, by number, that passes the test. */
-export function findMaze(want, { from = 1, to = 1000 } = {}) {
+export function findMaze(want, { from = 1, to = 1024 } = {}) {
   for (let number = from; number <= to; number += 1) {
     const found = mazeOf(number);
     if (want(found)) return found;
@@ -71,12 +88,14 @@ export function findMaze(want, { from = 1, to = 1000 } = {}) {
   throw new Error("no such maze level");
 }
 
-/** Where a point of the maze is on the page, in pixels, given the svg showing it: its viewBox and where it sits. */
+/** Where a point of the maze is on the page, in pixels, given the svg showing it: its viewBox, where it sits, and whether the board shows the maze turned a quarter (then a point (x, y) is shown at (y, -x)). */
 export async function pixelOf(svg, [x, y]) {
   await svg.scrollIntoViewIfNeeded();
   const box = await svg.boundingBox();
   const [vx, vy, vw, vh] = (await svg.getAttribute("viewBox")).split(" ").map(Number);
-  return { x: box.x + ((x - vx) / vw) * box.width, y: box.y + ((y - vy) / vh) * box.height };
+  const turned = (await svg.getAttribute("data-turned")) === "true";
+  const [px, py] = turned ? [y, -x] : [x, y];
+  return { x: box.x + ((px - vx) / vw) * box.width, y: box.y + ((py - vy) / vh) * box.height };
 }
 
 /** A cell's middle on the page. */

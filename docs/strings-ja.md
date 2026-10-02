@@ -40,6 +40,10 @@ open a *Fix a translation* issue with the string's name. `{name}` and the other 
 | `zoomIn` | Zoom in | 拡大 |
 | `zoomOut` | Zoom out | 縮小 |
 | `zoomLabel` | Zoom the board | 盤を拡大・縮小 |
+| `pan` | Move | 移動 |
+| `panLabel` | Drag the board to move it, instead of drawing | 線を引かずに、盤をドラッグして動かす |
+| `turn` | Turn | 回す |
+| `turnLabel` | Turn the board a quarter | 盤を4分の1回す |
 | `tabArrows` | Arrows | 矢印 |
 | `tabMaze` | Labyrinth | 迷宮 |
 | `tabsLabel` | Which board to look at | 見る盤を選ぶ |

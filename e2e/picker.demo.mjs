@@ -10,10 +10,11 @@ const info = (page) => page.locator("#info");
 test("a first visit starts at level 1 of the mazes, which is small and plain", async ({ page }) => {
   const errors = await open(page, "");
   await expect(page.locator("#level-input")).toHaveValue("1");
-  await expect(page.locator("#level-of")).toContainText("1000");
+  await expect(page.locator("#level-of")).toContainText("1024");
   await expect(page.locator("#previous")).toBeDisabled();
   await expect(info(page)).toContainText("Square");
-  await expect(info(page)).toContainText("difficulty 1 of 100");
+  await expect(info(page)).toContainText("Small · level 1 of 256");
+  await expect(info(page)).toContainText(/difficulty \d+ of 100/);
   expect(errors).toEqual([]);
   await noSidewaysScroll(page);
 });
@@ -32,22 +33,29 @@ test("the arrows step to the next and the previous level, and a number typed goe
   await expect(info(page)).toContainText(`${level.cells} cells`);
   await page.locator("#level-input").fill("1000000");
   await page.locator("#level-input").press("Enter");
-  await expect(page.locator(at("board"))).toHaveAttribute("data-level", "1000");
+  await expect(page.locator(at("board"))).toHaveAttribute("data-level", "1024");
   await expect(page.locator("#next")).toBeDisabled();
 });
 
-test("each level is harder than the one before: the difficulty shown never goes down along the list", async ({ page }) => {
+test("the difficulty shown climbs inside each size, from its easy third to its hard one, and each size ends harder than the one before", async ({ page }) => {
   await open(page, "");
-  let before = 0;
-  for (const number of [1, 50, 150, 300, 450, 600, 750, 900, 1000]) {
-    await page.locator("#level-input").fill(String(number));
-    await page.locator("#level-input").press("Enter");
-    await expect(page.locator(at("board"))).toHaveAttribute("data-level", String(number));
-    const rating = Number(/difficulty (\d+) of 100/.exec(await info(page).textContent())[1]);
-    expect(rating).toBeGreaterThanOrEqual(before);
-    before = rating;
+  let top = 0;
+  for (const first of [0, 256, 512, 768]) {
+    let before = 0;
+    for (const place of [10, 128, 246]) {
+      const number = first + place;
+      await page.locator("#level-input").fill(String(number));
+      await page.locator("#level-input").press("Enter");
+      await expect(page.locator(at("board"))).toHaveAttribute("data-level", String(number));
+      const score = Number(/difficulty (\d+) of 100/.exec(await info(page).textContent())[1]);
+      expect(score).toBeGreaterThan(before);
+      before = score;
+    }
+    // The end of a size is harder than the end of the one before.
+    expect(before).toBeGreaterThan(top);
+    top = before;
   }
-  expect(before).toBeGreaterThan(95);
+  expect(top).toBeGreaterThan(90);
 });
 
 test("the shape, the size and the way to play narrow the levels, and the arrows step through only those", async ({ page }) => {

@@ -6,6 +6,30 @@ All notable changes to this project are written here. The format follows
 
 ## [Unreleased]
 
+**This is a MAJOR release (2.0.0), not a minor one**, because the maze list is renumbered: `MEIKYUU_MAZE_LEVELS` was 1,000 levels in one list and is now 1,024 in four sizes of 256, and the first release promised a level keeps its number. Everything else here is additive. `package.json` still says 1.0.0: the version is taken when it is released.
+
+### Breaking: the maze list
+
+- **256 levels to a size.** Small, medium, large and huge are 256 each, in that order (`MEIKYUU_LEVELS_PER_SIZE`, `mazeLevelsOfSize`, `mazeLevelOfSize`; a level has `size`, `inSize` and `score`), where 1.0.0 had 217, 231, 285 and 267 by `sizeOf`. A size is sixteen pages of sixteen, and its thirds (86, 85, 85) are its easy, medium and hard (`bandOf`). The one list `MEIKYUU_MAZE_LEVELS` is now 1,024 long, so **every level number from 218 up moves**: level 1 to 256 of the list are Small, 257 to 512 Medium, 513 to 768 Large and 769 to 1,024 Huge.
+- **A size keeps its places, as far as it can.** 843 of the 1,000 levels of 1.0.0 are at the same place of the same size, with the same maze: Large and Huge keep places 1 to 256 exactly, Medium 222 of its first 231, Small 109 of 217. A place whose maze was **too easy** has a new maze of about the same effort: 108 places of Small (the 3 by 3 mazes among them) and 9 of Medium. **Added at the end:** places 218 to 256 of Small and 232 to 256 of Medium, mazes of rising effort that carry on up from the last. **Gone:** places 257 to 285 of Large and 257 to 267 of Huge (the 29 and 11 hardest of those sizes), which a size of 256 has no room for.
+- **`@johnmorrisdotca/meikyuu/levels/legacy`** (`legacyLevelOf`, `legacyLevelOfCode`, `MEIKYUU_LEGACY_MAZE_LEVELS`) answers for every one of the 1,000: its recipe, its place in its size (`place`), where it is now (`now`, `nowInSize`) or null, and the level now at its place (`nearest`). A recipe never changes what it builds, so a solve kept by recipe is still a solve of that maze whatever it is called; a solve of one of the 157 that left the list is a solve of a maze that is no longer a level.
+- **Easy is not trivial.** `isTooEasy` / `MEIKYUU_LEAST`: every level is held to at least 4 cells the straight guess draws in vain, 2 forks where it is wrong, 3 forks, 3 wrong branches and 4 dead ends, and the easy third of a size to a floor that rises through it (`easyFloorAt`: 3 traps, 5 forks and 8 wasted cells at level 86). 62 of the 73 easy levels of Small in 1.0.0 failed it, 28 of Small's 217 were solved by the straight guess alone. The easy third of Small now runs from 15 to 48 cells.
+- The effort still never goes down along a size, which is the first release's promise kept inside each size; it no longer rises along the whole list, since Medium begins where Small ended.
+
+### Added
+
+- **`difficultyOf(maze)`**: a 0 to 100 score of how hard a maze is to play, from the effort, the forks, the forks where the straight guess goes wrong, the cells it draws in vain, the longest wrong branch and the bends. `docs/LEVELS.md` documents it, shows the score of every level, and has the tables of what the lists hold and how many more could be made.
+- **Tall levels** (`@johnmorrisdotca/meikyuu/levels/tall`): 1,536 portrait mazes, 2:3, in six sizes of 256 (6×9, 8×12, 10×15, 12×18, 16×24, 20×30; squares, hexagons and triangles), ordered by effort like the rest, with the score beside it. `tallDimensions`, `TALL_RATIO`, `TALL_WIDTHS`. 1:2 was weighed and not built (`docs/LEVELS.md`).
+- **`orientation`** (`portrait`, `landscape`, `auto`) in `mountMeikyuu`, `<meikyuu-board orientation>` and `drawMaze`: a maze is shown a quarter turn counter-clockwise where that fits it bigger (`auto` looks at the host's width and the window's height). Presentation only: the maze, its cells and any line are as made, so a line stored as its steps (`lineToSteps`, `stepsToLine`) replays identically either way up. Tested for every shape, in the browser as well.
+- **`ratio`** (the shape of the box: `square`, `maze`, or width over height), **`gutter`**, **`reserve`**, **`fit`** (`both`, `width`, `height`), **`edgePan`**, **`pan`** and **`turnButton`** options, with attributes on the element, and `gutter()`, `pan()`, `edgePan()`, `orientation()` and `fit(mode)` on the handle. A `meikyuu-orientation` event. `--mkp-gutter` and `--mkp-reserve`.
+
+### Changed
+
+- **The board always leaves some of the page beside it** (24 px each side at least) and is never taller than the window less `reserve`; only the box asks the browser to keep touches (`touch-action: none`), the host has `pan-y pinch-zoom`. **A board that filled the width of its host in 1.0.0 is up to 48 px narrower on a phone**; `gutter: 0` takes it back.
+- **Zoom out widens the gutters** (to 72 px) once the whole maze is in the box, and a pinch does the same; Zoom in and fingers apart bring them back first. Fit puts them back.
+- **A box that changes size keeps its zoom relative to the fit**, and the middle of what it shows, so narrowing the box no longer crops a fitted maze.
+- **The edge nudge is gentle**: nothing 44 px from the edge, rising to 7 px a frame at the edge itself, where it was 7 px a frame anywhere in the last 44.
+
 ## [1.0.0] - 2026-10-01
 
 The first release.

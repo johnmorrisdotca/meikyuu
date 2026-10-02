@@ -14,8 +14,9 @@ pnpm docs:make      # rewrite docs/strings-ja.md after changing a word of the bo
 ```
 
 A change to a generator, to the seeded stream or to the measure changes mazes, so it fails the level tests: a level published
-keeps its number, and a recipe must rebuild the same maze for ever. Levels are only ever added to the end of the list (a new
-version), made by `scripts/meikyuu-levels.ts`, never edited by hand. A new shape or algorithm is welcome as an addition, with a test that its mazes are perfect.
+keeps its number, and a recipe must rebuild the same maze for ever. Levels are only ever added to the end of a list (a new
+version), made by `scripts/meikyuu-levels.ts` and `scripts/meikyuu-tall.ts`, never edited by hand. The one exception is a release
+that says so in the changelog and keeps the way from the old numbers to the new (`docs/LEVELS.md`, 2.0.0). A new shape or algorithm is welcome as an addition, with a test that its mazes are perfect.
 
 ## House rules, shared by every package of the family
 

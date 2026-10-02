@@ -13,7 +13,10 @@ const uses = [
   `import { buildMaze, measureMaze } from "@johnmorrisdotca/meikyuu";`,
   `buildMaze({ shape: "heart", w: 25, h: 25, algorithm: "wilson", mode: "to-goal", seed: 5 })  // the same maze everywhere`,
   `measureMaze(maze).effort  // how many cells a person draws to solve it`,
-  `import { MEIKYUU_MAZE_LEVELS } from "@johnmorrisdotca/meikyuu/levels";  // 1,000 recipes, easiest first`,
+  `import { MEIKYUU_MAZE_LEVELS } from "@johnmorrisdotca/meikyuu/levels";  // 1,024 recipes: four sizes of 256, each a little harder level by level`,
+  `import { MEIKYUU_TALL_LEVELS } from "@johnmorrisdotca/meikyuu/levels/tall";  // 1,536 portrait mazes for a phone held upright`,
+  `mountMeikyuu(element, { recipe: level.code, ratio: level.ratio, orientation: "auto" })  // a tall maze, lying down on a wide screen`,
+  `difficultyOf(maze).score  // how hard it is to play, 0 to 100`,
   `drawMaze(maze, { path, hint, board: "wood" })  // the maze as SVG text`,
   `mountMeikyuu(element, { kind: "maze", level: 12, tap: true })  // a board to play, by touch and mouse`,
   `<meikyuu-board kind="arrows" level="5" board="wood"></meikyuu-board>`,
@@ -27,9 +30,9 @@ const page = `<!doctype html>
     ${familyHead({
       id,
       title: "Meikyuu · draw your way through the labyrinth",
-      description: "Play Meikyuu, a maze game of a thousand levels: mazes on squares, hexagons, triangles, circles and cut-out shapes, from a few cells to thousands, with arrow puzzles too. Draw with a finger or the mouse, zoom in and out. Free and open source, in English and Japanese.",
+      description: "Play Meikyuu, a maze game of over a thousand levels: mazes on squares, hexagons, triangles, circles and cut-out shapes, from a few cells to thousands, tall ones for a phone held upright, with arrow puzzles too. Draw with a finger or the mouse, zoom in and out. Free and open source, in English and Japanese.",
       ogTitle: "Meikyuu maze game",
-      ogDescription: "Draw a line through a thousand mazes, from tiny to huge, in every shape. Arrow puzzles and mixed ones too.",
+      ogDescription: "Draw a line through over a thousand mazes, from tiny to huge, in every shape, and tall ones for a phone. Arrow puzzles and mixed ones too.",
     })}
     <link rel="icon" href="${ICON}" />
     <link rel="stylesheet" href="family.css" />
@@ -47,7 +50,7 @@ const page = `<!doctype html>
           <span class="fam-label" data-say="shape"></span>
           <div class="fam-seg" role="group" data-say-label="shape" id="shapes" data-testid="shapes"></div>
         </div>
-        <div class="setup fam-row" data-help-en="Show only small, medium, large or huge mazes. A huge one has thousands of cells and takes a while." data-help-ja="小さい、ふつう、大きい、巨大の迷路だけを表示します。巨大な迷路は数千マスあり、時間がかかります。">
+        <div class="setup fam-row" data-help-en="Show only one size: small, medium, large or huge (a tall maze has six sizes of its own). A huge one has thousands of cells and takes a while." data-help-ja="大きさをひとつに絞ります（小、中、大、巨大。縦長の迷路には6つの大きさがあります）。巨大な迷路は数千マスあり、時間がかかります。">
           <span class="fam-label" data-say="size"></span>
           <div class="fam-seg" role="group" data-say-label="size" id="sizes" data-testid="sizes"></div>
         </div>
@@ -56,7 +59,11 @@ const page = `<!doctype html>
           <div class="fam-seg" role="group" data-say-label="way" id="modes" data-testid="modes"></div>
         </div>
       </div>
-      <div class="setup fam-row" data-help-en="Step to the next or the previous level, or type a number to go to it. Every level is harder than the one before." data-help-ja="矢印で前後のレベルに移るか、番号を入力して移ります。どのレベルも、前のレベルより難しくなっています。">
+      <div class="setup fam-row" id="orientation-row" data-help-en="Which way up the maze is shown. Auto stands a tall maze upright on a phone and lays it down on a wide screen. The line you have drawn is the same line either way." data-help-ja="迷路をどちら向きに表示するか。おまかせは、スマホでは縦長の迷路を立て、横長の画面では寝かせます。引いた線はどちら向きでも同じ線です。">
+        <span class="fam-label" data-say="orientation"></span>
+        <div class="fam-seg" role="group" data-say-label="orientation" id="orientations" data-testid="orientations"></div>
+      </div>
+      <div class="setup fam-row" data-help-en="Step to the next or the previous level, or type a number to go to it. Inside a size, every level is a little harder than the one before." data-help-ja="矢印で前後のレベルに移るか、番号を入力して移ります。どの大きさでも、前のレベルより少し難しくなっています。">
         <span class="fam-label" data-say="level"></span>
         <button type="button" class="fam-button" id="previous" data-testid="previous" data-say-label="previous">←</button>
         <input class="fam-field level-input" id="level-input" data-testid="level-input" type="number" min="1" step="1" inputmode="numeric" data-say-label="level" />
