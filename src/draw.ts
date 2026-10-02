@@ -1,6 +1,7 @@
 import { MEIKYUU_BOARDS, MEIKYUU_TRAILS, type MeikyuuBoardLook, type MeikyuuBoardName, type MeikyuuTrailName } from "./boards.ts";
 import { doorPlace, fixed, framed, linePath, standingWalls, wallPath } from "./geometry.ts";
 import type { Maze } from "./maze.ts";
+import { turnedBox, turnFor, turnTransform, type MeikyuuOrientation } from "./orientation.ts";
 import { solutionOf } from "./maze.ts";
 import { meikyuuSay, type MeikyuuLanguage } from "./strings.ts";
 import { MEIKYUU_STYLE } from "./style.ts";
@@ -45,6 +46,11 @@ export type DrawMazeOptions = MazeLook & {
   standalone?: boolean;
   /** The margin round the shape, in cells. Default 0.6. */
   pad?: number;
+  /**
+   * Which way up the picture is: `portrait` stands a wide maze up and `landscape` lays a tall one down (a quarter turn counter-clockwise,
+   * which changes nothing in the maze, its cells or any line on it); `auto`, the default, leaves it as it was made. A square maze is never turned.
+   */
+  orientation?: MeikyuuOrientation;
 };
 
 const escape = (text: string): string => text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -108,14 +114,16 @@ export function marksOf(maze: Maze, collected: readonly number[] = []): string {
 export function drawMaze(maze: Maze, options: DrawMazeOptions = {}): string {
   const { grid } = maze;
   const language = options.language ?? "en";
-  const view = framed(grid, options.pad ?? 0.6);
+  const frame = framed(grid, options.pad ?? 0.6);
+  const turn = turnFor(options.orientation ?? "auto", grid.box);
+  const view = turnedBox(turn, frame);
   const board = boardLookOf(options.board);
   const wallWidth = options.wall ?? 0.12;
   const lineWidth = options.line ?? 0.34;
   const play = meikyuuSay(language, `play_${maze.recipe.mode.replace(/-/g, "_")}`);
   const label = options.label ?? meikyuuSay(language, "mazeLabel", { shape: meikyuuSay(language, `shape_${maze.recipe.shape}`), n: grid.cells, play });
   const parts: string[] = [];
-  parts.push(`<rect class="mk-paper" x="${fixed(view.x)}" y="${fixed(view.y)}" width="${fixed(view.w)}" height="${fixed(view.h)}" fill="${board.paper}"/>`);
+  parts.push(`<rect class="mk-paper" x="${fixed(frame.x)}" y="${fixed(frame.y)}" width="${fixed(frame.w)}" height="${fixed(frame.h)}" fill="${board.paper}"/>`);
   if (options.solution === true) parts.push(`<path class="mk-solution" d="${linePath(grid, solutionOf(maze))}" stroke-width="${fixed(lineWidth * 0.8)}"/>`);
   if (options.hint !== undefined && options.hint.cells.length > 0) parts.push(`<path class="mk-hint" data-kind="ahead" d="${linePath(grid, options.hint.cells)}" stroke-width="${fixed(lineWidth * 1.5)}"/>`);
   if (options.path !== undefined && options.path.length > 0) {
@@ -126,6 +134,8 @@ export function drawMaze(maze: Maze, options: DrawMazeOptions = {}): string {
   parts.push(marksOf(maze, options.collected));
   parts.push(`<path class="mk-walls" d="${standingWalls(maze).map(wallPath).join("")}" stroke-width="${fixed(wallWidth)}"/>`);
   const style = options.standalone === true ? `<style>${MEIKYUU_STYLE}</style>` : "";
-  return `<svg ${lookAttributes(options)} xmlns="http://www.w3.org/2000/svg" viewBox="${fixed(view.x)} ${fixed(view.y)} ${fixed(view.w)} ${fixed(view.h)}" role="img" aria-label="${escape(label)}" data-shape="${maze.recipe.shape}" data-mode="${maze.recipe.mode}" data-cells="${grid.cells}"${options.won === true ? ` data-won="true"` : ""}>${style}${parts.join("")}</svg>`;
+  // Turned, everything of the maze is in one group that is turned, so the picture is the maze as made and only its place on the page changes.
+  const inner = turn === 1 ? `<g class="mk-turn" transform="${turnTransform(turn)}">${parts.join("")}</g>` : parts.join("");
+  return `<svg ${lookAttributes(options)} xmlns="http://www.w3.org/2000/svg" viewBox="${fixed(view.x)} ${fixed(view.y)} ${fixed(view.w)} ${fixed(view.h)}" role="img" aria-label="${escape(label)}" data-shape="${maze.recipe.shape}" data-mode="${maze.recipe.mode}" data-cells="${grid.cells}"${turn === 1 ? ` data-turned="true"` : ""}${options.won === true ? ` data-won="true"` : ""}>${style}${inner}</svg>`;
 }
 

@@ -1,9 +1,10 @@
 import { boardLookOf, lookAttributes, marksOf, type MazeLook } from "./draw.ts";
 import { fixed, framed, linePath, standingWalls, wallPath } from "./geometry.ts";
 import { dragMaze, headOf, liftMaze, pressMaze, tapMaze, type MazeGame } from "./game.ts";
-import type { Wall } from "./grid.ts";
+import type { Box, Wall } from "./grid.ts";
 import type { Maze } from "./maze.ts";
-import { createSurface, type Surface } from "./surface.ts";
+import { cellsAlong, toDisplay, toLogical, turnedBox, turnTransform, unturnedBox, type Turn } from "./orientation.ts";
+import { createSurface, type Surface, type SurfaceOptions } from "./surface.ts";
 import { viewBoxOf, type View } from "./viewport.ts";
 
 /**
@@ -14,6 +15,10 @@ import { viewBoxOf, type View } from "./viewport.ts";
  *
  * A pointer pressed on the start (or the end of the line), or within a thumb's width of it, draws; a pointer
  * pressed anywhere else moves the view, and, if taps are on, a tap there extends the line.
+ *
+ * The maze may be shown turned a quarter (`turn`, see orientation.ts): everything drawn is in a group that is turned, the view and the
+ * pointer are in the turned picture, and every point a pointer gives is carried back into the maze before the game hears of it, so the
+ * game, its line and its cells are the same however the board is turned.
  */
 export type MazeSurfaceHooks = {
   game(): MazeGame;
@@ -29,6 +34,10 @@ export type MazeSurface = {
   readonly surface: Surface;
   /** Draw another maze, fitted. */
   show(maze: Maze, look: MazeLook): void;
+  /** Show the maze turned (1) or as made (0), fitted. The game is untouched. */
+  turn(next: Turn): void;
+  /** Which way it is shown now. */
+  turned(): Turn;
   /** The game or the hint changed: draw the line, the marks and the hint again. */
   update(game: MazeGame, hint: { back: number; cells: readonly number[] } | null, won: boolean): void;
   look(look: MazeLook): void;
@@ -48,20 +57,30 @@ function svgElement<K extends keyof SVGElementTagNameMap>(parent: Element, tag: 
   return el;
 }
 
-export function createMazeSurface(box: HTMLElement, hooks: MazeSurfaceHooks, maze: Maze, initial: MazeLook): MazeSurface {
+export function createMazeSurface(box: HTMLElement, hooks: MazeSurfaceHooks, maze: Maze, initial: MazeLook, turnNow: Turn = 0, surfaceOptions: SurfaceOptions = {}): MazeSurface {
   const svg = document.createElementNS(NS, "svg");
   svg.setAttribute("preserveAspectRatio", "xMidYMid meet");
   svg.setAttribute("aria-hidden", "true");
   box.replaceChildren(svg);
-  const paper = svgElement(svg, "rect", "mk-paper");
-  const hintBack = svgElement(svg, "path", "mk-hint");
+  // Everything of the maze is drawn in its own coordinates in one group, and the group is what is turned.
+  const content = svgElement(svg, "g", "mk-turn");
+  const paper = svgElement(content, "rect", "mk-paper");
+  const hintBack = svgElement(content, "path", "mk-hint");
   hintBack.setAttribute("data-kind", "back");
-  const hintAhead = svgElement(svg, "path", "mk-hint");
+  const hintAhead = svgElement(content, "path", "mk-hint");
   hintAhead.setAttribute("data-kind", "ahead");
-  const trail = svgElement(svg, "path", "mk-trail");
-  const head = svgElement(svg, "circle", "mk-head");
-  const marks = svgElement(svg, "g", "mk-marks");
-  const walls = svgElement(svg, "g", "mk-walls");
+  const trail = svgElement(content, "path", "mk-trail");
+  const head = svgElement(content, "circle", "mk-head");
+  const marks = svgElement(content, "g", "mk-marks");
+  const walls = svgElement(content, "g", "mk-walls");
+  let turn: Turn = turnNow;
+  const applyTurn = (): void => {
+    const transform = turnTransform(turn);
+    if (transform === "") content.removeAttribute("transform");
+    else content.setAttribute("transform", transform);
+    svg.setAttribute("data-turned", String(turn === 1));
+  };
+  applyTurn();
 
   let current = maze;
   let lookNow = initial;
@@ -105,11 +124,11 @@ export function createMazeSurface(box: HTMLElement, hooks: MazeSurfaceHooks, maz
   }
 
   /** Put on the page the tiles that are in view (and one more tile round them), and take off the rest. */
-  function showTiles(view: View, width: number, height: number): void {
-    const x0 = view.x - TILE;
-    const y0 = view.y - TILE;
-    const x1 = view.x + width / view.scale + TILE;
-    const y1 = view.y + height / view.scale + TILE;
+  function showTiles(shown: Box): void {
+    const x0 = shown.x - TILE;
+    const y0 = shown.y - TILE;
+    const x1 = shown.x + shown.w + TILE;
+    const y1 = shown.y + shown.h + TILE;
     const keep = new Set<string>();
     for (let ty = Math.floor(y0 / TILE); ty <= Math.floor(y1 / TILE); ty += 1) {
       for (let tx = Math.floor(x0 / TILE); tx <= Math.floor(x1 / TILE); tx += 1) {
@@ -128,36 +147,29 @@ export function createMazeSurface(box: HTMLElement, hooks: MazeSurfaceHooks, maz
     for (const [key, tile] of tiles) if (!keep.has(key) && tile.path?.parentNode) tile.path.remove();
   }
 
-  const surface = createSurface(box, maze.grid.box, {
+  const surface = createSurface(box, turnedBox(turn, maze.grid.box), {
     press: (_at, pixel) => {
       const now = hooks.game();
       if (now.solved) return false;
       // Pressing the start, or the end of the line, begins a stroke there.
       const target = headOf(now) ?? current.start;
-      const [cx, cy] = surface.pixelOf(current.grid.centres[target]!);
+      const [cx, cy] = surface.pixelOf(toDisplay(turn, current.grid.centres[target]!));
       if (Math.hypot(pixel[0] - cx, pixel[1] - cy) > Math.max(REACH, surface.view().scale * 0.6)) return false;
       hooks.change(pressMaze(now, target), "press");
       return true;
     },
     move: (from, to) => {
-      // The pointer's way from one point to the next, in steps of a third of a cell, each cell it enters offered to the game.
-      const length = Math.hypot(to[0] - from[0], to[1] - from[1]);
-      const steps = Math.max(1, Math.ceil(length / 0.3));
+      // The pointer's way from one point to the next (in the picture), carried into the maze, each cell it enters offered to the game.
       const before = hooks.game();
       let next = before;
-      let previous = -2;
-      for (let i = 1; i <= steps; i += 1) {
-        const cell = current.grid.at(from[0] + ((to[0] - from[0]) * i) / steps, from[1] + ((to[1] - from[1]) * i) / steps);
-        if (cell < 0 || cell === previous) continue;
-        previous = cell;
-        next = dragMaze(next, cell);
-      }
+      for (const cell of cellsAlong(current.grid, turn, from, to)) next = dragMaze(next, cell);
       if (next !== before) hooks.change(next, "drag");
     },
     lift: () => hooks.change(liftMaze(hooks.game()), "lift"),
     tap: (at) => {
       if (!hooks.taps()) return;
-      const cell = current.grid.at(at[0], at[1]);
+      const [x, y] = toLogical(turn, at);
+      const cell = current.grid.at(x, y);
       if (cell >= 0) hooks.change(tapMaze(hooks.game(), cell), "tap");
     },
     render: (view, _shown, size) => {
@@ -172,10 +184,10 @@ export function createMazeSurface(box: HTMLElement, hooks: MazeSurfaceHooks, maz
       hintBack.setAttribute("stroke-width", fixed(Math.max(line * 1.5, 5 * unit)));
       head.setAttribute("r", fixed(Math.max(line * 0.8, 3.4 * unit)));
       head.setAttribute("stroke-width", fixed(Math.max(0.06, unit)));
-      showTiles(view, size.width, size.height);
+      showTiles(unturnedBox(turn, { x: view.x, y: view.y, w: size.width / view.scale, h: size.height / view.scale }));
       hooks.viewChanged?.();
     },
-  });
+  }, undefined, surfaceOptions);
 
   applyLook();
   build(maze);
@@ -203,9 +215,18 @@ export function createMazeSurface(box: HTMLElement, hooks: MazeSurfaceHooks, maz
       lookNow = look;
       applyLook();
       build(next);
-      surface.setArea({ x: next.grid.box.x, y: next.grid.box.y, w: next.grid.box.w, h: next.grid.box.h });
+      surface.setArea(turnedBox(turn, next.grid.box));
       draw(hooks.game(), null, false);
     },
+    turn: (next) => {
+      if (next === turn) return;
+      turn = next;
+      applyTurn();
+      surface.setArea(turnedBox(turn, current.grid.box));
+      tiles.forEach((tile) => tile.path?.remove());
+      draw(hooks.game(), null, false);
+    },
+    turned: () => turn,
     update: draw,
     look: (look) => {
       lookNow = look;

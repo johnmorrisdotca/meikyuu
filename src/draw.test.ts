@@ -100,4 +100,24 @@ describe("an arrow board drawn as SVG text", () => {
     expect(drawArrows(board, { unlocked: true })).not.toContain('data-locked="true"');
     expect(drawArrows(board, { hint: 1 })).toContain('data-hint="true"');
   });
+
+  it("is drawn a quarter turned for a landscape or portrait asked for, in one group, with the same walls, and as made for auto and for a square maze", () => {
+    const tall = buildMaze({ shape: "square", w: 6, h: 9, algorithm: "wilson", mode: "to-goal", seed: 5 });
+    const made = drawMaze(tall);
+    const lying = drawMaze(tall, { orientation: "landscape" });
+    expect(made).not.toContain("data-turned");
+    expect(lying).toContain('data-turned="true"');
+    expect(lying).toContain('<g class="mk-turn" transform="rotate(-90)">');
+    // The picture is wider than tall now, and the walls are the same path.
+    const [, , width, height] = /viewBox="([\d. -]+)"/.exec(lying)![1]!.split(" ").map(Number);
+    expect(width).toBeGreaterThan(height!);
+    expect(lying.match(/class="mk-walls" d="([^"]*)"/)![1]).toBe(made.match(/class="mk-walls" d="([^"]*)"/)![1]);
+    // Asking for what it already is, or `auto`, changes nothing; nor does turning a square maze.
+    expect(drawMaze(tall, { orientation: "portrait" })).toBe(made);
+    expect(drawMaze(tall, { orientation: "auto" })).toBe(made);
+    const square = buildMaze({ shape: "square", w: 8, h: 8, algorithm: "wilson", mode: "to-goal", seed: 5 });
+    expect(drawMaze(square, { orientation: "landscape" })).toBe(drawMaze(square));
+    // A wide maze stands up for portrait.
+    expect(drawMaze(buildMaze({ shape: "square", w: 9, h: 6, algorithm: "wilson", mode: "to-goal", seed: 5 }), { orientation: "portrait" })).toContain('data-turned="true"');
+  });
 });
