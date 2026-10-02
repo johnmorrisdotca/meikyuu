@@ -1,9 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { clearArrows, tapArrow } from "./arrowGame.ts";
-import { dragMaze, liftMaze, pressMaze } from "./game.ts";
+import { ARROW_HEARTS, arrowsLeft, clearArrows, restartArrows, tapArrow, undoArrow } from "./arrowGame.ts";
+import { dragMaze, liftMaze, pressMaze, restartMaze } from "./game.ts";
+import { levelOf } from "./levels.ts";
 import { solutionOf } from "./maze.ts";
-import { buildMixed, measureMixed, mixedRecipeCode, mixedSolved, newMixedGame, parseMixedRecipe, withArrows, withMaze, type MixedRecipe } from "./mixed.ts";
+import { buildMixed, measureMixed, mixedRecipeCode, mixedSolved, newMixedGame, parseMixedRecipe, withArrows, withMaze, type MixedGame, type MixedRecipe } from "./mixed.ts";
 
 const recipe: MixedRecipe = { arrows: { shape: "square", w: 9, h: 9, longest: 4, seed: 5, locks: 2 }, maze: { shape: "square", w: 8, h: 8, algorithm: "kruskal", mode: "to-goal", seed: 3 } };
 
@@ -40,5 +41,90 @@ describe("a mixed puzzle", () => {
     expect(mixedSolved(game)).toBe(false);
     game = withArrows(game, clearArrows(game.arrows));
     expect(mixedSolved(game)).toBe(true);
+  });
+});
+
+/** The labyrinth drawn along its one way and let go: the button reached. */
+function reachButton(game: MixedGame): MixedGame {
+  const way = solutionOf(game.maze.maze);
+  let maze = pressMaze(game.maze, way[0]!);
+  for (const cell of way.slice(1)) maze = dragMaze(maze, cell);
+  return withMaze(game, liftMaze(maze));
+}
+
+/** Every arrow that can be tapped now, tapped, until none can be. */
+const clearNow = (game: MixedGame): MixedGame => withArrows(game, clearArrows(game.arrows));
+
+describe("a mixed puzzle in every order", () => {
+  // The whole list: whichever way round a person plays it, it is won once every arrow is off, and the way to play never decides that.
+  for (const number of [1, 2, 11, 26, 27, 37, 60, 100]) {
+    const board = buildMixed(levelOf("mixed", number)!.recipe as MixedRecipe);
+
+    it(`level ${number}: the arrows first, then the labyrinth, then the rest of the arrows`, () => {
+      let game = clearNow(newMixedGame(board));
+      expect(game.arrows.status).toBe("playing");
+      expect(arrowsLeft(game.arrows)).toBeGreaterThan(0);
+      game = reachButton(game);
+      expect(game.arrows.unlocked).toBe(true);
+      expect(game.arrows.hearts).toBe(ARROW_HEARTS);
+      expect(mixedSolved(game)).toBe(false);
+      game = clearNow(game);
+      expect(mixedSolved(game)).toBe(true);
+      expect(game.arrows.hearts).toBe(ARROW_HEARTS);
+    });
+
+    it(`level ${number}: the labyrinth first, then every arrow`, () => {
+      const game = clearNow(reachButton(newMixedGame(board)));
+      expect(mixedSolved(game)).toBe(true);
+      expect(arrowsLeft(game.arrows)).toBe(0);
+    });
+
+    it(`level ${number}: the labyrinth restarted after the unlock does not lock the arrows again`, () => {
+      let game = reachButton(newMixedGame(board));
+      game = withMaze(game, restartMaze(game.maze));
+      expect(game.maze.solved).toBe(false);
+      expect(game.arrows.unlocked).toBe(true);
+      expect(mixedSolved(clearNow(game))).toBe(true);
+    });
+  }
+
+  it("a restart of the arrows after the unlock keeps them unlocked, and the puzzle can still be won", () => {
+    const board = buildMixed(recipe);
+    let game = reachButton(newMixedGame(board));
+    game = clearNow(game);
+    game = withArrows(game, undoArrow(game.arrows));
+    expect(game.arrows.status).toBe("playing");
+    game = withArrows(game, restartArrows(game.arrows));
+    expect(game.arrows.unlocked).toBe(true);
+    expect(arrowsLeft(game.arrows)).toBe(board.arrows.arrows.length);
+    expect(mixedSolved(clearNow(game))).toBe(true);
+  });
+
+  it("an arrow held up only by a locked one costs no heart before the unlock, so the puzzle cannot be lost on the way to the button", () => {
+    const board = buildMixed(recipe);
+    let game = clearNow(newMixedGame(board));
+    const stuck = game.arrows.present.flatMap((here, id) => (here && !board.arrows.locked[id] ? [id] : []));
+    expect(stuck.length).toBeGreaterThan(0);
+    for (let n = 0; n < 2 * ARROW_HEARTS; n += 1) for (const id of stuck) game = withArrows(game, tapArrow(game.arrows, id).game);
+    expect(game.arrows.hearts).toBe(ARROW_HEARTS);
+    expect(game.arrows.status).toBe("playing");
+    expect(mixedSolved(clearNow(reachButton(game)))).toBe(true);
+  });
+
+  it("a puzzle lost on a real mistake stays lost when the button is reached, and a restart keeps the unlock and wins", () => {
+    const board = buildMixed(recipe);
+    let game = newMixedGame(board);
+    const blocked = board.arrows.arrows.findIndex((_, id) => !board.arrows.locked[id] && tapArrow(game.arrows, id).result === "blocked");
+    expect(blocked).toBeGreaterThanOrEqual(0);
+    for (let n = 0; n < ARROW_HEARTS; n += 1) game = withArrows(game, tapArrow(game.arrows, blocked).game);
+    expect(game.arrows.status).toBe("lost");
+    game = reachButton(game);
+    expect(game.arrows.unlocked).toBe(true);
+    expect(game.arrows.status).toBe("lost");
+    expect(tapArrow(game.arrows, blocked).result).toBe("ignored");
+    game = withArrows(game, restartArrows(game.arrows));
+    expect(game.arrows.status).toBe("playing");
+    expect(game.arrows.unlocked).toBe(true);
+    expect(mixedSolved(clearNow(game))).toBe(true);
   });
 });

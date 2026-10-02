@@ -206,3 +206,30 @@ export async function tapArrowOnPage(page, svg, board, id) {
   const point = await arrowPoint(svg, board, id);
   await page.mouse.click(point.x, point.y);
 }
+
+/**
+ * How a mixed level is played, worked out by the package's own rules: `before` the arrows that can be taken before the unlock, in an order that
+ * never bumps; `locked` and `held` (the locked arrows, and the others that nothing can free before the unlock); `after` the rest, in an order
+ * that never bumps; `mistake` an arrow that is blocked now by one the player could clear first; and `way` the labyrinth's one way to its button.
+ */
+export async function mixedPlan(number) {
+  const { arrowsLeft, buildMixed, hintArrow, newArrowGame, solutionOf, tapArrow, unlockArrows, heldByLocks } = await import("../dist/index.js");
+  const level = levelOf("mixed", number);
+  const board = buildMixed(level.recipe);
+  const start = newArrowGame(board.arrows);
+  const take = (game, order) => {
+    for (let id = hintArrow(game); id !== null; id = hintArrow(game)) {
+      order.push(id);
+      game = tapArrow(game, id).game;
+    }
+    return game;
+  };
+  const before = [];
+  const stuck = take(start, before);
+  const held = stuck.present.flatMap((here, id) => (here && !board.arrows.locked[id] && heldByLocks(start, id) ? [id] : []));
+  const after = [];
+  const done = take(unlockArrows(stuck), after);
+  if (arrowsLeft(done) !== 0) throw new Error(`mixed level ${number} cannot be cleared`);
+  const mistake = start.present.findIndex((_, id) => !board.arrows.locked[id] && !stuck.present[id] && !heldByLocks(start, id) && tapArrow(start, id).result === "blocked");
+  return { level, board, way: solutionOf(board.maze), before, held, after, mistake, locked: board.arrows.locked.flatMap((on, id) => (on ? [id] : [])) };
+}

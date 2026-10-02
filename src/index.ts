@@ -34,7 +34,7 @@ export { dragMaze, headOf, hintMaze, liftMaze, mazeProgress, newMazeGame, playSo
 export type { MazeGame } from "./game.ts";
 export { ARROW_SHAPES, ARROW_STEPS, MEIKYUU_MOST_ARROW_CELLS, arrowRecipeCode, blockersOf, makeArrows, measureArrows, parseArrowRecipe, peelRounds, rayOf } from "./arrows.ts";
 export type { Arrow, ArrowBoard, ArrowDirection, ArrowMeasure, ArrowRecipe, ArrowShape } from "./arrows.ts";
-export { ARROW_HEARTS, arrowsLeft, blockedBy, clearArrows, hintArrow, isFree, newArrowGame, restartArrows, tapArrow, undoArrow, unlockArrows } from "./arrowGame.ts";
+export { ARROW_HEARTS, arrowsLeft, blockedBy, clearArrows, heldByLocks, hintArrow, isFree, newArrowGame, restartArrows, tapArrow, undoArrow, unlockArrows } from "./arrowGame.ts";
 export type { ArrowGame, ArrowTap } from "./arrowGame.ts";
 export { buildMixed, measureMixed, mixedRecipeCode, mixedSolved, newMixedGame, parseMixedRecipe, withArrows, withMaze } from "./mixed.ts";
 export type { MixedBoard, MixedGame, MixedRecipe } from "./mixed.ts";

@@ -6,6 +6,15 @@ All notable changes to this project are written here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+
+- **A mixed puzzle can be finished after the labyrinth is solved.** The report: the labyrinth solved, back on the arrows tab it read "3 arrows left. Hearts: 0 of 3." with nothing to tap, and no finish. The cause was the hearts, not the tab switch: the arrows that the locked arrow holds up cost a heart each time they were tapped, so a player who tapped them on the way to the button lost the puzzle (hearts spent, `meikyuu-lose`) before ever drawing the labyrinth; and the board then hid it. The word of what had just happened ("Out of hearts" or a bump) was carried to the other tab and replaced by "Unlocked!", so a lost puzzle on the arrows tab read as a plain one that would not move.
+  - **An arrow that nothing can free before the unlock costs no heart** (`tapArrow` answers `locked`, with `by` the locked arrow to look at, and nothing changes), whether a locked arrow is in its way directly or behind others. New `heldByLocks(game, id)` says which; an arrow that is blocked by one the player could clear first still costs a heart. A mixed puzzle can no longer be lost before the button is tried. New words `arrowsWaiting`.
+  - **A puzzle out of hearts says so from its state**, on the arrows tab (`arrowsLost`) and, in a mixed puzzle, on the labyrinth's (`arrowsLostAway`), whatever else was said last. Restart on the arrows keeps the unlock.
+  - **Nothing is said twice.** "Unlocked! The locked arrows are free to go." was in the progress line and again in the message line; it is now the progress line's on the labyrinth and the message line's on the arrows. A message belongs to the tab it was said on and is not carried over.
+  - The labyrinth's tab reads "Cleared!" once the arrows are cleared, where it kept saying "Unlocked!".
+  - Tests: the state logic for every order (arrows first, labyrinth first, restart and undo after the unlock, lost and restarted) in `src/mixed.test.ts` and `src/arrows.test.ts`; `e2e/mixed.demo.mjs` plays mixed puzzles in a browser in both orders with the tabs switched again and again, by mouse and by touch, and asserts one `meikyuu-solve`, the banner and the confirmation line.
+
 ## [2.0.0] - 2026-10-02
 
 **This is a MAJOR release (2.0.0), not a minor one**, because the maze list is renumbered: `MEIKYUU_MAZE_LEVELS` was 1,000 levels in one list and is now 1,024 in four sizes of 256, and the first release promised a level keeps its number. Everything else here is additive. `package.json` still says 1.0.0: the version is taken when it is released.

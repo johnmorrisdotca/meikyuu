@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { arrowsLeft, blockedBy, clearArrows, hintArrow, isFree, newArrowGame, restartArrows, tapArrow, undoArrow, unlockArrows, ARROW_HEARTS } from "./arrowGame.ts";
+import { arrowsLeft, blockedBy, clearArrows, heldByLocks, hintArrow, isFree, newArrowGame, restartArrows, tapArrow, undoArrow, unlockArrows, ARROW_HEARTS } from "./arrowGame.ts";
 import { arrowRecipeCode, ARROW_SHAPES, ARROW_STEPS, blockersOf, makeArrows, measureArrows, parseArrowRecipe, peelRounds, rayOf, type ArrowRecipe } from "./arrows.ts";
 
 const recipes: ArrowRecipe[] = [
@@ -190,6 +190,42 @@ describe("locks", () => {
     expect(tap.game).toBe(game);
     expect(isFree(game, id)).toBe(false);
     expect(tapArrow(unlockArrows(game), id).result).toBe("removed");
+  });
+
+  it("an arrow that nothing can free before the unlock waits for it: it does nothing, looks at a locked arrow, and costs no heart", () => {
+    const stuck = clearArrows(newArrowGame(board));
+    // What is left once every free arrow has gone: the locked ones, and everything behind them, directly or through others.
+    const waiting = stuck.present.flatMap((here, id) => (here && !board.locked[id] ? [id] : []));
+    expect(waiting.length).toBeGreaterThan(0);
+    const start = newArrowGame(board);
+    for (const id of waiting) expect(heldByLocks(start, id), `arrow ${id}`).toBe(true);
+    let game = stuck;
+    for (let n = 0; n < ARROW_HEARTS + 2; n += 1) {
+      for (const id of waiting) {
+        const tap = tapArrow(game, id);
+        expect(tap.result).toBe("locked");
+        expect(tap.by).toBeDefined();
+        expect(tap.game).toBe(game);
+        game = tap.game;
+      }
+    }
+    expect(game.hearts).toBe(ARROW_HEARTS);
+    expect(game.status).toBe("playing");
+    // Once unlocked it is an arrow like any other.
+    const unlocked = unlockArrows(game);
+    expect(waiting.some((id) => heldByLocks(unlocked, id))).toBe(false);
+    expect(clearArrows(unlocked).status).toBe("cleared");
+  });
+
+  it("a blocked arrow that the player could clear first is still a mistake that costs a heart, locks or not", () => {
+    const start = newArrowGame(board);
+    const stuck = clearArrows(start);
+    const mistake = start.present.findIndex((_, id) => !board.locked[id] && !stuck.present[id] && blockedBy(start, id).length > 0);
+    expect(mistake).toBeGreaterThanOrEqual(0);
+    expect(heldByLocks(start, mistake)).toBe(false);
+    const tap = tapArrow(start, mistake);
+    expect(tap.result).toBe("blocked");
+    expect(tap.game.hearts).toBe(ARROW_HEARTS - 1);
   });
 
   it("cannot be cleared without the unlock, and can with it", () => {

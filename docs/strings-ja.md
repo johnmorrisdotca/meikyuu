@@ -66,9 +66,11 @@ open a *Fix a translation* issue with the string's name. `{name}` and the other 
 | `arrowsFlew` | Away it goes. | 飛んでいきました。 |
 | `arrowsBlocked` | Blocked: another arrow is in the way, and a heart is lost. | ほかの矢が邪魔をしています。ハートが1つ減りました。 |
 | `arrowsLocked` | Locked. Find the unlock button in the labyrinth. | 鍵がかかっています。迷宮の解除ボタンを探しましょう。 |
+| `arrowsWaiting` | A locked arrow is holding this one up. Find the unlock button in the labyrinth. | 鍵のかかった矢のせいで動かせません。迷宮の解除ボタンを探しましょう。 |
 | `arrowsUnlocked` | Unlocked! The locked arrows are free to go. | 解除しました。鍵のかかった矢が動かせます。 |
 | `arrowsCleared` | Cleared! Every arrow is off the board. | クリア。すべての矢が盤から出ました。 |
 | `arrowsLost` | Out of hearts. Restart to try again. | ハートがなくなりました。やり直してください。 |
+| `arrowsLostAway` | The arrows are out of hearts. Go back to them and press Restart. | 矢のハートがなくなりました。矢に戻って、やり直してください。 |
 | `lockedCount` | {n} locked. | 鍵つきの矢が{n}本あります。 |
 | `button` | Unlock button | 解除ボタン |
 | `mazeForButton` | Draw a line from the green start to the unlock button. | 緑のスタートから解除ボタンまで、線を引きます。 |

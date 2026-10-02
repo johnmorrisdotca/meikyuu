@@ -4,8 +4,11 @@ import { blockersOf, type ArrowBoard } from "./arrows.ts";
  * AN ARROW PUZZLE BEING PLAYED, as pure functions. `tapArrow` is the one move: a free arrow
  * is taken off the board; a blocked one costs a heart (and says which arrow is in its way); a
  * locked one that has not been unlocked does nothing at all, and costs nothing, because the
- * player cannot know yet. Clear every arrow to win; lose the last heart and the puzzle is lost
- * until it is restarted.
+ * player cannot know yet. The same goes for an arrow that no order of taps can clear before the
+ * unlock, because a locked arrow is in its way, directly or behind others (`locked`, with `by` naming
+ * the arrow to look at): nothing the player does can free it, so it must not cost the hearts the
+ * puzzle is lost with, and a mixed puzzle cannot be lost before the labyrinth has even been tried.
+ * Clear every arrow to win; lose the last heart and the puzzle is lost until it is restarted.
  *
  * The mixed puzzles lock some arrows until a button deep in a maze is reached. `unlockArrows`
  * is what reaching it does.
@@ -26,7 +29,12 @@ export type ArrowGame = {
 };
 
 /** What a tap did. */
-export type ArrowTap = { readonly game: ArrowGame; readonly result: "removed" | "blocked" | "locked" | "ignored"; /** The arrow in the way, for `blocked`. */ readonly by?: number };
+export type ArrowTap = {
+  readonly game: ArrowGame;
+  readonly result: "removed" | "blocked" | "locked" | "ignored";
+  /** The arrow in the way, for `blocked`, and for the `locked` result of an arrow that waits for the unlock (the tapped arrow itself is not locked then): a locked arrow in its way if there is one. */
+  readonly by?: number;
+};
 
 /** The hearts a puzzle starts with. */
 export const ARROW_HEARTS = 3;
@@ -45,11 +53,32 @@ export function isFree(game: ArrowGame, id: number): boolean {
   return game.present[id] === true && !(game.board.locked[id] && !game.unlocked) && blockedBy(game, id).length === 0;
 }
 
+/**
+ * Whether an arrow cannot be cleared before the unlock whatever the player taps: with every free arrow taken off, one after another,
+ * it is still on the board. Only a locked arrow can hold it up like that, in its way or in the way of what is in its way.
+ * Nothing is held once the arrows are unlocked.
+ */
+export function heldByLocks(game: ArrowGame, id: number): boolean {
+  if (game.unlocked || !game.present[id]) return false;
+  const blockers = blockersOf(game.board);
+  const left = game.present.slice();
+  for (let moved = true; moved; ) {
+    moved = false;
+    for (let other = 0; other < left.length; other += 1) {
+      if (!left[other] || game.board.locked[other] || blockers[other]!.some((behind) => left[behind])) continue;
+      left[other] = false;
+      moved = true;
+    }
+  }
+  return left[id] === true;
+}
+
 export function tapArrow(game: ArrowGame, id: number): ArrowTap {
   if (game.status !== "playing" || id < 0 || id >= game.present.length || !game.present[id]) return { game, result: "ignored" };
   if (game.board.locked[id] && !game.unlocked) return { game, result: "locked" };
   const blockers = blockedBy(game, id);
   if (blockers.length > 0) {
+    if (!game.unlocked && heldByLocks(game, id)) return { game, result: "locked", by: blockers.find((other) => game.board.locked[other]) ?? blockers[0]! };
     const hearts = game.hearts - 1;
     return { game: { ...game, hearts, mistakes: game.mistakes + 1, status: hearts <= 0 ? "lost" : "playing" }, result: "blocked", by: blockers[0]! };
   }

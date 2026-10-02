@@ -205,7 +205,7 @@ game = liftMaze(game);                // the stroke is over, and Undo takes it b
 hintMaze(game).cells;                 // the next stretch of the right way, and how many cells to draw back first
 ```
 
-A cell the line is on again cuts the line back to it, so a line never crosses itself. Arrow puzzles are `newArrowGame`, `tapArrow` (`removed`, `blocked`, `locked`), `hintArrow`, `undoArrow`, and mixed ones are `buildMixed` with `withMaze`
+A cell the line is on again cuts the line back to it, so a line never crosses itself. Arrow puzzles are `newArrowGame`, `tapArrow` (`removed`, `blocked`, `locked`), `heldByLocks`, `hintArrow`, `undoArrow`, and mixed ones are `buildMixed` with `withMaze`
 unlocking the arrows when the labyrinth's button is reached.
 
 ### On a server, in a page and in a framework
@@ -339,7 +339,7 @@ board?.load({ kind: "arrows", level: 5 });   // another puzzle in the same box
 - **Zoom and pan.** Pinch or the wheel zooms about the fingers or the cursor, two fingers move the view, and so does a drag that starts anywhere but on the start or the end of the line. The Fit button brings the whole maze back, and the zoom pad has + and −. A line drawn near an edge of the box moves the view along with it. A big maze stays smooth on a phone: its walls are cut into tiles that are in the page only while they are on screen.
 - **Buttons.** Undo takes back the last stroke, Restart clears the line, and Hint lights the next stretch of the right way (and, if the line has gone into a wrong branch, how far to draw back). The arrow keys step the line, Backspace and Ctrl+Z undo.
 - **Solved.** The line takes the colour of a win, a banner comes in and `meikyuu-solve` is fired once. With `prefers-reduced-motion` nothing moves.
-- **Arrows.** Tap an arrow. A free one slides away along its line, a blocked one shakes and shows what is in its way and costs a heart, a locked one tells you where its button is and costs nothing. Three hearts. A mixed puzzle has two tabs, the arrows and the labyrinth.
+- **Arrows.** Tap an arrow. A free one slides away along its line, a blocked one shakes and shows what is in its way and costs a heart, a locked one tells you where its button is and costs nothing, and so does one that nothing can free until the unlock (a locked arrow is in its way, or in the way of what is). Three hearts. A mixed puzzle has two tabs, the arrows and the labyrinth; what has just happened is said on the tab it happened on, and a puzzle out of hearts says so on both until the arrows are restarted (a restart keeps the unlock).
 - **Events**, on the host and as callbacks: `meikyuu-move` (after each stroke or each arrow tapped), `meikyuu-solve` (once), `meikyuu-key`, `meikyuu-unlock`, `meikyuu-bump`, `meikyuu-lose`. Each carries `{ kind, level, moves, cells, keys, keysOf, hearts, arrowsLeft, solved }`.
 - **Words** in English and Japanese, following the page's `lang`.
 - **A steady box.** The board is one shape (a square, or the `ratio` asked for) whatever is in it, and nothing on the play surface can be selected. The lines of words under it keep the room their longest wording takes, so nothing moves as they change.

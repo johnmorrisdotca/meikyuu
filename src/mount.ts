@@ -286,7 +286,8 @@ export function mountMeikyuu(host: HTMLElement, options: MeikyuuMountOptions = {
   let viewing: "maze" | "arrows" = "maze";
   let hintedMaze: { back: number; cells: readonly number[] } | null = null;
   let hintedArrow: number | null = null;
-  let message: { key: string; values: Record<string, string | number>; warn: boolean } | null = null;
+  /** The word of what has just happened, and which board it is about: it is not carried to the other tab of a mixed puzzle. */
+  let message: { key: string; values: Record<string, string | number>; warn: boolean; on: "maze" | "arrows" } | null = null;
   let pendingSolve = false;
   let solveTold = false;
   let moves = 0;
@@ -396,8 +397,8 @@ export function mountMeikyuu(host: HTMLElement, options: MeikyuuMountOptions = {
     words();
     tell("meikyuu-orientation");
   }
-  const setMessage = (key: string | null, values: Record<string, string | number> = {}, warn = false): void => {
-    message = key === null ? null : { key, values, warn };
+  const setMessage = (key: string | null, values: Record<string, string | number> = {}, warn = false, on: "maze" | "arrows" = viewing): void => {
+    message = key === null ? null : { key, values, warn, on };
   };
 
   // What the line says, in words, and the buttons' states.
@@ -464,7 +465,7 @@ export function mountMeikyuu(host: HTMLElement, options: MeikyuuMountOptions = {
     says.textContent = onMaze && maze !== null ? (mixed ? say("mazeForButton") : say(`play_${maze.recipe.mode.replace(/-/g, "_")}`)) : `${say("arrowsHint")}${mixed && board !== null && board.locked.some(Boolean) && arrowGame?.unlocked !== true ? `${joiner}${say("lockedCount", { n: board.locked.filter(Boolean).length })}` : ""}`;
     if (onMaze && mazeGame !== null && maze !== null) {
       const parts: string[] = [];
-      if (mazeGame.solved) parts.push(mixed ? say("arrowsUnlocked") : say("solved", { n: moves }));
+      if (mazeGame.solved) parts.push(mixed ? say(arrowGame?.status === "cleared" ? "arrowsCleared" : "arrowsUnlocked") : say("solved", { n: moves }));
       else {
         parts.push(mazeGame.path.length === 0 ? say("notStarted") : say("drawn", { n: mazeGame.path.length }));
         if (maze.keys.length > 0) parts.push(say("keysOf", { k: mazeGame.collected.length, total: maze.keys.length }));
@@ -474,8 +475,13 @@ export function mountMeikyuu(host: HTMLElement, options: MeikyuuMountOptions = {
       const hearts = "♥".repeat(arrowGame.hearts) + "♡".repeat(arrowGame.heartsAtStart - arrowGame.hearts);
       progress.textContent = arrowGame.status === "cleared" ? say("arrowsCleared") : `${say("arrowsLeft", { n: arrowsLeft(arrowGame) })}${joiner}${say("hearts", { n: arrowGame.hearts, total: arrowGame.heartsAtStart })} ${hearts}`;
     }
-    messages.textContent = message === null ? "" : say(message.key, message.values);
-    messages.dataset.warn = String(message?.warn === true);
+    // The word of what has just happened is about one board and is said on that board only (the unlock is told on the labyrinth by the line above it,
+    // and on the arrows by this one). A puzzle out of hearts says so from its state, on the arrows and, in a mixed puzzle, on the labyrinth too.
+    const shown = message !== null && message.on === viewing ? message : null;
+    const lostNote = arrowGame?.status === "lost" ? (onMaze ? (mixed ? "arrowsLostAway" : null) : "arrowsLost") : null;
+    const line = lostNote !== null && (!onMaze || shown === null) ? { key: lostNote, values: {}, warn: true } : shown;
+    messages.textContent = line === null ? "" : say(line.key, line.values);
+    messages.dataset.warn = String(line?.warn === true);
   }
 
   function refresh(): void {
@@ -543,7 +549,7 @@ export function mountMeikyuu(host: HTMLElement, options: MeikyuuMountOptions = {
     if (puzzle.kind === "mixed") {
       if (arrowGame !== null && !arrowGame.unlocked) {
         arrowGame = unlockArrows(arrowGame);
-        setMessage("arrowsUnlocked");
+        setMessage("arrowsUnlocked", {}, false, "arrows");
         playSound("unlock");
         tell("meikyuu-unlock", callbacks.onUnlock);
       }
@@ -568,11 +574,11 @@ export function mountMeikyuu(host: HTMLElement, options: MeikyuuMountOptions = {
       arrowSurface?.fly(id, still());
       playSound("fly");
     } else if (tapped.result === "locked") {
-      setMessage("arrowsLocked", {}, true);
-      arrowSurface?.bump(id, undefined);
+      setMessage(tapped.by === undefined ? "arrowsLocked" : "arrowsWaiting", {}, true);
+      arrowSurface?.bump(id, tapped.by);
       playSound("bump");
     } else {
-      setMessage(arrowGame.status === "lost" ? "arrowsLost" : "arrowsBlocked", {}, true);
+      setMessage("arrowsBlocked", {}, true);
       arrowSurface?.bump(id, tapped.by);
       playSound("bump");
       tell("meikyuu-bump", callbacks.onBump);
