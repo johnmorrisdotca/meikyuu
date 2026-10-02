@@ -1,6 +1,6 @@
 {
   "name": "@johnmorrisdotca/meikyuu",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Meikyuu 迷宮, a maze game for JavaScript and TypeScript: mazes on squares, hexagons, triangles, circles and cut-out shapes (a heart, a leaf, a star), made by seven algorithms from a seed, with a difficulty score, over a thousand levels from a few cells to thousands and over a thousand tall ones for a phone held upright, each a recipe that rebuilds the same maze everywhere. Drawn as SVG and played by drawing a line with a finger or the mouse, with zoom and pan and page left beside the board to scroll by, turning to lie down on a wide screen, in any page, as a function call or a tag. Arrow puzzles too. Zero dependencies.",
   "keywords": [
     "maze",

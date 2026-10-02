@@ -2,7 +2,7 @@
  * Defines the `<meikyuu-board>` element on the page. Import it for its effect:
  *
  * ```html
- * <script type="module" src="https://cdn.jsdelivr.net/npm/@johnmorrisdotca/meikyuu@1/dist/element-define.js"></script>
+ * <script type="module" src="https://cdn.jsdelivr.net/npm/@johnmorrisdotca/meikyuu@2/dist/element-define.js"></script>
  * <meikyuu-board level="12"></meikyuu-board>
  * ```
  *

@@ -43,7 +43,7 @@ playSolution(newMazeGame(maze)).solved;        // true: the game's own rules, a 
 And in a page, a level to play, by touch and mouse, with nothing else to set up:
 
 ```html
-<script type="module" src="https://cdn.jsdelivr.net/npm/@johnmorrisdotca/meikyuu@1/dist/element-define.js"></script>
+<script type="module" src="https://cdn.jsdelivr.net/npm/@johnmorrisdotca/meikyuu@2/dist/element-define.js"></script>
 <meikyuu-board level="40" board="wood" tap></meikyuu-board>
 ```
 
@@ -225,7 +225,7 @@ const solution = solutionOf(buildMaze(recipe));        // the one way through, c
 One tag, no bundler:
 
 ```html
-<script type="module" src="https://cdn.jsdelivr.net/npm/@johnmorrisdotca/meikyuu@1/dist/element-define.js"></script>
+<script type="module" src="https://cdn.jsdelivr.net/npm/@johnmorrisdotca/meikyuu@2/dist/element-define.js"></script>
 <meikyuu-board level="40" board="wood"></meikyuu-board>
 <script>
   document.querySelector("meikyuu-board").addEventListener("meikyuu-solve", (event) => console.log(event.detail.moves));
@@ -387,7 +387,7 @@ Every export of every entry point, with its signature and its doc comment, is in
 
 `pnpm levels` runs `scripts/meikyuu-levels.ts`, which writes `src/levels/mazes.data.ts` (about a minute and a half); `node scripts/meikyuu-tall.ts` writes `tall.data.ts` (about a minute); `node scripts/meikyuu-arrows.ts` writes `arrows.data.ts` and `mixed.data.ts` (about a minute).
 All are seeded, so the same run writes the same files. A size keeps the places of the 1.0.0 list: a level that was good enough stays, a place that was too easy is given a new maze of about the same effort, a size with fewer than 256 is added to at the end, and one with more loses its end (`scripts/meikyuu-levels.ts`); the tall sizes are ramps of 256 steps of the effort (`scripts/levels-list.ts`). `node scripts/levels-facts.ts [--capacity]`, `levels-trees.ts`, `phone-fit.mjs` and `levels-charts.mjs` print and draw the tables and pictures of `docs/LEVELS.md`.
-A level once published keeps its number: a published list is only ever added to at the end, never rewritten, **except by a release that says so**: 2.0.0 changed 181 places of the maze list and cut 40 off its end (CHANGELOG.md), and `@johnmorrisdotca/meikyuu/levels/legacy` says where each 1.0.0 level went.
+A level once published keeps its number: a published list is only ever added to at the end, never rewritten, **except by a release that says so**: 2.0.0 gave 117 places of the maze list a new maze and cut 40 off its end (CHANGELOG.md), and `@johnmorrisdotca/meikyuu/levels/legacy` says where each 1.0.0 level went.
 
 ## Theming
 
