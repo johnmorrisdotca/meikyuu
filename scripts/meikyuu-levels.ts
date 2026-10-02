@@ -1,183 +1,161 @@
 /**
- * THE MEIKYUU MAZE LEVELS, MADE ON A DESK: `node scripts/meikyuu-levels.ts [--count N] [--out file]`.
+ * THE MEIKYUU MAZE LEVELS, MADE ON A DESK: `node scripts/meikyuu-levels.ts [--out file]`.
  *
- * A level is a recipe (shape, size, algorithm, way to play, seed), never a drawing. For each
- * of the N levels this picks a shape, a way to play and an algorithm from what that point of
- * the list has unlocked, then searches sizes and seeds for the maze whose measured effort
- * (`measureMaze`) is nearest the effort the list should have there, which grows from a few
- * cells drawn to thousands. The levels are then sorted by the effort they measured, so each
- * is at least as hard as the one before, and written to `src/levels/mazes.data.ts` with the
- * effort beside each recipe. The tests rebuild every one and measure it again.
+ * Four sizes (small, medium, large, huge, as `sizeOf` words them), 256 levels each, in that order, each size in the order of the effort it
+ * measures, as the 1.0.0 list was. A level is a recipe (shape, size, algorithm, way to play, seed), never a drawing.
  *
- * Seeded, so the same run writes the same file; the file is what everybody plays, and this is
- * how it was made, kept so it can be made again. Nothing here runs in a browser. A level
- * once published keeps its number: change this and the numbers move, so a published list
- * is only ever added to at the end (a new file, a new version), never rewritten.
+ * It is made FROM the 1.0.0 list (`src/levels/legacy.data.ts`), keeping as many numbers as can be kept:
+ *
+ * - A level that is good enough keeps its number and its maze. Good enough is `isTooEasy` at its place: the least a level has (the straight
+ *   guess must be wrong, and cost something), and, through the easy third of a size, a floor that rises (`easyFloorAt`).
+ * - A level that is not is replaced in its own place by a new maze whose effort fits between its neighbours', as near the old one as there
+ *   is one (a place must still never be easier to draw than the one before). The first places of Small, which were a 3 by 3, become the
+ *   smallest mazes that are mazes, so for a few places the effort stands still.
+ * - A size with fewer than 256 is added to at the END, with mazes whose effort carries on up from the last, so no number moves.
+ * - A size with more than 256 loses its END: the hardest levels of Large (257 to 285) and of Huge (257 to 267) of 1.0.0 are not in the list.
+ *
+ * The shapes, ways to play and algorithms of a replaced place arrive by the effort of the place it takes, as they did (`arrivedAt`), and a new
+ * maze avoids the shapes and ways to play of the eight places before it. Seeded, so the same run writes the same file; the file is what
+ * everybody plays, and this is how it was made, kept so it can be made again. Nothing here runs in a browser. A level once published keeps its
+ * number: change this and the numbers move, so a published list is only ever added to at the end (a new file, a new version), never
+ * rewritten, except by a release that says so (CHANGELOG.md, 2.0.0).
  */
 import { writeFileSync } from "node:fs";
 
-import { MEIKYUU_ALGORITHMS, type MeikyuuAlgorithm } from "../src/algorithms.ts";
-import type { MeikyuuShape } from "../src/grid.ts";
-import { gridOf } from "../src/shapes.ts";
-import { buildMaze, isPerfect, recipeCode, walk, type MazeRecipe, type MeikyuuMode } from "../src/maze.ts";
-import { measureMaze } from "../src/measure.ts";
-import { seededRandom } from "../src/random.ts";
+import type { MeikyuuAlgorithm } from "../src/algorithms.ts";
+import { MEIKYUU_SHAPES } from "../src/grid.ts";
+import { MEIKYUU_LEGACY_MAZE_ROWS } from "../src/levels/legacy.data.ts";
+import { layoutCells, parseRecipe } from "../src/maze.ts";
+import { EFFORT_MOST } from "../src/measure.ts";
+import { arrivedAt, candidateOf, candidates, SIZE_CELLS, tooEasy, type Candidate, type SizeWord } from "./levels-lib.ts";
 
 const args = process.argv.slice(2);
 const flag = (name: string, fallback: string): string => (args.includes(name) ? args[args.indexOf(name) + 1]! : fallback);
-const COUNT = Number(flag("--count", "1000"));
 const OUT = flag("--out", new URL("../src/levels/mazes.data.ts", import.meta.url).pathname);
+const COUNT = 256;
+/** No level lays out more cells than the 1.0.0 list's biggest did (a heart cut from a raster 139 across), so `MEIKYUU_MOST_CELLS` is still a little over twice what a level lays out. */
+const BIGGEST_LAYOUT = 19_321;
+const POOL: Record<SizeWord, number> = { small: 60_000, medium: 30_000, large: 0, huge: 0 };
+const SIZES: readonly SizeWord[] = ["small", "medium", "large", "huge"];
+const sizeOfCells = (cells: number): SizeWord => (cells < 150 ? "small" : cells < 800 ? "medium" : cells < 4000 ? "large" : "huge");
+const WINDING: readonly MeikyuuAlgorithm[] = ["backtracker", "hunt", "growing"];
 
-/** The effort of the first level and of the last, and how fast the list climbs toward the last (below 1 is quick at first). */
-const EFFORT_FIRST = 9;
-const EFFORT_LAST = 5200;
-const CLIMB = 0.55;
-/** No maze has more cells than this: a phone has to draw it. */
-const MOST_CELLS = 9000;
-/** A maze of an effort has no more cells than this: the long, winding algorithms make the hardest mazes, and a maze of many short branches does not get to be a big one. */
-const cellsFor = (effort: number): number => Math.min(MOST_CELLS, Math.round(3.2 * effort + 40));
-
-/** The effort the list should have at level index `i`. */
-const targetAt = (i: number): number => EFFORT_FIRST * (EFFORT_LAST / EFFORT_FIRST) ** (Math.min(1, i / (COUNT - 1)) ** CLIMB);
-
-/** Each shape arrives when the list's effort reaches this, so the first levels are plain squares. */
-const SHAPE_FROM: Record<MeikyuuShape, number> = { square: 0, circle: 12, hex: 16, triangle: 20, hexagon: 26, pyramid: 30, diamond: 36, ring: 42, cross: 48, moon: 55, heart: 62, star: 75, leaf: 90 };
-const MODE_FROM: Record<MeikyuuMode, number> = { "enter-leave": 0, "to-goal": 10, "centre-out": 25, keys: 55 };
-const ALGORITHM_FROM: Record<MeikyuuAlgorithm, number> = { prim: 0, growing: 0, kruskal: 12, wilson: 25, eller: 25, hunt: 60, backtracker: 90 };
-
-const ASPECTS: readonly (readonly [number, number])[] = [[1, 1], [1.25, 0.8], [0.8, 1.25], [1, 1]];
-
-/** The columns and rows (or the one size) a shape has at a scale: how many cells across it is about. */
-function dimensions(shape: MeikyuuShape, scale: number, aspect: number): [number, number] {
-  const [aw, ah] = ASPECTS[aspect % ASPECTS.length]!;
-  switch (shape) {
-    case "square":
-      return [Math.max(3, Math.round(scale * aw)), Math.max(3, Math.round(scale * ah))];
-    case "hex":
-      return [Math.max(2, Math.round(scale * aw)), Math.max(2, Math.round(scale * ah * 1.15))];
-    case "triangle":
-      return [Math.max(3, Math.round(2 * scale * aw)), Math.max(2, Math.round(scale * ah * 1.15))];
-    case "circle":
-    case "hexagon":
-    case "pyramid":
-      return [Math.max(2, scale), Math.max(2, scale)];
-    default:
-      return [Math.max(7, scale), Math.max(7, scale)];
-  }
-}
-
-/** The number of keys for a keys level of a given size: one more for each couple of hundred cells, up to five. */
-const keysFor = (cells: number): number => Math.min(5, 1 + Math.floor(cells / 220));
-
-type Candidate = { recipe: MazeRecipe; effort: number; cells: number };
-
-/** Build and measure a recipe; null when it cannot be played (too few cells, too many, or no room for its way to play). */
-function attempt(recipe: MazeRecipe, most: number): Candidate | null {
-  let maze;
-  try {
-    if (gridOf(recipe.shape, recipe.w, recipe.h).cells > most) return null;
-    maze = buildMaze(recipe);
-  } catch {
-    return null;
-  }
-  if (maze.grid.cells < 6) return null;
-  if (recipe.mode === "keys" && maze.keys.length < (recipe.keys ?? 1)) return null;
-  if (recipe.mode === "keys" && maze.grid.cells < 40) return null;
-  if (maze.start === maze.goal) return null;
-  const { effort } = measureMaze(maze);
-  return { recipe, effort, cells: maze.grid.cells };
-}
-
-/** A key that says whether two mazes are the same maze, so the list never repeats one (small mazes would). */
-function sameness(recipe: MazeRecipe): string {
-  const maze = buildMaze(recipe);
-  const { before } = walk(maze.links, maze.start);
-  return `${recipe.shape}:${recipe.w}x${recipe.h}:${recipe.mode}:${maze.start}:${maze.goal}:${maze.keys.join(",")}:${Array.from(before).join(",")}`;
-}
-
-const kept = new Set<string>();
-const hints = new Map<string, number>();
-const chosen: Candidate[] = [];
+const legacy: Candidate[] = MEIKYUU_LEGACY_MAZE_ROWS.map(([code], index) => candidateOf(parseRecipe(code)!, index + 1)!);
 const started = Date.now();
+const rows: string[] = [];
+const report: string[] = [];
+const allowed = (c: Candidate): boolean => c.effort <= EFFORT_MOST && layoutCells(c.recipe.shape, c.recipe.w, c.recipe.h) <= BIGGEST_LAYOUT;
 
-for (let index = 0; index < COUNT; index += 1) {
-  const target = targetAt(index);
-  const random = seededRandom(7000 + index);
-  const shapes = (Object.keys(SHAPE_FROM) as MeikyuuShape[]).filter((shape) => SHAPE_FROM[shape] <= target);
-  const modes = (Object.keys(MODE_FROM) as MeikyuuMode[]).filter((mode) => MODE_FROM[mode] <= target);
-  // The first level a shape or a way to play is available shows it; after that, squares are a little commoner than the rest.
-  const newShape = shapes.find((shape) => SHAPE_FROM[shape] <= target && !chosen.some((c) => c.recipe.shape === shape));
-  const newMode = modes.find((mode) => !chosen.some((c) => c.recipe.mode === mode));
-  const weighted = shapes.flatMap((shape) => (shape === "square" ? [shape, shape] : [shape]));
-  const shape = newShape ?? weighted[Math.floor(random() * weighted.length)]!;
-  const mode = newMode ?? modes[Math.floor(random() * modes.length)]!;
-  const aspect = Math.floor(random() * 4);
-  const pool = MEIKYUU_ALGORITHMS.filter((algorithm) => ALGORITHM_FROM[algorithm] <= target && (algorithm !== "eller" || shape === "square"));
-  // A preferred algorithm first, then the rest: the first that can reach the target's effort within a tenth is taken.
-  const first = pool[Math.floor(random() * pool.length)]!;
-  const order = [first, ...pool.filter((algorithm) => algorithm !== first).sort((a, b) => (a === "backtracker" ? -1 : b === "backtracker" ? 1 : 0))];
-  let best: Candidate | null = null;
-  for (const algorithm of order) {
-    const key = `${shape}:${algorithm}:${aspect}`;
-    let found: Candidate | null = null;
-    // Climb through sizes from where the last search of this kind ended until the effort passes the target.
-    let scale = Math.max(3, (hints.get(key) ?? 3) - 2);
-    let passed = false;
-    for (; scale < 140 && !passed; scale += 1) {
-      const [w, h] = dimensions(shape, scale, aspect);
-      for (let seed = 0; seed < 4; seed += 1) {
-        const recipe: MazeRecipe = { shape, w, h, algorithm, mode, seed: 1 + seed * 7919 + index * 31, ...(mode === "keys" ? { keys: 1 } : {}) };
-        const keysed = mode === "keys" ? { ...recipe, keys: keysFor(buildMaze({ ...recipe, keys: 1 }).grid.cells) } : recipe;
-        const made = attempt(keysed, cellsFor(target * 1.6));
-        if (made === null) {
-          // Too big for this effort, or too small to play: bigger sizes only get bigger.
-          if (gridOf(shape, w, h).cells > cellsFor(target * 1.6)) passed = true;
-          continue;
+/** How alike the recent places a maze would sit among are, in the log of the effort it is worth: a shape, a way to play or a size seen lately costs a little. */
+function crowd(recent: readonly Candidate[], c: Candidate): number {
+  let cost = 0;
+  for (const r of recent) {
+    if (r.recipe.shape === c.recipe.shape) cost += 0.03;
+    if (r.recipe.mode === c.recipe.mode) cost += 0.012;
+    if (r.recipe.algorithm === c.recipe.algorithm) cost += 0.008;
+    if (r.recipe.w === c.recipe.w && r.recipe.h === c.recipe.h && r.recipe.shape === c.recipe.shape) cost += 0.04;
+  }
+  return cost;
+}
+
+for (const [index, size] of SIZES.entries()) {
+  const [low, high] = SIZE_CELLS[size];
+  const old = legacy.filter((c) => sizeOfCells(c.cells) === size);
+  const taken = new Set(old.map((c) => c.same));
+  const pool: Candidate[] = [];
+  const stream = candidates(1000 + index, low, high, MEIKYUU_SHAPES);
+  while (pool.length < POOL[size]) pool.push(stream.next().value!);
+  const fresh = pool.filter((c) => allowed(c) && !taken.has(c.same));
+
+  const forced = new Set<number>();
+  const kept = (c: Candidate, place: number): boolean => allowed(c) && !tooEasy(c, place) && !forced.has(place - 1);
+  const level: Candidate[] = [];
+  let replaced = 0;
+  let cutOff = 0;
+  for (let i = 0; i < Math.min(old.length, COUNT); i += 1) {
+    const place = i + 1;
+    const here = old[i]!;
+    if (kept(here, place)) {
+      level.push(here);
+      continue;
+    }
+    // The first later place that stays: this one's effort may not pass it, unless that one is replaced too, which it is when there is no room.
+    const floor = level.length > 0 ? level[level.length - 1]!.effort : 0;
+    let best: Candidate | null = null;
+    for (let from = i + 1; best === null; from += 1) {
+      let ceiling = Infinity;
+      let at = -1;
+      for (let j = from; j < Math.min(old.length, COUNT); j += 1) {
+        if (kept(old[j]!, j + 1)) {
+          ceiling = old[j]!.effort;
+          at = j;
+          break;
         }
-        if (made.effort > target * 1.6) passed = true;
-        if (found === null || Math.abs(Math.log(made.effort / target)) < Math.abs(Math.log(found.effort / target))) found = made;
+      }
+      // A shape, a way to play or an algorithm arrives at the effort the place had; if nothing of the kind fits, a little earlier than that.
+      for (const slack of [0, 4]) {
+        let bestCost = Infinity;
+        for (const c of fresh) {
+          if (taken.has(c.same) || c.effort < floor || c.effort > ceiling || tooEasy(c, place) || !arrivedAt(c, here.effort + slack)) continue;
+          const cost = Math.abs(Math.log(c.effort / Math.max(here.effort, 1))) + crowd(level.slice(-8), c);
+          if (cost < bestCost) {
+            bestCost = cost;
+            best = c;
+          }
+        }
+        if (best !== null) break;
+      }
+      if (best === null) {
+        if (at < 0) throw new Error(`no maze to take place ${place} of ${size} (effort ${here.effort}, from ${floor})`);
+        forced.add(at);
+        from = at;
       }
     }
-    hints.set(key, scale - 1);
-    if (found === null) continue;
-    // Refine: more seeds at the size that came nearest.
-    const { recipe } = found;
-    for (let seed = 0; seed < 40 && Math.abs(Math.log(found.effort / target)) > 0.025; seed += 1) {
-      const made = attempt({ ...recipe, seed: 100003 + seed * 104729 + index * 17 }, cellsFor(target * 1.6));
-      if (made !== null && Math.abs(Math.log(made.effort / target)) < Math.abs(Math.log(found.effort / target)) && !kept.has(sameness(made.recipe))) found = made;
-    }
-    if (best === null || Math.abs(Math.log(found.effort / target)) < Math.abs(Math.log(best.effort / target))) best = found;
-    if (Math.abs(Math.log(best.effort / target)) < 0.1) break;
+    taken.add(best.same);
+    level.push(best);
+    replaced += 1;
   }
-  if (best === null) throw new Error(`no maze for level ${index + 1} (target ${target.toFixed(1)}, ${shape}, ${mode})`);
-  if (kept.has(sameness(best.recipe))) {
-    // A small maze that already is in the list: take a neighbour by seed.
-    for (let seed = 0; seed < 400 && kept.has(sameness(best.recipe)); seed += 1) {
-      const made = attempt({ ...best.recipe, seed: 55555 + seed * 977 + index }, MOST_CELLS);
-      if (made !== null) best = made;
+  if (old.length > COUNT) cutOff = old.length - COUNT;
+
+  // Too few: carry on up from the last, at the end, with mazes of rising effort.
+  const added = COUNT - level.length;
+  if (added > 0) {
+    const winding: Candidate[] = [];
+    const harder = candidates(5000 + index, Math.round(high * 0.55), high, MEIKYUU_SHAPES, undefined, WINDING);
+    const last = level[level.length - 1]!.effort;
+    for (let n = 0; winding.length < 12_000 && n < 150_000; n += 1) {
+      const c = harder.next().value!;
+      if (allowed(c) && c.effort >= last) winding.push(c);
+    }
+    winding.sort((a, b) => a.effort - b.effort);
+    const top = winding[Math.floor(winding.length * 0.985)]!.effort;
+    for (let j = 1; j <= added; j += 1) {
+      const place = level.length + 1;
+      const target = last * (top / last) ** (j / added);
+      const floor = level[level.length - 1]!.effort;
+      let best: Candidate | null = null;
+      let bestCost = Infinity;
+      for (const c of winding) {
+        if (taken.has(c.same) || c.effort < floor || tooEasy(c, place)) continue;
+        const cost = Math.abs(Math.log(c.effort / target)) + crowd(level.slice(-8), c);
+        if (cost < bestCost) {
+          bestCost = cost;
+          best = c;
+        }
+      }
+      if (best === null) throw new Error(`no maze to add at place ${place} of ${size}`);
+      taken.add(best.same);
+      level.push(best);
     }
   }
-  kept.add(sameness(best.recipe));
-  chosen.push(best);
-  if ((index + 1) % 10 === 0) console.log(`${index + 1}/${COUNT}  target ${target.toFixed(0)}  got ${best.effort}  ${recipeCode(best.recipe)}  ${((Date.now() - started) / 1000).toFixed(0)}s`);
+  for (let i = 1; i < level.length; i += 1) if (level[i]!.effort < level[i - 1]!.effort) throw new Error(`${size} place ${i + 1} is easier than the one before`);
+  report.push(`${size}: ${old.length} were published; ${level.filter((c) => c.old !== undefined).length} stay at their number, ${replaced} places have a new maze (the old one was too easy), ${added} are added at the end, ${cutOff} cut off the end (${((Date.now() - started) / 1000).toFixed(0)}s)`);
+  for (const c of level) rows.push(`  ["${c.code}", ${c.effort}, ${c.cells}, ${c.score}],`);
 }
 
-chosen.sort((a, b) => a.effort - b.effort);
-for (const level of chosen) if (!isPerfect(buildMaze(level.recipe).grid, buildMaze(level.recipe).links)) throw new Error(`${recipeCode(level.recipe)} is not perfect`);
-
-const rows = chosen.map((level) => `  ["${recipeCode(level.recipe)}", ${level.effort}, ${level.cells}],`).join("\n");
 writeFileSync(
   OUT,
-  `// THE MAZE LEVELS: ${chosen.length} recipes, easiest first, each with the effort it measures (see measure.ts) and its cells.\n// Made by scripts/meikyuu-levels.ts and never edited by hand: a recipe rebuilds its maze exactly, and levels.mazes.*.test.ts\n// rebuilds every one and checks the effort, so a change to a generator or to the stream fails the build.\nexport const MEIKYUU_MAZE_ROWS: readonly (readonly [string, number, number])[] = [\n${rows}\n];\n`,
+  `// THE MAZE LEVELS: ${rows.length} recipes, ${COUNT} to each size (small, medium, large, huge, in that order), each size in the order of the effort it measures\n// (never easier to draw than the one before), each with that effort, its cells and its score (see difficulty.ts). Made by scripts/meikyuu-levels.ts and never edited by\n// hand: a recipe rebuilds its maze exactly, and levels.mazes.*.test.ts rebuilds every one and checks all of it, so a change to a generator or to the stream fails the build.\nexport const MEIKYUU_MAZE_ROWS: readonly (readonly [string, number, number, number])[] = [\n${rows.join("\n")}\n];\n`,
 );
-
-const count = (pick: (c: Candidate) => string): string => {
-  const map = new Map<string, number>();
-  for (const level of chosen) map.set(pick(level), (map.get(pick(level)) ?? 0) + 1);
-  return [...map].sort((a, b) => b[1] - a[1]).map(([k, n]) => `${k} ${n}`).join(", ");
-};
-console.log(`wrote ${chosen.length} levels to ${OUT} in ${((Date.now() - started) / 1000).toFixed(0)}s`);
-console.log("shapes:", count((c) => c.recipe.shape));
-console.log("modes:", count((c) => c.recipe.mode));
-console.log("algorithms:", count((c) => c.recipe.algorithm));
-console.log("effort:", chosen[0]!.effort, "to", chosen[chosen.length - 1]!.effort, " cells:", Math.min(...chosen.map((c) => c.cells)), "to", Math.max(...chosen.map((c) => c.cells)));
+console.log(report.join("\n"));
+console.log(`wrote ${rows.length} levels to ${OUT} in ${((Date.now() - started) / 1000).toFixed(0)}s`);

@@ -19,6 +19,10 @@ import { ratingOf } from "./measure.ts";
 export const MEIKYUU_KINDS = ["maze", "arrows", "mixed"] as const;
 export type MeikyuuKind = (typeof MEIKYUU_KINDS)[number];
 
+/** The four sizes of the maze list. */
+export const MEIKYUU_SIZES = ["small", "medium", "large", "huge"] as const;
+export type MeikyuuSize = (typeof MEIKYUU_SIZES)[number];
+
 type Base = {
   /** Its place in its own list, from 1. */
   readonly number: number;
@@ -30,7 +34,17 @@ type Base = {
   readonly rating: number;
 };
 
-export type MeikyuuMazeLevel = Base & { readonly kind: "maze"; readonly recipe: MazeRecipe; readonly cells: number };
+export type MeikyuuMazeLevel = Base & {
+  readonly kind: "maze";
+  readonly recipe: MazeRecipe;
+  readonly cells: number;
+  /** How hard it is to play, from 0 to 100 (see `difficultyOf`): what each size's list is put in order by. */
+  readonly score: number;
+  /** The size it belongs to, as `sizeOf` words its cells. */
+  readonly size: MeikyuuSize;
+  /** Its place among the levels of its size, from 1: the number a person playing that size meets it at. */
+  readonly inSize: number;
+};
 export type MeikyuuArrowLevel = Base & { readonly kind: "arrows"; readonly recipe: ArrowRecipe };
 export type MeikyuuMixedLevel = Base & { readonly kind: "mixed"; readonly recipe: MixedRecipe };
 export type MeikyuuLevel = MeikyuuMazeLevel | MeikyuuArrowLevel | MeikyuuMixedLevel;
@@ -41,7 +55,21 @@ function parsed<T>(code: string, read: (code: string) => T | null): T {
   return recipe;
 }
 
-export const MEIKYUU_MAZE_LEVELS: readonly MeikyuuMazeLevel[] = MEIKYUU_MAZE_ROWS.map(([code, effort, cells], index) => ({ kind: "maze", number: index + 1, code, effort, rating: ratingOf(effort), cells, recipe: parsed(code, parseRecipe) }));
+/** How many levels each size has: 256, so a size is sixteen pages of sixteen, and the four sizes make 1,024. */
+export const MEIKYUU_LEVELS_PER_SIZE = 256;
+
+export const MEIKYUU_MAZE_LEVELS: readonly MeikyuuMazeLevel[] = MEIKYUU_MAZE_ROWS.map(([code, effort, cells, score], index) => ({
+  kind: "maze",
+  number: index + 1,
+  code,
+  effort,
+  rating: ratingOf(effort),
+  score,
+  cells,
+  size: sizeOf(cells),
+  inSize: (index % MEIKYUU_LEVELS_PER_SIZE) + 1,
+  recipe: parsed(code, parseRecipe),
+}));
 export const MEIKYUU_ARROW_LEVELS: readonly MeikyuuArrowLevel[] = MEIKYUU_ARROW_ROWS.map(([code, effort], index) => ({ kind: "arrows", number: index + 1, code, effort, rating: Math.min(100, Math.max(1, Math.round(1 + (99 * Math.log(effort / 8)) / Math.log(800 / 8)))), recipe: parsed(code, parseArrowRecipe) }));
 export const MEIKYUU_MIXED_LEVELS: readonly MeikyuuMixedLevel[] = MEIKYUU_MIXED_ROWS.map(([code, effort], index) => ({ kind: "mixed", number: index + 1, code, effort, rating: Math.min(100, Math.max(1, Math.round(1 + (99 * Math.log(effort / 30)) / Math.log(1000 / 30)))), recipe: parsed(code, parseMixedRecipe) }));
 
@@ -69,10 +97,26 @@ export function levelOf(kind: MeikyuuKind, n: number): MeikyuuLevel | null {
 }
 
 /** How big a maze is, in words a person picks by: under 150 cells is small, under 800 medium, under 4,000 large, and the rest huge. */
-export const MEIKYUU_SIZES = ["small", "medium", "large", "huge"] as const;
-export type MeikyuuSize = (typeof MEIKYUU_SIZES)[number];
 export function sizeOf(cells: number): MeikyuuSize {
   return cells < 150 ? "small" : cells < 800 ? "medium" : cells < 4000 ? "large" : "huge";
+}
+
+/** The levels of one size, in order: 256 of them, each a little harder than the one before. */
+export function mazeLevelsOfSize(size: MeikyuuSize): readonly MeikyuuMazeLevel[] {
+  const first = MEIKYUU_SIZES.indexOf(size) * MEIKYUU_LEVELS_PER_SIZE;
+  return MEIKYUU_MAZE_LEVELS.slice(first, first + MEIKYUU_LEVELS_PER_SIZE);
+}
+
+/** Level `n` (from 1) of a size, or null when there is none. */
+export function mazeLevelOfSize(size: MeikyuuSize, n: number): MeikyuuMazeLevel | null {
+  return Number.isInteger(n) && n >= 1 && n <= MEIKYUU_LEVELS_PER_SIZE ? mazeLevelsOfSize(size)[n - 1] ?? null : null;
+}
+
+/** Which third of a size's list a level is in: the easy, medium and hard a site files it under. Place `n` is from 1 of `count`. */
+export type MeikyuuBand = "easy" | "medium" | "hard";
+export function bandOf(n: number, count: number = MEIKYUU_LEVELS_PER_SIZE): MeikyuuBand {
+  const third = (n - 1) / count;
+  return third < 1 / 3 ? "easy" : third < 2 / 3 ? "medium" : "hard";
 }
 
 /** The levels of a kind that pass a filter, with their numbers: by shape, by way to play and by size, each when given. */

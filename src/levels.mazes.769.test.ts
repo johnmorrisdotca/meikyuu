@@ -2,6 +2,6 @@ import { describe } from "vitest";
 
 import { checkMazeLevels } from "./levelSuite.fixture.ts";
 
-describe("the maze levels, 1 to 128", () => {
-  checkMazeLevels(1, 128);
+describe("the maze levels, 769 to 896", () => {
+  checkMazeLevels(769, 896);
 });
