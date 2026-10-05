@@ -1,6 +1,8 @@
 // The colossal mazes (about ten thousand cells), played in a browser: the biggest of each list opens, is zoomed and moved, has a long line drawn
 // through it (and drawn back and on again) whose text is the line's own, and is solved. The cost of the drawing was measured on a phone's Chromium
 // slowed four times over (docs/LEVELS.md): this holds what must stay true, that the line drawn by the incremental text is the line the game has.
+import process from "node:process";
+
 import { expect, test } from "@playwright/test";
 
 import { buildMaze, solutionOf } from "../dist/index.js";
