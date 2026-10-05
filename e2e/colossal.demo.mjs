@@ -55,7 +55,7 @@ for (const [name, kind, list] of [["square", "colossal", MEIKYUU_COLOSSAL_LEVELS
   test(`the biggest ${name} colossal maze opens at about its size, takes a long line drawn and drawn back with the line's own text, and is solved`, async ({ page, browserName }) => {
     // WebKit on Linux paints in software, and an SVG of this size makes every frame take tens of seconds there: the same stall is in the earlier release's huge mazes (e2e/zoom.demo.mjs's smoothness
     // check fails there on 2.0.1 too), and WebKit on a Mac, Chromium on Linux and on a Mac are all at the frame rate (docs/LEVELS.md). So the long line is drawn in the other engines.
-    test.skip(browserName === "webkit" && /Linux/.test(await page.evaluate(() => window.navigator.userAgent)), "WebKit's software painting on Linux cannot repaint a maze this big in a frame");
+    test.skip(browserName === "webkit" && process.platform === "linux", "WebKit's software painting on Linux cannot repaint a maze this big in a frame");
     const { level, maze, way } = longest(list);
     expect(way.length).toBeGreaterThan(1000);
     const errors = await open(page, `?kind=${kind}&level=${level.number}`);
