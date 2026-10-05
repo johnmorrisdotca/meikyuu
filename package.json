@@ -1,7 +1,7 @@
 {
   "name": "@johnmorrisdotca/meikyuu",
-  "version": "2.0.1",
-  "description": "Meikyuu 迷宮, a maze game for JavaScript and TypeScript: mazes on squares, hexagons, triangles, circles and cut-out shapes (a heart, a leaf, a star), made by seven algorithms from a seed, with a difficulty score, over a thousand levels from a few cells to thousands and over a thousand tall ones for a phone held upright, each a recipe that rebuilds the same maze everywhere. Drawn as SVG and played by drawing a line with a finger or the mouse, with zoom and pan and page left beside the board to scroll by, turning to lie down on a wide screen, in any page, as a function call or a tag. Arrow puzzles too. Zero dependencies.",
+  "version": "2.1.0",
+  "description": "Meikyuu 迷宮, a maze game for JavaScript and TypeScript: mazes on squares, hexagons, triangles, circles and cut-out shapes (a heart, a leaf, a star), made by seven algorithms from a seed, with a difficulty score, over a thousand levels from a few cells to thousands and over a thousand tall ones for a phone held upright, and colossal ones of ten thousand cells, each a recipe that rebuilds the same maze everywhere. Drawn as SVG and played by drawing a line with a finger or the mouse, with zoom and pan and page left beside the board to scroll by, turning to lie down on a wide screen, in any page, as a function call or a tag. Stones to shut the passages you have given up on, laid only beside your line. Arrow puzzles too. Zero dependencies.",
   "keywords": [
     "maze",
     "labyrinth",
@@ -22,7 +22,9 @@
     "itsutsu",
     "svg",
     "custom-element",
-    "web-component"
+    "web-component",
+    "colossal",
+    "stones"
   ],
   "homepage": "https://github.com/johnmorrisdotca/meikyuu#readme",
   "repository": {
@@ -76,6 +78,11 @@
       "types": "./dist/levels-tall.d.ts",
       "import": "./dist/levels-tall.js",
       "default": "./dist/levels-tall.js"
+    },
+    "./levels/colossal": {
+      "types": "./dist/levels-colossal.d.ts",
+      "import": "./dist/levels-colossal.js",
+      "default": "./dist/levels-colossal.js"
     },
     "./levels/legacy": {
       "types": "./dist/levels-legacy.d.ts",

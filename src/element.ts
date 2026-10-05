@@ -2,6 +2,7 @@ import { MEIKYUU_BOARD_NAMES, MEIKYUU_TRAIL_NAMES, type MeikyuuBoardName, type M
 import { MEIKYUU_KINDS, type MeikyuuKind } from "./levels.ts";
 import { mountMeikyuu, type MeikyuuMount } from "./mount.ts";
 import { MEIKYUU_ORIENTATIONS, type MeikyuuOrientation } from "./orientation.ts";
+import type { StoneOption } from "./stones.ts";
 import type { MeikyuuLanguage } from "./strings.ts";
 import { FIT_MODES, type FitMode } from "./viewport.ts";
 
@@ -27,9 +28,11 @@ import { FIT_MODES, type FitMode } from "./viewport.ts";
  *    `orientation`: `auto` (default), `portrait` or `landscape`. `gutter`: the page left beside the box, in pixels (24). `reserve`: what else
  *    is on the screen, in pixels (200). `fit`: `both` (default), `width` or `height`. `pan`: every one-finger drag moves the view.
  *    `edge-pan="off"`: a line drawn to the edge does not move the view. `turn-button`: show a Turn button.
+ *  - `stones`: stones for mazes, a marble to lay beside the line that the line may not enter (see `mountMeikyuu`). `stone-limit`: how many at once
+ *    (a number, or `none` for no limit; a few by default). `stone-reach`: how far from the line one may be laid, 1 or 2 cells (2).
  *  - `lang`: `en` or `ja`, or the page's.
  *
- * It fires `meikyuu-move`, `meikyuu-solve`, `meikyuu-key`, `meikyuu-unlock`, `meikyuu-bump` and `meikyuu-lose` (see
+ * It fires `meikyuu-move`, `meikyuu-solve`, `meikyuu-key`, `meikyuu-unlock`, `meikyuu-bump`, `meikyuu-lose` and `meikyuu-stones` (see
  * `mountMeikyuu`), and has the methods `undo()`, `restart()`, `hint()` and `fit()`. Nothing in it can be selected,
  * and its box stays one steady square whatever is drawn.
  */
@@ -48,7 +51,7 @@ const numberOf = (value: string | null): number | undefined => (value === null |
 const oneOf = <T extends string>(value: string | null, allowed: readonly T[]): T | undefined => (allowed.includes(value as T) ? (value as T) : undefined);
 
 export class MeikyuuBoard extends ElementBase {
-  static observedAttributes = ["kind", "level", "recipe", "board", "trail", "tap", "hints", "sound", "controls", "zoom", "lang", "ratio", "orientation", "gutter", "reserve", "fit", "pan", "edge-pan", "turn-button"];
+  static observedAttributes = ["kind", "level", "recipe", "board", "trail", "tap", "hints", "sound", "controls", "zoom", "lang", "ratio", "orientation", "gutter", "reserve", "fit", "pan", "edge-pan", "turn-button", "stones", "stone-limit", "stone-reach"];
 
   #mount: MeikyuuMount | null = null;
   #key = "";
@@ -117,8 +120,11 @@ export class MeikyuuBoard extends ElementBase {
       sound: isOn(this.getAttribute("sound")),
       language: oneOf<MeikyuuLanguage>(this.getAttribute("lang"), ["en", "ja"] as const),
     };
+    const stones: StoneOption | undefined = isOn(this.getAttribute("stones"))
+      ? { ...(this.getAttribute("stone-limit") === null ? {} : { limit: this.getAttribute("stone-limit")!.trim().toLowerCase() === "none" ? null : numberOf(this.getAttribute("stone-limit")) }), ...(numberOf(this.getAttribute("stone-reach")) === undefined ? {} : { reach: numberOf(this.getAttribute("stone-reach")) }) }
+      : undefined;
     const live = (mount: MeikyuuMount): void => {
-      mount.set(settings);
+      mount.set({ ...settings, stones });
       mount.orientation(orientation);
       mount.pan(pan);
       mount.edgePan(edgePan);
@@ -130,6 +136,6 @@ export class MeikyuuBoard extends ElementBase {
     if (recipe === undefined && (level === undefined || !Number.isInteger(level))) return;
     this.#mount?.destroy();
     this.#key = key;
-    this.#mount = mountMeikyuu(this, { kind, level, recipe, ...settings, controls, zoom, ratio, reserve, gutter, fit, orientation, pan, edgePan, turnButton });
+    this.#mount = mountMeikyuu(this, { kind, level, recipe, ...settings, stones, controls, zoom, ratio, reserve, gutter, fit, orientation, pan, edgePan, turnButton });
   }
 }

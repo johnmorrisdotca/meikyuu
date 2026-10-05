@@ -5,6 +5,7 @@ import { isPerfect, recipeCode, buildMaze } from "./maze.ts";
 import { measureMaze } from "./measure.ts";
 import { newMazeGame, playSolution } from "./game.ts";
 import { MEIKYUU_MAZE_LEVELS, sizeOf } from "./levels.ts";
+import { MEIKYUU_COLOSSAL_LEVELS, MEIKYUU_COLOSSAL_TALL_LEVELS } from "./levels-colossal.ts";
 import { MEIKYUU_TALL_LEVELS } from "./levels-tall.ts";
 import { TALL_RATIO } from "./tall.ts";
 
@@ -14,8 +15,8 @@ import { TALL_RATIO } from "./tall.ts";
  * way (by the game's own rules, a cell at a time, picking up its keys) solves it. The lists are split across several test files so that
  * they run side by side.
  */
-export function checkMazeLevels(from: number, to: number, list: "square" | "tall" = "square"): void {
-  const levels = list === "square" ? MEIKYUU_MAZE_LEVELS : MEIKYUU_TALL_LEVELS;
+export function checkMazeLevels(from: number, to: number, list: "square" | "tall" | "colossal" | "colossal-tall" = "square"): void {
+  const levels = list === "square" ? MEIKYUU_MAZE_LEVELS : list === "tall" ? MEIKYUU_TALL_LEVELS : list === "colossal" ? MEIKYUU_COLOSSAL_LEVELS : MEIKYUU_COLOSSAL_TALL_LEVELS;
   it(`${list} levels ${from} to ${to} build, are perfect, measure what the list says, are not too easy, and are solved by drawing their way`, () => {
     for (const level of levels.slice(from - 1, to)) {
       const where = `${list} level ${level.number} (${level.code})`;
@@ -35,6 +36,7 @@ export function checkMazeLevels(from: number, to: number, list: "square" | "tall
       if (level.recipe.mode === "enter-leave") expect(maze.entrance, where).not.toBeNull();
       if (level.recipe.mode !== "to-goal") expect(maze.exit ?? maze.entrance, where).not.toBeNull();
       if (list === "square") expect(sizeOf(level.cells), where).toBe((level as (typeof MEIKYUU_MAZE_LEVELS)[number]).size);
+      else if (list === "colossal") expect(level.cells, where).toBeGreaterThanOrEqual(9500);
       else {
         // Upright, and filling a container two thirds as wide as it is tall.
         const { box } = maze.grid;

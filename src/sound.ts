@@ -5,7 +5,7 @@
  * asked for, a browser with no audio, or one that has not been touched yet, is silent without an error, and
  * a sound that comes too soon after the last of its kind is dropped.
  */
-export const MEIKYUU_SOUND_KINDS = ["step", "back", "key", "bump", "fly", "unlock", "solve", "lose", "tap"] as const;
+export const MEIKYUU_SOUND_KINDS = ["step", "back", "key", "bump", "fly", "unlock", "solve", "lose", "tap", "stone"] as const;
 export type MeikyuuSoundKind = (typeof MEIKYUU_SOUND_KINDS)[number];
 
 export type MeikyuuSounds = {
@@ -24,6 +24,7 @@ const SOUNDS: Record<MeikyuuSoundKind, { notes: number[]; each: number; wave: Os
   solve: { notes: [523, 659, 784, 1047], each: 0.14, wave: "triangle", gain: 0.1, gap: 0.5 },
   lose: { notes: [392, 330, 262], each: 0.16, wave: "sawtooth", gain: 0.05, gap: 0.5 },
   tap: { notes: [440], each: 0.03, wave: "sine", gain: 0.03, gap: 0.05 },
+  stone: { notes: [330, 247], each: 0.05, wave: "sine", gain: 0.07, gap: 0.08 },
 };
 
 export function createMeikyuuSounds(): MeikyuuSounds {

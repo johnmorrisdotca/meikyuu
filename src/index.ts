@@ -32,6 +32,8 @@ export { lineToSteps, stepsToLine } from "./steps.ts";
 export { TALL_RATIO, TALL_SHAPES, TALL_WIDTHS, tallDimensions } from "./tall.ts";
 export { dragMaze, headOf, hintMaze, liftMaze, mazeProgress, newMazeGame, playSolution, pressMaze, restartMaze, tapMaze, undoMaze } from "./game.ts";
 export type { MazeGame } from "./game.ts";
+export { canLayStone, clearStones, decodeRun, encodeRun, hasStone, layStone, MEIKYUU_STONE_REACH_MOST, stoneLimitFor, stoneRulesOf, stonesLeft, takeStone, toggleStone, withStoneRules } from "./stones.ts";
+export type { StoneOption, StoneRules, StoneVerdict } from "./stones.ts";
 export { ARROW_SHAPES, ARROW_STEPS, MEIKYUU_MOST_ARROW_CELLS, arrowRecipeCode, blockersOf, makeArrows, measureArrows, parseArrowRecipe, peelRounds, rayOf } from "./arrows.ts";
 export type { Arrow, ArrowBoard, ArrowDirection, ArrowMeasure, ArrowRecipe, ArrowShape } from "./arrows.ts";
 export { ARROW_HEARTS, arrowsLeft, blockedBy, clearArrows, heldByLocks, hintArrow, isFree, newArrowGame, restartArrows, tapArrow, undoArrow, unlockArrows } from "./arrowGame.ts";

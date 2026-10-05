@@ -59,6 +59,8 @@ And in a page, a level to play, by touch and mouse, with nothing else to set up:
 
 - **A thousand mazes, then arrow puzzles and mixed ones.** 1,024 maze levels, 300 arrow levels and 100 mixed levels: four sizes of 256 mazes, each size ordered by effort so that no level is easier to draw than the one before, and each scored 0 to 100 for how hard it is to play.
 - **Tall mazes for a phone held upright.** 1,536 portrait levels, two columns to three rows, in six sizes of 256 (6×9 to 20×30 cells), that lie down by themselves on a wide screen (`orientation`) without changing the maze or a line drawn on it.
+- **Colossal mazes.** Two more lists, in an entry of their own (`/levels/colossal`): 128 square mazes of about ten thousand cells (a hundred across or so, every shape) and 128 tall ones 64 across and 96 down, each a recipe that builds in about twenty milliseconds, drawn and played with the same zoom, gutters and panning as any other.
+- **Stones.** A marble (`stones` option) laid beside the line on a passage the player has given up on, which the line cannot enter: a helper for the big mazes, never a pen. Laid only within `reach` cells of the line (2 by default), as many as `limit` allows (a few, or none for no limit), by the Stone button, by pressing and holding, or by Shift and an arrow key. Part of the game for Undo, Restart and saving a run, never part of the maze or its answer.
 - **Made for a thumb.** Always some page beside the board to scroll by, touches kept only by the board, a pinch to zoom, two fingers to move a zoomed maze, and the view following a line drawn to the edge.
 - **Every shape.** Squares, hexagons, triangles and circles, and shapes cut out of them (a heart, a leaf, a star, a ring, a diamond, a cross, a moon), from a few cells to thousands.
 - **Four ways to play**: in and out through the wall, find the goal, out from the centre, and collect the keys on the way.
@@ -142,6 +144,48 @@ mazeLevelOfSize("medium", 40);                         // level 40 of the 256 me
 MEIKYUU_ARROW_LEVELS[0].recipe;                        // { shape: "square", w: 3, h: 4, longest: 2, seed: …, … }
 ```
 
+## Colossal mazes
+
+The biggest the lists go: about **ten thousand cells**, where the biggest of the other lists has 8,923 and most have far fewer. There are two lists of 128 levels, in an entry of their own so a page that does not play them does not carry them:
+
+```ts
+import { MEIKYUU_COLOSSAL_LEVELS, MEIKYUU_COLOSSAL_TALL_LEVELS, colossalLevelOf } from "@johnmorrisdotca/meikyuu/levels/colossal";
+import { mountMeikyuu } from "@johnmorrisdotca/meikyuu/play";
+
+const level = colossalLevelOf(40)!;                       // level 40 of the 128 square colossal mazes, about 10,000 cells
+mountMeikyuu(host, { recipe: level.code, ratio: level.ratio });
+const tall = MEIKYUU_COLOSSAL_TALL_LEVELS[0]!;            // 64 across and 96 down for a square one, 2:3, for a phone held upright
+mountMeikyuu(host, { recipe: tall.code, ratio: tall.ratio });
+```
+
+- **The square list** is 9,500 to 12,000 cells in every shape (`square` is a hundred across or so) and every way to play; **the tall list** is `square` 64×96, and hexagons and triangles laid out to fill the same 2:3 container (`tallDimensions`), about 6,100 cells. Each list is in order of the effort its levels measure, as every list is, and scored by the same `difficultyOf`. The scale is the one the older lists use, so a colossal maze scores high (most 84 to 98) and a colossal level is harder than every huge one at the top.
+- **The list is recipes, not mazes.** 256 recipes are 20 KB. A maze is built from its seed where it is played, about 20 to 30 ms in a browser for ten thousand cells (`buildMaze`), so nothing is generated ahead and nothing is stored: a list that held the mazes would be megabytes.
+- **Drawn and played as any other.** Only the walls on screen are in the page (tiles of a few cells), a line is one path, and nothing else is drawn per cell, so a line of thousands of cells stays smooth: see `docs/LEVELS.md` for the frame cost measured on a phone-sized Chromium.
+- Made by `node --experimental-strip-types scripts/meikyuu-colossal.ts` (about six minutes), seeded, into `src/levels/colossal.data.ts`.
+
+## Stones
+
+A big maze is hard to hold in the head. A **stone** is a marble the player lays on a passage cell to say that the line will not go there: a dead end found, shut. It is deliberately not a pen. A stone may only be laid
+
+- **beside the line**: on an open passage cell joined by passages to a cell of the line within `reach` steps (1 or 2, default 2: next to the line, or one cell beyond that), not counting a way through another stone, so never across a wall and never out in the middle of the maze;
+- **on a cell the line is not on**, and not on the start or the goal;
+- **while stones are left**: `limit` stones may lie at once (`stoneLimitFor(cells)` by default: 4 for a small maze, 9 for a huge one, 13 for a colossal one; `limit: null` for no limit); and not once the maze is solved.
+
+The line cannot enter a stone's cell, and a stone is taken up by asking for it again (which gives it back). Stones belong to the game: **Undo** takes a laid stone up and puts a taken one back, **Restart** takes every stone up, `mount.run()` and `mount.restore(code)` (or `encodeRun` / `decodeRun`) keep a run with its stones as one short text, and a stone is never part of the maze, its recipe, its answer or any check (the maze is solved by the same line whatever stones lie).
+
+```ts
+const board = mountMeikyuu(host, { level: 40, stones: { limit: 5, reach: 2 } });   // or `stones: true` for the defaults, `limit: null` for no limit
+board?.stoneMode(true);        // a tap on a cell lays a stone (or takes the one there up), and nothing draws
+board?.stones();               // the cells with a stone
+board?.stonesLeft();           // 3, or null with no limit
+board?.clearStones();          // one Undo puts them back
+const saved = board?.run();    // "0231~1a.2f": the line's steps, a tilde, the stones' cells in base 36
+board?.restore(saved!);        // the same line and stones, with nothing to Undo
+host.addEventListener("meikyuu-stones", (event) => console.log((event as CustomEvent).detail.stonesLeft));
+```
+
+Three ways to lay one, none of which needs the button: **the Stone mode** (the board's own Stone button, or `mount.stoneMode(true)` from a button of your own: while it is on a one-finger drag only moves the view and a tap lays or takes up a stone), **press and hold** (a finger or the mouse held still on a cell for about half a second lays a stone there, or takes up the one there, whatever the mode; a hold on the line itself is a pause, and does nothing), and **Shift and an arrow key** beside the end of the line. A refusal says why in the board's words (`stoneFar`, `stoneOnLine`, `stoneLimit`, ...) and a hold with no line to lay beside says nothing. The marble is drawn as `.mk-stone` with a `.mk-gleam` (`--mk-stone`, `--mk-stone-edge`; `drawMaze` takes `stones`), and the element has `stones`, `stone-limit` (a number or `none`) and `stone-reach`.
+
 ## Tall mazes, turning and touch
 
 A phone held upright leaves a box about two thirds as wide as it is tall (a 390 by 844 phone, less the page's header and the board's buttons, leaves about 342 by 560 with a gutter each side), so the tall levels are **2:3**, width to height. A 1:2 tower fits the same phone at 82% of the width, and a 1:1 square at 100% but 50% fewer cells at the same cell size; `docs/LEVELS.md` has the table for five phones. Squares are 6×9 up to 20×30; hexagons and triangles are laid out to fill the same container.
@@ -177,6 +221,7 @@ Entry points, so a page loads only what it uses:
 | `@johnmorrisdotca/meikyuu/element/define` | Defines the tag on the page, for its effect |
 | `@johnmorrisdotca/meikyuu/levels` | The three numbered lists of levels, and finding a level |
 | `@johnmorrisdotca/meikyuu/levels/tall` | The 1,536 tall (portrait) maze levels, in six sizes |
+| `@johnmorrisdotca/meikyuu/levels/colossal` | The 256 colossal maze levels (about ten thousand cells): 128 square and 128 tall |
 | `@johnmorrisdotca/meikyuu/levels/legacy` | The 1,000 maze levels of 1.0.0, and where each went |
 
 ```ts
@@ -321,7 +366,7 @@ the goal or the doors, and the keys are marks. Colours are generic: it knows not
 | `language` | `en` (default), `ja` | what a screen reader hears |
 | `label`, `standalone`, `pad` | | a description instead of the default; `standalone` puts the style inside, so the drawing is a picture on its own; the margin round the shape |
 
-Every colour is also a custom property on `.meikyuu` (`--mk-paper`, `--mk-wall`, `--mk-frame`, `--mk-trail`, `--mk-start`, `--mk-goal`, `--mk-key`, `--mk-hint`, `--mk-bad`), so a page sets only what it wants different.
+Every colour is also a custom property on `.meikyuu` (`--mk-paper`, `--mk-wall`, `--mk-frame`, `--mk-trail`, `--mk-start`, `--mk-goal`, `--mk-key`, `--mk-hint`, `--mk-bad`, `--mk-stone`, `--mk-stone-edge`), so a page sets only what it wants different.
 The parts carry classes and data attributes: `mk-walls`, `mk-trail`, `mk-head`, `mk-start`, `mk-goal`, `mk-door` (`data-door="in"` or `"out"`), `mk-key` (`data-got`), `mk-hint`. Nothing in the drawing can be selected,
 dragged or double-tapped into a selection, and with reduced motion asked for nothing moves. `drawArrows(board, { present, unlocked, hint })` draws an arrow board the same way, each arrow a group with `data-id`, `data-dir` and `data-locked`.
 
@@ -340,7 +385,7 @@ board?.load({ kind: "arrows", level: 5 });   // another puzzle in the same box
 - **Buttons.** Undo takes back the last stroke, Restart clears the line, and Hint lights the next stretch of the right way (and, if the line has gone into a wrong branch, how far to draw back). The arrow keys step the line, Backspace and Ctrl+Z undo.
 - **Solved.** The line takes the colour of a win, a banner comes in and `meikyuu-solve` is fired once. With `prefers-reduced-motion` nothing moves.
 - **Arrows.** Tap an arrow. A free one slides away along its line, a blocked one shakes and shows what is in its way and costs a heart, a locked one tells you where its button is and costs nothing, and so does one that nothing can free until the unlock (a locked arrow is in its way, or in the way of what is). Three hearts. A mixed puzzle has two tabs, the arrows and the labyrinth; what has just happened is said on the tab it happened on, and a puzzle out of hearts says so on both until the arrows are restarted (a restart keeps the unlock).
-- **Events**, on the host and as callbacks: `meikyuu-move` (after each stroke or each arrow tapped), `meikyuu-solve` (once), `meikyuu-key`, `meikyuu-unlock`, `meikyuu-bump`, `meikyuu-lose`. Each carries `{ kind, level, moves, cells, keys, keysOf, hearts, arrowsLeft, solved }`.
+- **Events**, on the host and as callbacks: `meikyuu-move` (after each stroke or each arrow tapped), `meikyuu-solve` (once), `meikyuu-key`, `meikyuu-unlock`, `meikyuu-bump`, `meikyuu-lose`, and `meikyuu-stones` (a stone laid, taken up, cleared, undone or restored). Each carries `{ kind, level, moves, cells, keys, keysOf, hearts, arrowsLeft, solved, stones, stonesLeft }`.
 - **Words** in English and Japanese, following the page's `lang`.
 - **A steady box.** The board is one shape (a square, or the `ratio` asked for) whatever is in it, and nothing on the play surface can be selected. The lines of words under it keep the room their longest wording takes, so nothing moves as they change.
 - **Sounds**, off unless `sound` is on: short tones made in the browser by the Web Audio API for a step, drawing back, a key, a bump, an arrow flying, an unlock, a win and a loss. There are no recordings, so there is nothing to fetch and nothing to credit.
@@ -361,11 +406,12 @@ board?.load({ kind: "arrows", level: 5 });   // another puzzle in the same box
 | `edgePan` | boolean, default true | a line drawn to the edge moves the view along |
 | `pan` | boolean, default false | every one-finger drag moves the view |
 | `turnButton` | boolean, default false | a Turn button in the pad, for a maze that is not square |
+| `stones` | `true`, or `{ limit?, reach? }`; default off | stones to lay beside the line (see Stones); adds the Stone button |
 | `sound` | boolean, default false | make a sound for each thing that happens |
 | `language` | `en`, `ja` | the language; left out, the host's own `lang`, or the page's |
-| `onMove`, `onSolve`, `onKey`, `onUnlock`, `onBump`, `onLose` | callbacks | what the events tell, as callbacks |
+| `onMove`, `onSolve`, `onKey`, `onUnlock`, `onBump`, `onLose`, `onStones` | callbacks | what the events tell, as callbacks |
 
-The handle: `load`, `set`, `undo`, `restart`, `hint`, `fit(mode?)`, `zoomIn`, `zoomOut`, `gutter(px?)`, `pan(on?)`, `edgePan(on?)`, `orientation(setting?)`, `show("arrows" | "maze")`, `mazeGame()`, `arrowGame()`, `destroy()`.
+The handle: `load`, `set`, `undo`, `restart`, `hint`, `fit(mode?)`, `zoomIn`, `zoomOut`, `gutter(px?)`, `pan(on?)`, `edgePan(on?)`, `orientation(setting?)`, `show("arrows" | "maze")`, `mazeGame()`, `arrowGame()`, `stoneMode(on?)`, `stones()`, `stonesLeft()`, `stone(cell)`, `clearStones()`, `run()`, `restore(code)`, `destroy()`.
 
 ### The element
 
@@ -375,7 +421,7 @@ The handle: `load`, `set`, `undo`, `restart`, `hint`, `fit(mode?)`, `zoomIn`, `z
 <meikyuu-board recipe="heart:25:wilson:to-goal:5" tap></meikyuu-board>
 ```
 
-Attributes, each read again when it changes: `kind` and `level`, or `recipe`; `board`, `trail`; `tap`; `hints` (`off` for no Hint button); `sound`; `controls` (`off` for only the board); `zoom` (`off` for no pad); `lang`; `ratio`, `orientation`, `gutter`, `reserve`, `fit`, `pan`, `edge-pan` (`off`), `turn-button`.
+Attributes, each read again when it changes: `kind` and `level`, or `recipe`; `board`, `trail`; `tap`; `hints` (`off` for no Hint button); `sound`; `controls` (`off` for only the board); `zoom` (`off` for no pad); `lang`; `ratio`, `orientation`, `gutter`, `reserve`, `fit`, `pan`, `edge-pan` (`off`), `turn-button`, `stones`, `stone-limit`, `stone-reach`.
 Methods: `undo()`, `restart()`, `hint()`, `fit()`; `.mount` is the handle. `@johnmorrisdotca/meikyuu/element/define` defines the tag; `/element` holds the class alone.
 
 ## API
@@ -385,7 +431,7 @@ Every export of every entry point, with its signature and its doc comment, is in
 
 ## Making levels
 
-`pnpm levels` runs `scripts/meikyuu-levels.ts`, which writes `src/levels/mazes.data.ts` (about a minute and a half); `node scripts/meikyuu-tall.ts` writes `tall.data.ts` (about a minute); `node scripts/meikyuu-arrows.ts` writes `arrows.data.ts` and `mixed.data.ts` (about a minute).
+`pnpm levels` runs `scripts/meikyuu-levels.ts`, which writes `src/levels/mazes.data.ts` (about a minute and a half); `node scripts/meikyuu-tall.ts` writes `tall.data.ts` (about a minute); `node --experimental-strip-types scripts/meikyuu-colossal.ts` writes `colossal.data.ts` (about six minutes); `node scripts/meikyuu-arrows.ts` writes `arrows.data.ts` and `mixed.data.ts` (about a minute).
 All are seeded, so the same run writes the same files. A size keeps the places of the 1.0.0 list: a level that was good enough stays, a place that was too easy is given a new maze of about the same effort, a size with fewer than 256 is added to at the end, and one with more loses its end (`scripts/meikyuu-levels.ts`); the tall sizes are ramps of 256 steps of the effort (`scripts/levels-list.ts`). `node scripts/levels-facts.ts [--capacity]`, `levels-trees.ts`, `phone-fit.mjs` and `levels-charts.mjs` print and draw the tables and pictures of `docs/LEVELS.md`.
 A level once published keeps its number: a published list is only ever added to at the end, never rewritten, **except by a release that says so**: 2.0.0 gave 117 places of the maze list a new maze and cut 40 off its end (CHANGELOG.md), and `@johnmorrisdotca/meikyuu/levels/legacy` says where each 1.0.0 level went.
 
@@ -406,6 +452,8 @@ Nothing here is branded. The drawing and the playable board are coloured by cust
 | `--mk-key` | a key | `#e0b43b` | the same |
 | `--mk-hint` | the stretch a hint lights | `#f2a900` | the same |
 | `--mk-bad` | a hint to draw back, and the arrows in a bump | `#b5452c` | the same |
+| `--mk-stone` | a stone (a marble laid beside the line) | `#4b5d8f` | `#b3c0ea` |
+| `--mk-stone-edge` | the rim of a stone | `#161c33` | `#0e1220` |
 | `--mk-dot` | the faint dots of an arrow board | `rgba(0,0,0,.14)` | `rgba(255,255,255,.14)` |
 | `--mk-ink` | set for a page that draws its own text over the board; no part of the drawing reads it yet | `#1f2320` | `#ece8dc` |
 
@@ -437,6 +485,8 @@ All of these are held by tests, and the ones with a name are exported.
 | --- | --- | --- |
 | Levels | 1,024 maze levels, 300 arrow levels, 100 mixed | `MEIKYUU_MAZE_LEVELS`, `MEIKYUU_ARROW_LEVELS`, `MEIKYUU_MIXED_LEVELS` |
 | Tall levels | 1,536, six sizes of 256 (6 to 20 cells across, 2:3) | `MEIKYUU_TALL_LEVELS`, `MEIKYUU_TALL_SIZES` |
+| Colossal levels | 256, two lists of 128: square (9,500 to 12,000 cells) and tall (64 across, 96 down, 2:3) | `MEIKYUU_COLOSSAL_LEVELS`, `MEIKYUU_COLOSSAL_TALL_LEVELS` |
+| Stones | beside the line within 1 or 2 cells (default 2); a few by default (3 and one more for every hundred cells across), or no limit | `stoneLimitFor`, `MEIKYUU_STONE_REACH_MOST` |
 | The biggest maze in the lists | 8,923 cells (level 1002); the smallest is 15 (level 1) | `levelOf("maze", n).cells` |
 | A maze's size words | small under 150 cells, medium under 800, large under 4,000, huge beyond | `sizeOf`, `MEIKYUU_SIZES` |
 | A recipe's size | at least 2 a side, and at most 40,000 cells laid out (counting, for a shape cut out of a square, the whole square): a little over twice the biggest level's 19,321; `parseRecipe` refuses more | `MEIKYUU_MOST_CELLS`, `layoutCells` |
@@ -477,6 +527,8 @@ src/
 ├── measure.ts        how hard a maze is, counted off its passages, and the 1 to 100 rating
 ├── difficulty.ts     the 0 to 100 score of how hard a maze is to play, and the least a level must have
 ├── tall.ts           tall (2:3) mazes: the sizes, and the dimensions that fill a container in each shape
+├── colossal.ts       colossal mazes (about ten thousand cells): how many, how big
+├── stones.ts         stones: the rules of laying one beside the line, taking it up, and keeping a run with its stones
 ├── orientation.ts    which way up a maze is shown: the quarter turn, and carrying a finger's path back into the maze
 ├── steps.ts          a line as its steps, one character a step, the same on a board turned either way
 ├── game.ts           a line drawn through a maze as pure functions: press, drag, lift, tap, undo, hint
@@ -485,6 +537,7 @@ src/
 ├── mixed.ts          a mixed puzzle: arrows with locks, and a labyrinth whose button unlocks them
 ├── levels.ts         the "/levels" entry: the three lists, found by kind and number, and the maze list by size
 ├── levels-tall.ts    the "/levels/tall" entry: the 1,536 tall maze levels
+├── levels-colossal.ts the "/levels/colossal" entry: the 256 colossal maze levels
 ├── levels-legacy.ts  the "/levels/legacy" entry: the 1.0.0 maze levels, and where each went
 ├── draw-entry.ts     the "/draw" entry: the drawing, its boards and colours, its style and its words
 ├── draw.ts           a maze as SVG text: walls, line, marks, hint, solution
@@ -507,6 +560,7 @@ src/
 └── levels/
     ├── mazes.data.ts   the 1,024 maze levels, each a recipe with its effort, its cells and its score
     ├── tall.data.ts    the 1,536 tall levels, the same
+    ├── colossal.data.ts the 256 colossal levels, the same
     ├── legacy.data.ts  the 1.0.0 maze levels, kept, with the score each is given now
     ├── arrows.data.ts  the arrow levels, each a recipe with its effort
     └── mixed.data.ts   the mixed levels, each two recipes with their effort

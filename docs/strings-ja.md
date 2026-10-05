@@ -75,3 +75,19 @@ open a *Fix a translation* issue with the string's name. `{name}` and the other 
 | `button` | Unlock button | 解除ボタン |
 | `mazeForButton` | Draw a line from the green start to the unlock button. | 緑のスタートから解除ボタンまで、線を引きます。 |
 | `heart` | heart | ハート |
+| `stone` | Stone | 石 |
+| `stoneLabel` | Stone mode: tap a cell beside your line to lay a stone there, or a stone to take it up | 石のモード：線のとなりのマスをタップすると石を置き、石をタップすると取り除く |
+| `stoneHow` | Stone mode. Tap a cell beside your line, up to {n} cells away along the passages, to lay a stone the line cannot enter. Tap a stone to take it up. | 石のモードです。線のとなりのマス（通路づたいに{n}マスまで）をタップすると、線が入れない石を置けます。石をタップすると取り除きます。 |
+| `stonesLeft` | Stones left: {n}. | 石はあと{n}個。 |
+| `stonesLeftOne` | Stones left: 1. | 石はあと1個。 |
+| `stonesFree` | Stones laid: {n}. | 石を{n}個置きました。 |
+| `stonesFreeOne` | Stones laid: 1. | 石を1個置きました。 |
+| `stoneLaid` | Stone laid. The line cannot go in there. Tap it to take it up. | 石を置きました。線はそこに入れません。タップで取り除けます。 |
+| `stoneTaken` | Stone taken up. | 石を取り除きました。 |
+| `stoneFar` | Too far from your line. A stone goes on a passage up to {n} cells along from it. | 線から遠すぎます。石は線から通路づたいに{n}マスまでに置けます。 |
+| `stoneOnLine` | That cell is on your line. | そのマスは線の上です。 |
+| `stoneEnd` | A stone cannot go on the start or the goal. | スタートとゴールには石を置けません。 |
+| `stoneLimit` | No stones left. Tap a stone to take it up and lay it again. | 石がもうありません。石をタップして取り除くと、また置けます。 |
+| `stoneNoLine` | Draw a line first. A stone goes beside it. | 先に線を引いてください。石は線のとなりに置きます。 |
+| `stoneSolved` | The maze is solved. | 迷宮は解けています。 |
+| `stoneDrawing` | Lift your finger first. | いったん指を離してください。 |

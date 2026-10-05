@@ -6,6 +6,7 @@ import { drawMaze, meikyuuSay, MEIKYUU_BOARD_NAMES, MEIKYUU_BOARDS, MEIKYUU_TRAI
 import { mountMeikyuu } from "./dist/play-entry.js";
 import { levelsOf, MEIKYUU_KINDS, MEIKYUU_LEVELS_PER_SIZE, MEIKYUU_SIZES } from "./dist/levels.js";
 import { MEIKYUU_TALL_LEVELS, MEIKYUU_TALL_SIZES, TALL_SHAPES } from "./dist/levels-tall.js";
+import { MEIKYUU_COLOSSAL_LEVELS, MEIKYUU_COLOSSAL_TALL_LEVELS } from "./dist/levels-colossal.js";
 
 // The page's own words, in the two languages it speaks. Set as text, never as HTML. The names of the shapes and the ways to play are the package's own.
 const WORDS = {
@@ -15,7 +16,7 @@ const WORDS = {
     name: "Meikyuu (迷宮) is Japanese for labyrinth: 迷, to be lost, and 宮, a palace.",
     nameLink: "About the name",
     play: "Play",
-    kinds: { maze: "Mazes", arrows: "Arrows", mixed: "Mixed", tall: "Tall" },
+    kinds: { maze: "Mazes", arrows: "Arrows", mixed: "Mixed", tall: "Tall", colossal: "Colossal", "colossal-tall": "Colossal tall" },
     shape: "Shape",
     size: "Size",
     way: "Way to play",
@@ -34,6 +35,13 @@ const WORDS = {
     trails: { green: "Green", blue: "Blue", red: "Red", violet: "Violet", orange: "Orange" },
     playing: "Playing",
     tap: "Tap to extend",
+    stones: "Stones",
+    stonesLimit: "How many",
+    stonesReach: "How far",
+    stonesDefault: "A few",
+    stonesNone: "No limit",
+    stonesNear: "Next to the line",
+    stonesTwo: "Two cells",
     hints: "Hints",
     sound: "Sound",
     on: "On",
@@ -57,7 +65,7 @@ const WORDS = {
     name: "「迷宮」は、迷（道に迷う）と宮（宮殿）で、ラビリンスのことです。",
     nameLink: "名前について（英語）",
     play: "遊ぶ",
-    kinds: { maze: "迷路", arrows: "矢印", mixed: "ミックス", tall: "縦長" },
+    kinds: { maze: "迷路", arrows: "矢印", mixed: "ミックス", tall: "縦長", colossal: "超巨大", "colossal-tall": "超巨大・縦長" },
     shape: "形",
     size: "大きさ",
     way: "遊び方",
@@ -76,6 +84,13 @@ const WORDS = {
     trails: { green: "緑", blue: "青", red: "赤", violet: "紫", orange: "橙" },
     playing: "遊び方の設定",
     tap: "タップで伸ばす",
+    stones: "石",
+    stonesLimit: "個数",
+    stonesReach: "置ける距離",
+    stonesDefault: "少し",
+    stonesNone: "無制限",
+    stonesNear: "線のとなり",
+    stonesTwo: "2マスまで",
     hints: "ヒント",
     sound: "音",
     on: "あり",
@@ -116,8 +131,10 @@ const pick = (asked, allowed, kept, fallback) => (allowed.includes(asked) ? aske
 const flag = (asked, kept, fallback) => (asked === "on" ? true : asked === "off" ? false : typeof kept === "boolean" ? kept : fallback);
 
 /** The five lists the page plays: the three of the package, and the tall mazes, which are a list of their own. */
-const KINDS = [...MEIKYUU_KINDS, "tall"];
-const listOf = (which) => (which === "tall" ? MEIKYUU_TALL_LEVELS : levelsOf(which));
+const KINDS = [...MEIKYUU_KINDS, "tall", "colossal", "colossal-tall"];
+/** A kind that is played by its recipe (and a box shape), not by a number of the package's three lists. */
+const BY_RECIPE = ["tall", "colossal", "colossal-tall"];
+const listOf = (which) => (which === "tall" ? MEIKYUU_TALL_LEVELS : which === "colossal" ? MEIKYUU_COLOSSAL_LEVELS : which === "colossal-tall" ? MEIKYUU_COLOSSAL_TALL_LEVELS : levelsOf(which));
 const levelAt = (which, number) => listOf(which)[number - 1] ?? null;
 const countOf = (which) => listOf(which).length;
 const TALL_SIZE_NUMBERS = MEIKYUU_TALL_SIZES.map((each) => each.size);
@@ -132,8 +149,8 @@ if (kept.numbering !== 2 && (kept.solved?.maze?.length > 0 || kept.levels?.maze 
   kept.levels = { ...kept.levels, maze: legacyLevelOf(kept.levels?.maze ?? 1)?.nearest ?? 1 };
 }
 let kind = pick(params.get("kind"), KINDS, kept.kind, "maze");
-const levels = { maze: 1, arrows: 1, mixed: 1, tall: 1, ...(kept.levels ?? {}) };
-const solved = { maze: [], arrows: [], mixed: [], tall: [], ...(kept.solved ?? {}) };
+const levels = { maze: 1, arrows: 1, mixed: 1, tall: 1, colossal: 1, "colossal-tall": 1, ...(kept.levels ?? {}) };
+const solved = { maze: [], arrows: [], mixed: [], tall: [], colossal: [], "colossal-tall": [], ...(kept.solved ?? {}) };
 const filter = {
   shape: pick(params.get("shape"), [...MEIKYUU_SHAPES], kept.filter?.shape, "all"),
   size: pick(params.get("size"), MEIKYUU_SIZES, kept.filter?.size, "all"),
@@ -149,6 +166,13 @@ const play = {
   hints: flag(params.get("hints"), kept.play?.hints, true),
   sound: flag(params.get("sound"), kept.play?.sound, false),
 };
+/** Stones: off, or on with the package's defaults, no limit, or reach 1 (`?stones=on&stonelimit=none&stonereach=1`). */
+const stoneChoice = {
+  on: flag(params.get("stones"), kept.stones?.on, false),
+  limit: pick(params.get("stonelimit"), ["default", "none"], kept.stones?.limit, "default"),
+  reach: pick(Number(params.get("stonereach")), [1, 2], kept.stones?.reach, 2),
+};
+const stonesOption = () => (stoneChoice.on ? { limit: stoneChoice.limit === "none" ? null : undefined, reach: stoneChoice.reach } : false);
 let orientation = pick(params.get("orientation"), ORIENTATIONS, kept.orientation, "auto");
 let mount = null;
 
@@ -158,7 +182,7 @@ const say = (key, ...args) => {
   return typeof word === "function" ? word(...args) : word;
 };
 const pkg = (key, values) => meikyuuSay(language.lang, key, values);
-const keep = () => write({ numbering: 2, kind, levels, solved, filter, look, play, orientation });
+const keep = () => write({ numbering: 2, kind, levels, solved, filter, look, play, orientation, stones: stoneChoice });
 
 const host = document.getElementById("board");
 
@@ -181,6 +205,7 @@ function seg(parent, items, chosen, choose, labelOf, extra) {
 function matching() {
   const all = listOf(kind);
   if (kind === "tall") return all.filter((each) => (filter.shape === "all" || each.recipe.shape === filter.shape) && (filter.mode === "all" || each.recipe.mode === filter.mode) && (filter.tallSize === "all" || each.size === filter.tallSize));
+  if (kind === "colossal" || kind === "colossal-tall") return all.filter((each) => (filter.shape === "all" || each.recipe.shape === filter.shape) && (filter.mode === "all" || each.recipe.mode === filter.mode));
   if (kind !== "maze") return all;
   return all.filter((each) => (filter.shape === "all" || each.recipe.shape === filter.shape) && (filter.mode === "all" || each.recipe.mode === filter.mode) && (filter.size === "all" || each.size === filter.size));
 }
@@ -203,10 +228,10 @@ function swatch(name) {
 function info() {
   const current = levelAt(kind, levels[kind]);
   const done = solved[kind].includes(levels[kind]) ? ` · ✓ ${say("solvedHere")}` : "";
-  if (kind === "maze" || kind === "tall") {
+  if (kind === "maze" || BY_RECIPE.includes(kind)) {
     const { recipe } = current;
     const dims = ["square", "hex", "triangle"].includes(recipe.shape) ? `${recipe.w}×${recipe.h}` : `${recipe.w}`;
-    const size = kind === "tall" ? `${say("kinds").tall} ${MEIKYUU_TALL_SIZES[current.size - 1].label}` : say("sizes")[current.size];
+    const size = kind === "tall" ? `${say("kinds").tall} ${MEIKYUU_TALL_SIZES[current.size - 1].label}` : kind === "maze" ? say("sizes")[current.size] : say("kinds")[kind];
     return say("mazeInfo", size, current.inSize, `${pkg(`shape_${recipe.shape}`)} ${dims}`, pkg(`mode_${recipe.mode.replace(/-/g, "_")}`), current.cells, current.score) + done;
   }
   const game = mount?.arrowGame();
@@ -218,12 +243,13 @@ function info() {
 function render() {
   language.say();
   const list = matching();
-  const isMaze = kind === "maze" || kind === "tall";
+  const isMaze = kind === "maze" || BY_RECIPE.includes(kind);
   seg(document.getElementById("kinds"), KINDS, kind, (each) => choose(each, null), (each) => say("kinds")[each]);
   document.getElementById("maze-filters").hidden = !isMaze;
+  document.getElementById("size-row").hidden = kind === "colossal" || kind === "colossal-tall";
   document.getElementById("orientation-row").hidden = !isMaze;
   document.body.dataset.kind = kind;
-  seg(document.getElementById("shapes"), ["all", ...(kind === "tall" ? TALL_SHAPES : MEIKYUU_SHAPES)], filter.shape, (each) => refilter({ shape: each }), (each) => (each === "all" ? say("all") : pkg(`shape_${each}`)));
+  seg(document.getElementById("shapes"), ["all", ...(kind === "tall" || kind === "colossal-tall" ? TALL_SHAPES : MEIKYUU_SHAPES)], filter.shape, (each) => refilter({ shape: each }), (each) => (each === "all" ? say("all") : pkg(`shape_${each}`)));
   if (kind === "tall") seg(document.getElementById("sizes"), ["all", ...TALL_SIZE_NUMBERS], filter.tallSize, (each) => refilter({ tallSize: each }), (each) => (each === "all" ? say("all") : MEIKYUU_TALL_SIZES[each - 1].label));
   else seg(document.getElementById("sizes"), ["all", ...MEIKYUU_SIZES], filter.size, (each) => refilter({ size: each }), (each) => (each === "all" ? say("all") : say("sizes")[each]));
   seg(document.getElementById("modes"), ["all", ...MEIKYUU_MODES], filter.mode, (each) => refilter({ mode: each }), (each) => (each === "all" ? say("all") : pkg(`mode_${each.replace(/-/g, "_")}`)));
@@ -243,6 +269,9 @@ function render() {
   onOff("tap", "tap");
   onOff("hints", "hints");
   onOff("sound", "sound");
+  seg(document.getElementById("stones"), [true, false], stoneChoice.on, (value) => changeStones({ on: value }), (value) => say(value ? "on" : "off"));
+  seg(document.getElementById("stone-limit"), ["default", "none"], stoneChoice.limit, (value) => changeStones({ limit: value }), (value) => say(value === "none" ? "stonesNone" : "stonesDefault"));
+  seg(document.getElementById("stone-reach"), [1, 2], stoneChoice.reach, (value) => changeStones({ reach: value }), (value) => say(value === 1 ? "stonesNear" : "stonesTwo"));
   gallery();
 }
 
@@ -264,6 +293,12 @@ function changePlay(next) {
   Object.assign(play, next);
   keep();
   mount?.set(play);
+  render();
+}
+function changeStones(next) {
+  Object.assign(stoneChoice, next);
+  keep();
+  mount?.set({ stones: stonesOption() });
   render();
 }
 function refilter(next) {
@@ -319,12 +354,13 @@ function gallery() {
 function put() {
   const level = levelAt(kind, levels[kind]);
   // A tall level is played by its recipe in a box two thirds as wide as it is tall; the others by their number in their list, in a square.
-  const entry = kind === "tall" ? { recipe: level.code, ratio: level.ratio } : { kind, level: levels[kind], ratio: "square" };
+  const entry = BY_RECIPE.includes(kind) ? { recipe: level.code, ratio: level.ratio } : { kind, level: levels[kind], ratio: "square" };
   if (mount === null) {
     mount = mountMeikyuu(host, {
       ...entry,
       ...look,
       ...play,
+      stones: stonesOption(),
       orientation,
       onSolve: () => {
         if (!solved[kind].includes(levels[kind])) solved[kind] = [...solved[kind], levels[kind]];

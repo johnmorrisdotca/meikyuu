@@ -16,6 +16,7 @@ Everything in the tables below is printed by `node scripts/levels-facts.ts [--ca
 | Kind | Levels | Sizes and bands | On the site today |
 | --- | --- | --- | --- |
 | Mazes (`MEIKYUU_MAZE_LEVELS`) | 1024 | 4 sizes of 256: small, medium, large, huge; each size 86 easy, 85 medium, 85 hard | all 1,000 of the 1.0.0 list (217 small, 231 medium, 285 large, 267 huge) |
+| Colossal mazes (`MEIKYUU_COLOSSAL_LEVELS`, `MEIKYUU_COLOSSAL_TALL_LEVELS`) | 256 | two lists of 128: square (about 10,000 cells) and tall (64×96) | not yet |
 | Tall mazes (`MEIKYUU_TALL_LEVELS`) | 1536 | 6 sizes of 256: 6×9, 8×12, 10×15, 12×18, 16×24, 20×30; the same bands | not yet |
 | Arrow puzzles (`MEIKYUU_ARROW_LEVELS`) | 300 | one list, 8 pictures, in thirds of 100 | no |
 | Mixed puzzles (`MEIKYUU_MIXED_LEVELS`) | 100 | one list, in thirds (34, 33, 33) | no |
@@ -262,11 +263,43 @@ The worry: a maze that fills the window leaves nowhere to put a finger to scroll
 
 `e2e/touch.demo.mjs` (Chromium at 390×844, at 360×740, and WebKit for the parts that need no CDP) checks: the box is at least 24 px from both sides of the window; its `touch-action` is `none` and the host's has `pan-y`; **a real touch swipe (Chromium's `synthesizeScrollGesture`) on the box scrolls nothing and draws nothing, and the same swipe in the gutter scrolls the page**; a tall maze is drawn from its top to its bottom by one touch at the size the box fits, at 360 across, zoomed in a stretch at a time with two fingers moving the view between (the page does not move through any of it), and zoomed out with the gutters at 72 px (with the page scrolling from the gutter between); two fingers move a zoomed maze and draw nothing; the Move button; a pinch widens the gutters and the opposite pinch narrows them; and a line held at the edge moves the view or not as asked.
 
+## Colossal mazes (2.1.0)
+
+The biggest the lists go: two lists of 128 in an entry of their own (`@johnmorrisdotca/meikyuu/levels/colossal`), made by `scripts/meikyuu-colossal.ts` on 2026-10-05 from two pools of 6,000 mazes each, a ramp of the effort from the 3rd percentile to the 97th, as the tall lists are.
+
+| List | Levels | Cells | Effort | Score | Rating | Shapes and ways to play |
+| --- | ---: | ---: | ---: | ---: | ---: | --- |
+| Square (`MEIKYUU_COLOSSAL_LEVELS`) | 128 | 9,514 to 11,995 | 1,744 to 9,762 | 80 to 99 | 83 to 100 | all 13 shapes (8 to 13 levels each); to-goal 31, centre-out 31, enter-leave 33, keys 33 |
+| Tall (`MEIKYUU_COLOSSAL_TALL_LEVELS`) | 128 | 6,059 to 6,144 (64×96 for a square one) | 1,224 to 6,008 | 71 to 95 | 77 to 100 | square 44, hex 42, triangle 42; to-goal 28, centre-out 27, enter-leave 29, keys 44 |
+
+- **Why 128 and not 256, and why recipes.** A level is a recipe (about 60 characters), so a list is 17 KB for both, and the maze is built from its seed where it is played: 20 to 65 ms in Node for ten thousand cells (the cut-out shapes, which are built from a raster two to three times as big, take the most). Nothing is generated ahead and nothing needs to be generated on demand beyond that. Colossal mazes take much longer to solve than a huge one (the way through is up to 5,009 cells), so eight pages of sixteen is plenty.
+- **The scoring is the same.** `difficultyOf` is unchanged, its terms still scaled to the biggest the older lists reach, so the colossal scores run 71 to 99 and the order inside a list is by effort, which has more room. A colossal square maze is harder than every huge one at the top (9,762 against 4,990), and the smallest of them has more cells than the biggest huge one (9,514 against 8,923). `isTooEasy` holds every one.
+- **Why the tall one is 64×96.** The tall sizes' recipe form (`square:64x96:…`) and `tallDimensions` already serve it (hexagons 59×103, triangles 83×73, both 2:3 within a few per cent): a width of 80 would need 120 rows, the most `tallDimensions` looks at. 6,144 cells on a phone 342 px across is 5 px a cell at the fit: zoom is the way in, as for every big maze.
+- **Cut-out shapes in the square list** are cut from a raster up to 190 across (36,100 cells laid out), inside `MEIKYUU_MOST_CELLS` (40,000), so a recipe is still refused above what any level lays out.
+
+### Drawing a line ten thousand cells wide, measured
+
+Chromium 1.63 on the Mac, a 390×844 touch viewport, CPU slowed four times (`Emulation.setCPUThrottlingRate`, about a mid-range phone), the demo page, the colossal square level with the longest way through (`ring:143:backtracker:centre-out`, 5,009 cells), a finger crossing six cells a frame from the start to the goal, then 40 wheel zooms and 120 pointer moves of a pan:
+
+| | before | after |
+| --- | ---: | ---: |
+| Cost of the six pointer events of a frame (mean) | 22.6 ms | 6.1 ms |
+| Frames while drawing (mean / 95th percentile) | 28.3 / 50.0 ms | 16.7 / 16.7 ms |
+| Frames while zooming and panning (mean / 95th percentile) | 16.6 / 16.7 ms | 16.7 / 16.7 ms |
+| Page ready, with the maze built from its recipe | 569 ms | 551 ms |
+
+The cost was the line: every pointer event rebuilt the whole `d` attribute of the line (5,009 points) and the game copied the line, so a line of n cells cost n for each of n cells. The line is now kept as text with where each cell's piece ends (`mazeSurface.ts`): a maze is a tree, so two lines from the start that are the same at one place are the same up to it, the part kept is found by a binary search, and only the cells after it are written; the attribute is set once a frame. Walls were already cut into tiles of ten cells drawn only while on screen, so zooming and moving were at the frame rate before and after, and **the board stays SVG**: canvas would have been a second renderer for no gain. The tall list (3,033 cells the longest way) measured 12.7 ms for the six events before the change and 5.7 now, at 16.7 ms frames. A line of more than 600 cells does not ripple on winning (the ripple repaints the whole line each frame).
+
+`e2e/colossal.demo.mjs` holds what must stay true: the line's text is `linePath` of the game's own path after every kind of change (drawn on, cut back by three hundred, drawn on down another way, undone, restarted), on the longest way of each list.
+
+One thing found and not explained: **WebKit on Linux** (software painting, Playwright's `webkit` in the official Linux image) stalls for twenty to seventy seconds a frame once a line of five thousand cells is on the demo page and the page changes anything (it does when it hears the win, and when a button is clicked). The package's own board in a bare page does not (27 ms), WebKit on a Mac does not, Chromium on Linux does not, and an empty maze on the demo page does not. The 2.0.1 demo's own huge-maze smoothness test (`e2e/zoom.demo.mjs`) fails in that engine too, so it is that engine's software painting of an SVG this big and not a cost of this release; the browser test that draws the long line skips that one engine.
+
 ## Making them again
 
 ```sh
 node scripts/meikyuu-levels.ts       # the square lists, from the 1.0.0 list (about two minutes)
 node scripts/meikyuu-tall.ts         # the tall lists (about a minute)
+node --experimental-strip-types scripts/meikyuu-colossal.ts   # the colossal lists (about six minutes)
 node scripts/levels-facts.ts --capacity > facts.md    # the tables (about two minutes more)
 node scripts/levels-trees.ts         # spanning trees
 node scripts/phone-fit.mjs           # the phone table

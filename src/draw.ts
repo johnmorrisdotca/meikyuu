@@ -33,6 +33,8 @@ export type DrawMazeOptions = MazeLook & {
   path?: readonly number[];
   /** The keys picked up. */
   collected?: readonly number[];
+  /** The cells with a stone on them (see stones.ts). */
+  stones?: readonly number[];
   /** Draw the one way from the start to the goal. */
   solution?: boolean;
   /** Cells to light as a hint, and how many cells of the line to draw back first. */
@@ -67,6 +69,7 @@ export function lookStyle(look: MazeLook): string {
   if (board !== "paper") {
     const b = boardLookOf(board);
     colours.push(`--mk-paper:${b.paper}`, `--mk-wall:${b.wall}`, `--mk-frame:${b.frame}`, `--mk-dot:${b.dark ? "rgba(255,255,255,.18)" : "rgba(0,0,0,.14)"}`, `--mk-ink:${b.dark ? "#f3efe4" : "#1f2320"}`);
+    colours.push(`--mk-stone:${b.dark ? "#e8ecf7" : "#4b5d8f"}`, `--mk-stone-edge:${b.dark ? "#10131c" : "#161c33"}`);
     colours.push(`--mk-trail:${look.trail === undefined ? b.trail : look.trail in MEIKYUU_TRAILS ? MEIKYUU_TRAILS[look.trail as MeikyuuTrailName][b.dark ? "dark" : "light"] : look.trail}`);
   } else if (look.trail !== undefined && !(look.trail in MEIKYUU_TRAILS)) colours.push(`--mk-trail:${look.trail}`);
   return colours.join(";");
@@ -110,6 +113,14 @@ export function marksOf(maze: Maze, collected: readonly number[] = []): string {
   return out.join("");
 }
 
+/** The stones laid on a maze, as SVG: each a marble (`mk-stone`) with a small gleam (`mk-gleam`) on the cell, one unit across being a cell. */
+export function stonesOf(maze: Maze, stones: readonly number[]): string {
+  return stones.map((cell) => {
+    const [x, y] = maze.grid.centres[cell]!;
+    return `<g class="mk-marble" data-mark="stone" data-cell="${cell}"><circle class="mk-stone" cx="${fixed(x)}" cy="${fixed(y)}" r="0.32" stroke-width="0.07"/><circle class="mk-gleam" cx="${fixed(x - 0.1)}" cy="${fixed(y - 0.11)}" r="0.09"/></g>`;
+  }).join("");
+}
+
 /** The maze as SVG text. */
 export function drawMaze(maze: Maze, options: DrawMazeOptions = {}): string {
   const { grid } = maze;
@@ -131,6 +142,7 @@ export function drawMaze(maze: Maze, options: DrawMazeOptions = {}): string {
     const [hx, hy] = grid.centres[options.path[options.path.length - 1]!]!;
     parts.push(`<circle class="mk-head" cx="${fixed(hx)}" cy="${fixed(hy)}" r="${fixed(lineWidth * 0.8)}" stroke-width="0.06"/>`);
   }
+  if (options.stones !== undefined && options.stones.length > 0) parts.push(`<g class="mk-stones">${stonesOf(maze, options.stones)}</g>`);
   parts.push(marksOf(maze, options.collected));
   parts.push(`<path class="mk-walls" d="${standingWalls(maze).map(wallPath).join("")}" stroke-width="${fixed(wallWidth)}"/>`);
   const style = options.standalone === true ? `<style>${MEIKYUU_STYLE}</style>` : "";

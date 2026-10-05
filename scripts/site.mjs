@@ -15,6 +15,8 @@ const uses = [
   `measureMaze(maze).effort  // how many cells a person draws to solve it`,
   `import { MEIKYUU_MAZE_LEVELS } from "@johnmorrisdotca/meikyuu/levels";  // 1,024 recipes: four sizes of 256, each a little harder level by level`,
   `import { MEIKYUU_TALL_LEVELS } from "@johnmorrisdotca/meikyuu/levels/tall";  // 1,536 portrait mazes for a phone held upright`,
+  `import { MEIKYUU_COLOSSAL_LEVELS } from "@johnmorrisdotca/meikyuu/levels/colossal";  // 128 mazes of about ten thousand cells, and 128 tall ones`,
+  `mountMeikyuu(element, { recipe: level.code, stones: { limit: 5, reach: 2 } })  // marbles to shut the passages you have given up on`,
   `mountMeikyuu(element, { recipe: level.code, ratio: level.ratio, orientation: "auto" })  // a tall maze, lying down on a wide screen`,
   `difficultyOf(maze).score  // how hard it is to play, 0 to 100`,
   `drawMaze(maze, { path, hint, board: "wood" })  // the maze as SVG text`,
@@ -50,7 +52,7 @@ const page = `<!doctype html>
           <span class="fam-label" data-say="shape"></span>
           <div class="fam-seg" role="group" data-say-label="shape" id="shapes" data-testid="shapes"></div>
         </div>
-        <div class="setup fam-row" data-help-en="Show only one size: small, medium, large or huge (a tall maze has six sizes of its own). A huge one has thousands of cells and takes a while." data-help-ja="大きさをひとつに絞ります（小、中、大、巨大。縦長の迷路には6つの大きさがあります）。巨大な迷路は数千マスあり、時間がかかります。">
+        <div class="setup fam-row" id="size-row" data-help-en="Show only one size: small, medium, large or huge (a tall maze has six sizes of its own). A huge one has thousands of cells and takes a while." data-help-ja="大きさをひとつに絞ります（小、中、大、巨大。縦長の迷路には6つの大きさがあります）。巨大な迷路は数千マスあり、時間がかかります。">
           <span class="fam-label" data-say="size"></span>
           <div class="fam-seg" role="group" data-say-label="size" id="sizes" data-testid="sizes"></div>
         </div>
@@ -80,6 +82,9 @@ const page = `<!doctype html>
         <div class="setup fam-row" data-help-en="With this on, tapping a corridor runs the line along it as far as the next fork, so you can play with one finger tapping." data-help-ja="オンにすると、通路をタップするだけで、次の分かれ道まで線が伸びます。タップだけで遊べます。"><span class="fam-label" data-say="tap"></span><div class="fam-seg" role="group" data-say-label="tap" id="tap" data-testid="tap"></div></div>
         <div class="setup fam-row" data-help-en="Show or hide the Hint button, which lights the next stretch of the right way." data-help-ja="正しい道の次の部分を光らせる「ヒント」ボタンを、表示するか隠します。"><span class="fam-label" data-say="hints"></span><div class="fam-seg" role="group" data-say-label="hints" id="hints" data-testid="hints"></div></div>
         <div class="setup fam-row" data-help-en="Turn on small sounds for each step, key, arrow and win. They are made in your browser." data-help-ja="歩み、鍵、矢、クリアのたびに小さな音を鳴らします。音はブラウザの中で作っています。"><span class="fam-label" data-say="sound"></span><div class="fam-seg" role="group" data-say-label="sound" id="sound" data-testid="sound"></div></div>
+        <div class="setup fam-row" data-help-en="Stones: with this on, a Stone button lays a marble on a cell beside your line, and the line cannot enter it. Press and hold on a cell does the same without the button." data-help-ja="石：オンにすると「石」ボタンで、線のとなりのマスに石を置けます。線は石の上を通れません。マスを長押ししても置けます。"><span class="fam-label" data-say="stones"></span><div class="fam-seg" role="group" data-say-label="stones" id="stones" data-testid="stones"></div></div>
+        <div class="setup fam-row" data-help-en="How many stones can be down at once: a few that grow with the maze, or as many as you like." data-help-ja="同時に置ける石の数（迷路の大きさに応じた少数、または無制限）。"><span class="fam-label" data-say="stonesLimit"></span><div class="fam-seg" role="group" data-say-label="stonesLimit" id="stone-limit" data-testid="stone-limit"></div></div>
+        <div class="setup fam-row" data-help-en="How far from your line a stone may be laid: right next to it, or up to two cells along the passages." data-help-ja="線からどこまで離れた場所に石を置けるか（すぐとなり、または通路づたいに2マスまで）。"><span class="fam-label" data-say="stonesReach"></span><div class="fam-seg" role="group" data-say-label="stonesReach" id="stone-reach" data-testid="stone-reach"></div></div>
         <p class="fam-fine" data-say="keep"></p>
       </section>
       <section class="more" aria-labelledby="shapes-title">

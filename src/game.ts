@@ -1,4 +1,5 @@
 import { solutionOf, walk, type Maze } from "./maze.ts";
+import type { StoneRules } from "./stones.ts";
 
 /**
  * A MAZE BEING DRAWN, as pure functions: each takes a game and returns a new one (or the same one,
@@ -6,7 +7,7 @@ import { solutionOf, walk, type Maze } from "./maze.ts";
  *
  * A line starts at the start cell and runs through open passages, one cell to the next. A cell the
  * line is on again cuts the line back to it, so drawing back shortens it and a line never crosses
- * itself. A key is picked up by passing over it and stays picked up when the line is drawn back.
+ * itself, and never enters a cell with a stone on it (stones.ts). A key is picked up by passing over it and stays picked up when the line is drawn back.
  * The maze is solved when the line's end is on the goal and every key is picked up; after that the
  * line is fixed until Undo or Restart.
  *
@@ -25,13 +26,17 @@ export type MazeGame = {
   readonly drawing: boolean;
   /** How many strokes have been made, to count moves. */
   readonly strokes: number;
-  /** What each finished stroke started from, newest last, for Undo. */
-  readonly undo: readonly { readonly path: readonly number[]; readonly collected: readonly number[]; readonly solved: boolean }[];
+  /** The cells with a stone on them, in the order they were laid (see stones.ts); always empty in a game with no `rules`. */
+  readonly stones: readonly number[];
+  /** What stones may be laid (`StoneRules`), or null for a game that has none. */
+  readonly rules: StoneRules | null;
+  /** What each finished stroke (or each stone laid or taken up) started from, newest last, for Undo. */
+  readonly undo: readonly { readonly path: readonly number[]; readonly collected: readonly number[]; readonly solved: boolean; readonly stones: readonly number[] }[];
 };
 
-/** A game of the maze, with nothing drawn. */
-export function newMazeGame(maze: Maze): MazeGame {
-  return { maze, path: [], collected: [], solved: false, drawing: false, strokes: 0, undo: [] };
+/** A game of the maze, with nothing drawn, and, if given, the rules of its stones (stones.ts). */
+export function newMazeGame(maze: Maze, rules: StoneRules | null = null): MazeGame {
+  return { maze, path: [], collected: [], solved: false, drawing: false, strokes: 0, undo: [], stones: [], rules };
 }
 
 /** The end of the line, or null while there is none. */
@@ -50,7 +55,7 @@ function step(game: MazeGame, cell: number): MazeGame {
   if (cell === head) return game;
   const at = path.lastIndexOf(cell);
   if (at >= 0) return withLine(game, path.slice(0, at + 1));
-  if (!game.maze.links[head]!.includes(cell)) return game;
+  if (!game.maze.links[head]!.includes(cell) || game.stones.includes(cell)) return game;
   return withLine(game, [...path, cell]);
 }
 
@@ -65,7 +70,7 @@ export function pressMaze(game: MazeGame, cell: number): MazeGame {
   if (game.solved || game.drawing) return game;
   const onLine = game.path.includes(cell);
   if (!(game.path.length === 0 ? cell === game.maze.start : onLine)) return game;
-  const begun: MazeGame = { ...game, drawing: true, undo: [...game.undo, { path: game.path, collected: game.collected, solved: game.solved }] };
+  const begun: MazeGame = { ...game, drawing: true, undo: [...game.undo, { path: game.path, collected: game.collected, solved: game.solved, stones: game.stones }] };
   return step(begun, cell);
 }
 
@@ -86,12 +91,12 @@ export function liftMaze(game: MazeGame): MazeGame {
 export function undoMaze(game: MazeGame): MazeGame {
   const last = game.undo[game.undo.length - 1];
   if (last === undefined) return game;
-  return { ...game, path: last.path, collected: last.collected, solved: last.solved, drawing: false, undo: game.undo.slice(0, -1) };
+  return { ...game, path: last.path, collected: last.collected, solved: last.solved, stones: last.stones, drawing: false, undo: game.undo.slice(0, -1) };
 }
 
 /** Everything off the maze again. */
 export function restartMaze(game: MazeGame): MazeGame {
-  return game.path.length === 0 && game.strokes === 0 ? game : newMazeGame(game.maze);
+  return game.path.length === 0 && game.strokes === 0 && game.stones.length === 0 ? game : newMazeGame(game.maze, game.rules);
 }
 
 /**

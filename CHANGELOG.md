@@ -6,6 +6,20 @@ All notable changes to this project are written here. The format follows
 
 ## [Unreleased]
 
+## [2.1.0] - 2026-10-05
+
+### Added
+
+- **Colossal mazes: `@johnmorrisdotca/meikyuu/levels/colossal`.** Two lists of 128 levels, in an entry of their own: **square** ones of about ten thousand cells (9,514 to 11,995; a hundred across or so, in all thirteen shapes and all four ways to play) and **tall** ones for a phone held upright (64 across and 96 down for a square one, 6,059 to 6,144 cells, hexagons and triangles laid out to fill the same 2:3 container). `MEIKYUU_COLOSSAL_LEVELS`, `MEIKYUU_COLOSSAL_TALL_LEVELS`, `colossalLevelOf`, `colossalTallLevelOf`, `findColossalLevels`, `MEIKYUU_COLOSSAL_PER_LIST`, `COLOSSAL_CELLS`, `COLOSSAL_TALL_WIDTH`, `COLOSSAL_TALL_HEIGHT`. Each list is in order of effort (1,744 to 9,762 and 1,224 to 6,008), scored by the same `difficultyOf` (80 to 99 and 71 to 95), deterministic from its seeds, made by `scripts/meikyuu-colossal.ts`. The lists are recipes, so they are 17 KB, and a maze is built from its seed where it is played (about 20 to 60 ms in a browser for ten thousand cells): nothing is generated ahead and nothing needs to be. They are not in `MEIKYUU_MAZE_LEVELS` and renumber nothing. Every level is rebuilt, measured, and solved by drawing its way in `levels.colossal.*.test.ts`.
+- **Stones.** `mountMeikyuu(host, { stones: true | { limit, reach } })`, off by default: a marble laid on a passage cell beside the line that the line may not enter, for shutting a passage found to lead nowhere. Laid only within `reach` cells (1 or 2; default 2) along the passages of a cell of the line, not through another stone, never on the line, the start or the goal, while `limit` stones are not down (`stoneLimitFor(cells)` by default, 4 for a small maze to 13 for a colossal one; `null` for no limit), and not once the maze is solved. Taken up by laying on it again. By the Stone button (`mount.stoneMode(on)`: a tap lays or takes up, nothing draws), by press-and-hold on a cell (a finger or the mouse still for half a second; a hold on the line is a pause), or by Shift and an arrow key beside the end of the line. A stone is part of the game: **Undo** puts back what a lay or a take changed, **Restart** takes every stone up, and the run is kept with its stones as one short text (`mount.run()`, `mount.restore(code)`, `encodeRun`, `decodeRun`: the line's steps, a `~`, the stones' cells in base 36). Never part of the maze, its recipe, its answer or any check. New on the handle: `stoneMode`, `stones`, `stonesLeft`, `stone(cell)`, `clearStones`, `run`, `restore`; the `meikyuu-stones` event and `onStones`; `stones` and `stonesLeft` on every event's detail; `stones`, `stone-limit` and `stone-reach` on the tag; `stones` on `drawMaze`; `--mk-stone` and `--mk-stone-edge`; the words in English and Japanese; a `stone` sound. The pure rules are `canLayStone`, `layStone`, `takeStone`, `toggleStone`, `clearStones`, `withStoneRules`, `stoneRulesOf`, `stonesLeft`, `hasStone`; `MazeGame` has `stones` and `rules`, and `newMazeGame(maze, rules?)`.
+- The demo has the two colossal lists and a Stones row (on or off, a few or no limit, next to the line or two cells).
+
+### Changed
+
+- **A long line is cheap to draw and to draw back.** The line is kept as text with where each cell's piece ends, so drawing on or back by a few cells costs those cells and not the whole line, and it is written to the page once a frame however many cells a finger crossed. On a phone-sized Chromium slowed four times over, drawing a 5,009-cell line at six cells a frame cost 22.6 ms a frame and now costs 6.1 (frames held at 16.7 ms). Walls were already drawn only while on screen; zooming and moving a colossal maze was already at the frame rate, so the board stays SVG.
+- A line of more than 600 cells does not ripple when it wins.
+- A stone's group is redrawn only when the stones change.
+
 ## [2.0.1] - 2026-10-02
 
 ### Fixed

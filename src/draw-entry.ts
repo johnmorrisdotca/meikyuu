@@ -3,7 +3,7 @@
  * gives the drawing its look, and the words it says in English and Japanese. A separate entry
  * (`@johnmorrisdotca/meikyuu/draw`), so a server that only builds mazes never loads any of it.
  */
-export { boardLookOf, drawMaze, lookAttributes, lookStyle, marksOf } from "./draw.ts";
+export { boardLookOf, drawMaze, lookAttributes, lookStyle, marksOf, stonesOf } from "./draw.ts";
 export type { DrawMazeOptions, MazeLook } from "./draw.ts";
 export { arrowColour, arrowMarkup, drawArrows } from "./drawArrows.ts";
 export type { DrawArrowsOptions } from "./drawArrows.ts";

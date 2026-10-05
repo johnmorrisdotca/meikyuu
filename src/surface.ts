@@ -24,6 +24,12 @@ export type SurfaceHooks = {
   lift(): void;
   /** A pointer that moved the view was let go without having moved: a tap at a point of the board. */
   tap(at: Point, event: PointerEvent): void;
+  /**
+   * A pointer has been held down in one place for `HOLD_TIME` without moving, drawing or not: a press-and-hold at a point of the board. Answer true
+   * when it did something with it, and the pointer is then let go of (a line begun under it is lifted, and what the finger does next is ignored until it is up);
+   * answer false to carry on as before. Not asked for when the hooks leave it out.
+   */
+  hold?(at: Point, pixel: Point): boolean;
   /** The view changed: draw what it shows. */
   render(view: View, shown: Box, size: ViewBox): void;
 };
@@ -71,6 +77,8 @@ export type SurfaceOptions = {
 /** How far a pointer may move and still be a tap, in pixels, and how long it may take, in milliseconds. */
 const TAP_SLOP = 8;
 const TAP_TIME = 500;
+/** How long a pointer must stay where it went down, in milliseconds, to be a press-and-hold. A little over a tap's longest, so a tap is never both. */
+export const HOLD_TIME = 520;
 
 export function createSurface(box: HTMLElement, area: Box, hooks: SurfaceHooks, pad = 0.6, options: SurfaceOptions = {}): Surface {
   let size: ViewBox = { width: Math.max(1, box.clientWidth), height: Math.max(1, box.clientHeight), area };
@@ -79,7 +87,9 @@ export function createSurface(box: HTMLElement, area: Box, hooks: SurfaceHooks, 
   let panAlways = options.panMode === true;
   let view: View = fitView(size, pad, fitMode);
   let frame = 0;
-  let mode: "none" | "draw" | "pan" | "pinch" = "none";
+  let mode: "none" | "draw" | "pan" | "pinch" | "held" = "none";
+  let holdTimer = 0;
+  let holdFrom: [number, number] | null = null;
   const pointers = new Map<number, [number, number]>();
   let last: Point | null = null;
   let pinchFrom: { distance: number } | null = null;
@@ -123,6 +133,23 @@ export function createSurface(box: HTMLElement, area: Box, hooks: SurfaceHooks, 
     invalidate();
   };
 
+  const stopHold = (): void => {
+    if (holdTimer !== 0) window.clearTimeout(holdTimer);
+    holdTimer = 0;
+    holdFrom = null;
+  };
+  /** The pointer has stayed put: offer the press-and-hold to the board. */
+  const holdFired = (): void => {
+    holdTimer = 0;
+    const from = holdFrom;
+    holdFrom = null;
+    if (from === null || pointers.size !== 1 || (mode !== "draw" && mode !== "pan") || panned || hooks.hold === undefined) return;
+    if (!hooks.hold(pointAt(view, from[0], from[1]), from)) return;
+    if (mode === "draw") hooks.lift();
+    mode = "held";
+    last = null;
+  };
+
   const onDown = (event: PointerEvent): void => {
     if (event.pointerType === "mouse" && event.button !== 0 && event.button !== 1) return;
     const pixel = local(event);
@@ -134,6 +161,7 @@ export function createSurface(box: HTMLElement, area: Box, hooks: SurfaceHooks, 
     }
     event.preventDefault();
     if (pointers.size === 2) {
+      stopHold();
       if (mode === "draw") hooks.lift();
       mode = "pinch";
       const [a, b] = [...pointers.values()] as [[number, number], [number, number]];
@@ -149,6 +177,10 @@ export function createSurface(box: HTMLElement, area: Box, hooks: SurfaceHooks, 
       mode = "draw";
       last = at;
     } else mode = "pan";
+    if (hooks.hold !== undefined && event.button === 0) {
+      holdFrom = pixel;
+      holdTimer = window.setTimeout(holdFired, HOLD_TIME);
+    }
   };
 
   const onMove = (event: PointerEvent): void => {
@@ -176,6 +208,8 @@ export function createSurface(box: HTMLElement, area: Box, hooks: SurfaceHooks, 
       setView(next);
       return;
     }
+    if (holdFrom !== null && Math.hypot(pixel[0] - holdFrom[0], pixel[1] - holdFrom[1]) > TAP_SLOP) stopHold();
+    if (mode === "held") return;
     if (mode === "draw") {
       const events = typeof event.getCoalescedEvents === "function" ? event.getCoalescedEvents() : [];
       for (const each of events.length > 0 ? events : [event]) {
@@ -197,6 +231,7 @@ export function createSurface(box: HTMLElement, area: Box, hooks: SurfaceHooks, 
     if (!pointers.has(event.pointerId)) return;
     const pixel = local(event);
     pointers.delete(event.pointerId);
+    stopHold();
     if (mode === "draw") hooks.lift();
     else if (mode === "pan" && !panned && event.type === "pointerup" && event.timeStamp - started < TAP_TIME) hooks.tap(pointAt(view, pixel[0], pixel[1]), event);
     if (pointers.size === 0) {
@@ -287,6 +322,7 @@ export function createSurface(box: HTMLElement, area: Box, hooks: SurfaceHooks, 
       box.removeEventListener("pointerup", onUp);
       box.removeEventListener("pointercancel", onUp);
       box.removeEventListener("wheel", onWheel);
+      stopHold();
       resize?.disconnect();
     },
   };
