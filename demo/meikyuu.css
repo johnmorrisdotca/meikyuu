@@ -11,6 +11,12 @@
 /* The board on its table: the play element on the family's felt, its words in the felt's ink. */
 #board { margin: 8px auto 0; max-width: min(100%, 640px); padding: 14px 14px 10px; min-width: 0;
   --mkp-ink: var(--felt-ink); --mkp-surface: rgba(0,0,0,.28); --mkp-rule: rgba(255,255,255,.35); --mkp-muted: var(--felt-ink); --mkp-accent: #ffd23f; --mkp-good: #b9f1c9; }
+#solid-board { margin: 8px auto 0; max-width: min(100%, 560px); padding: 14px 14px 10px; min-width: 0;
+  --mkp-ink: var(--felt-ink); --mkp-surface: rgba(0,0,0,.28); --mkp-rule: rgba(255,255,255,.35); --mkp-muted: var(--felt-ink); --mkp-accent: #ffd23f; --mkp-good: #b9f1c9; }
+#solid-board .mk-box { border-radius: 10px; }
+#solid-board .mk-button { box-shadow: inset 0 0 0 1px rgba(255,255,255,.35); border-color: transparent; }
+#solid-board .mk-says, #solid-board .mk-messages { opacity: .92; }
+#solid-board .mk-banner { color: #1f4135; background: #fff8dc; }
 /* A tall maze lies down on a wide screen, and wants a wider table to do it on. */
 body[data-kind="tall"] #board { max-width: min(100%, 960px); }
 #board .mk-box { border-radius: 10px; }
@@ -39,6 +45,6 @@ body[data-kind="tall"] #board { max-width: min(100%, 960px); }
 .more .uses { grid-template-columns: 1fr; }
 .tag meikyuu-board { display: block; max-width: 420px; }
 @media (max-width: 520px) {
-  #board { padding: 10px 10px 8px; }
+  #board, #solid-board { padding: 10px 10px 8px; }
   .settings .fam-label { min-width: 100%; }
 }

@@ -91,3 +91,21 @@ open a *Fix a translation* issue with the string's name. `{name}` and the other 
 | `stoneNoLine` | Draw a line first. A stone goes beside it. | 先に線を引いてください。石は線のとなりに置きます。 |
 | `stoneSolved` | The maze is solved. | 迷宮は解けています。 |
 | `stoneDrawing` | Lift your finger first. | いったん指を離してください。 |
+| `solidLabel` | {shape} maze of {n} cells. {play} | {shape}の迷宮（{n}マス）。{play} |
+| `solid_cube` | Cube | 立方体 |
+| `solid_sphere` | Sphere | 球 |
+| `solid_tetrahedron` | Tetrahedron | 正四面体 |
+| `solid_octahedron` | Octahedron | 正八面体 |
+| `solid_icosahedron` | Icosahedron | 正二十面体 |
+| `play_solid` | Draw a line from the green start to the gold goal over the surface. Turn the solid to follow your line round it. | 緑のスタートから金色のゴールまで、表面をたどって線を引きます。線を追って立体を回します。 |
+| `solidHow` | Draw from the green start. Drag away from your line, or use the arrows, to turn the solid. It also turns by itself when your line nears the edge of the side you can see. | 緑のスタートから線を引きます。線から離れたところをドラッグするか、矢印を使うと立体が回ります。線が見えている面の端に近づくと、立体はひとりでに回ります。 |
+| `solidHidden` | The end of your line is out of sight. Turn the solid, or press Face me. | 線の先が見えない面にあります。立体を回すか「こちらへ」を押してください。 |
+| `turnLeft` | Turn left | 左へ回す |
+| `turnRight` | Turn right | 右へ回す |
+| `turnUp` | Turn up | 上へ回す |
+| `turnDown` | Turn down | 下へ回す |
+| `turnPadLabel` | Turn the solid | 立体を回す |
+| `faceMe` | Face me | こちらへ |
+| `faceMeLabel` | Turn the solid so that the end of your line faces you | 線の先がこちらを向くように立体を回す |
+| `solidTurnMode` | Turn only | 回すだけ |
+| `solidTurnModeLabel` | Drag anywhere to turn the solid, instead of drawing | 線を引かずに、どこをドラッグしても立体を回す |

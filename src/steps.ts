@@ -1,4 +1,4 @@
-import type { Maze } from "./maze.ts";
+import type { MazeCore } from "./maze.ts";
 
 /**
  * A LINE AS ITS STEPS: one character a step, the place of the cell stepped to among the neighbours of the cell stepped from
@@ -10,7 +10,7 @@ import type { Maze } from "./maze.ts";
 const STEP = /^[0-9a-z]*$/;
 
 /** A line, cell by cell from the start, as its steps. Null if it is not a run of neighbours. */
-export function lineToSteps(maze: Maze, cells: readonly number[]): string | null {
+export function lineToSteps(maze: MazeCore, cells: readonly number[]): string | null {
   let out = "";
   for (let at = 1; at < cells.length; at += 1) {
     const place = maze.grid.neighbours[cells[at - 1]!]?.indexOf(cells[at]!) ?? -1;
@@ -21,7 +21,7 @@ export function lineToSteps(maze: Maze, cells: readonly number[]): string | null
 }
 
 /** The cells steps walk from the maze's start, or null if any step goes where a line cannot: into a wall, off the maze, or back onto the line. */
-export function stepsToLine(maze: Maze, steps: string): number[] | null {
+export function stepsToLine(maze: MazeCore, steps: string): number[] | null {
   if (!STEP.test(steps)) return null;
   const cells = [maze.start];
   const seen = new Set(cells);

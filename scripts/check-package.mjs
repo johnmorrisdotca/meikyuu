@@ -89,6 +89,14 @@ if (!isPerfect(tall.grid, tall.links) || !(tall.grid.box.w < tall.grid.box.h) ||
 const { drawMaze } = await import(${JSON.stringify(`${pkg.name}/draw`)});
 const svg = drawMaze(maze);
 if (!svg.startsWith("<svg") || !svg.includes("mk-walls")) throw new Error("the drawing of level 12 is " + svg.slice(0, 80));
+const { buildSolidMaze, checkSolidAnswer, drawSolid, solidSolutionOf } = await import(${JSON.stringify(`${pkg.name}/3d`)});
+const { MEIKYUU_SOLID_LEVELS, solidLevelOf } = await import(${JSON.stringify(`${pkg.name}/3d/levels`)});
+const solid = solidLevelOf("cube", "small", 5);
+const solidMaze = buildSolidMaze(solid.recipe);
+if (solidMaze.grid.cells !== 96 || !isPerfect(solidMaze.grid, solidMaze.links) || !checkSolidAnswer(solidMaze, solidSolutionOf(solidMaze)) || !playSolution(newMazeGame(solidMaze)).solved) throw new Error("a level of the solids is not a perfect cube that can be solved");
+if (!drawSolid(solidMaze).startsWith("<svg") || Object.values(MEIKYUU_SOLID_LEVELS).flatMap((sizes) => Object.values(sizes)).flat().length !== 960) throw new Error("the solid levels or the drawing of a solid are not what they should be");
+const { mountSolid } = await import(${JSON.stringify(`${pkg.name}/3d/play`)});
+if (typeof mountSolid !== "function") throw new Error("mountSolid is not a function");
 console.log(names.join(" "));
 `,
 );

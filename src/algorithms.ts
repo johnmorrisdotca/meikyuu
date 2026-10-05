@@ -22,6 +22,12 @@ export type MeikyuuAlgorithm = (typeof MEIKYUU_ALGORITHMS)[number];
 /** Each cell's open neighbours. */
 export type Links = number[][];
 
+/**
+ * What a generator reads of a grid: how many cells there are and which are beside which. A `Grid` is one, and so is the surface of a solid
+ * (`@johnmorrisdotca/meikyuu/3d`); `shape`, `w` and `h` are only for Eller's algorithm, which needs rows and so makes square mazes.
+ */
+export type CellGraph = Pick<Grid, "cells" | "neighbours" | "w" | "h"> & { readonly shape: string };
+
 function emptyLinks(cells: number): Links {
   return Array.from({ length: cells }, () => []);
 }
@@ -31,7 +37,7 @@ function carve(links: Links, a: number, b: number): void {
   links[b]!.push(a);
 }
 
-function backtracker(grid: Grid, random: Random): Links {
+function backtracker(grid: CellGraph, random: Random): Links {
   const links = emptyLinks(grid.cells);
   const seen = new Uint8Array(grid.cells);
   const first = below(random, grid.cells);
@@ -52,7 +58,7 @@ function backtracker(grid: Grid, random: Random): Links {
   return links;
 }
 
-function growing(grid: Grid, random: Random, newest: number): Links {
+function growing(grid: CellGraph, random: Random, newest: number): Links {
   const links = emptyLinks(grid.cells);
   const seen = new Uint8Array(grid.cells);
   const first = below(random, grid.cells);
@@ -75,7 +81,7 @@ function growing(grid: Grid, random: Random, newest: number): Links {
   return links;
 }
 
-function hunt(grid: Grid, random: Random): Links {
+function hunt(grid: CellGraph, random: Random): Links {
   const links = emptyLinks(grid.cells);
   const seen = new Uint8Array(grid.cells);
   let cell = below(random, grid.cells);
@@ -109,7 +115,7 @@ function hunt(grid: Grid, random: Random): Links {
   }
 }
 
-function prim(grid: Grid, random: Random): Links {
+function prim(grid: CellGraph, random: Random): Links {
   const links = emptyLinks(grid.cells);
   const seen = new Uint8Array(grid.cells);
   const frontier: [number, number][] = [];
@@ -130,7 +136,7 @@ function prim(grid: Grid, random: Random): Links {
   return links;
 }
 
-function kruskal(grid: Grid, random: Random): Links {
+function kruskal(grid: CellGraph, random: Random): Links {
   const links = emptyLinks(grid.cells);
   const parent = Int32Array.from({ length: grid.cells }, (_, i) => i);
   const find = (cell: number): number => {
@@ -155,7 +161,7 @@ function kruskal(grid: Grid, random: Random): Links {
   return links;
 }
 
-function wilson(grid: Grid, random: Random): Links {
+function wilson(grid: CellGraph, random: Random): Links {
   const links = emptyLinks(grid.cells);
   const inTree = new Uint8Array(grid.cells);
   const next = new Int32Array(grid.cells).fill(-1);
@@ -177,7 +183,7 @@ function wilson(grid: Grid, random: Random): Links {
   return links;
 }
 
-function eller(grid: Grid, random: Random): Links {
+function eller(grid: CellGraph, random: Random): Links {
   if (grid.shape !== "square") throw new Error("Eller's algorithm works a row at a time, so it makes square mazes only");
   const { w, h } = grid;
   const links = emptyLinks(grid.cells);
@@ -215,7 +221,7 @@ function eller(grid: Grid, random: Random): Links {
 }
 
 /** The open neighbours of every cell, for a perfect maze of the grid made by this algorithm from this stream. */
-export function carveMaze(grid: Grid, algorithm: MeikyuuAlgorithm, random: Random): Links {
+export function carveMaze(grid: CellGraph, algorithm: MeikyuuAlgorithm, random: Random): Links {
   switch (algorithm) {
     case "backtracker":
       return backtracker(grid, random);

@@ -19,13 +19,13 @@ export { circleGrid, gridOf, hexGrid, ringCounts, squareGrid, triangleGrid } fro
 export { maskOf } from "./masks.ts";
 export type { Mask } from "./masks.ts";
 export { carveMaze, MEIKYUU_ALGORITHMS } from "./algorithms.ts";
-export type { Links, MeikyuuAlgorithm } from "./algorithms.ts";
+export type { CellGraph, Links, MeikyuuAlgorithm } from "./algorithms.ts";
 export { buildMaze, isPerfect, layoutCells, MEIKYUU_MODES, MEIKYUU_MOST_CELLS, MEIKYUU_MOST_KEYS, parseRecipe, passageCount, recipeCode, solutionOf, walk } from "./maze.ts";
-export type { Door, MazeRecipe, Maze, MeikyuuMode } from "./maze.ts";
+export type { Door, MazeRecipe, Maze, MazeCore, MeikyuuMode } from "./maze.ts";
 export { EFFORT_LEAST, EFFORT_MOST, measureMaze, ratingOf } from "./measure.ts";
 export type { MazeMeasure } from "./measure.ts";
-export { DIFFICULTY_CEILINGS, DIFFICULTY_WEIGHTS, difficultyOf, easyFloorAt, isTooEasy, MEIKYUU_EASY_PLACES, MEIKYUU_LEAST } from "./difficulty.ts";
-export type { MazeDifficulty } from "./difficulty.ts";
+export { DIFFICULTY_CEILINGS, DIFFICULTY_WEIGHTS, difficultyOf, difficultyOfGraph, easyFloorAt, isTooEasy, MEIKYUU_EASY_PLACES, MEIKYUU_LEAST } from "./difficulty.ts";
+export type { MazeDifficulty, MazeGeometry } from "./difficulty.ts";
 export { autoTurn, cellsAlong, MEIKYUU_ORIENTATIONS, resolveTurn, toDisplay, toLogical, turnedBox, turnFor, turnTransform, unturnedBox } from "./orientation.ts";
 export type { MeikyuuOrientation, Turn } from "./orientation.ts";
 export { lineToSteps, stepsToLine } from "./steps.ts";

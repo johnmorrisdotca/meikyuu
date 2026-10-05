@@ -54,6 +54,19 @@ export type Maze = {
   readonly keys: readonly number[];
 };
 
+/**
+ * What the game, the stones, the measure and the steps read of a maze: the passages, the two ends, the keys, and how many cells there are and which
+ * are beside which. A `Maze` is one, and so is a maze over the surface of a solid (`SolidMaze` in `@johnmorrisdotca/meikyuu/3d`), so one set of rules
+ * plays them both.
+ */
+export type MazeCore = {
+  readonly links: Links;
+  readonly start: number;
+  readonly goal: number;
+  readonly keys: readonly number[];
+  readonly grid: { readonly cells: number; readonly neighbours: readonly (readonly number[])[] };
+};
+
 const ROWLESS: readonly MeikyuuShape[] = ["circle", "heart", "leaf", "star", "ring", "diamond", "cross", "moon", "hexagon", "pyramid"];
 
 /** A recipe as one short word, such as `square:12x9:wilson:to-goal:48213` or `heart:25:prim:keys-3:7`, and the other way (`parseRecipe`). */
@@ -241,7 +254,7 @@ export function buildMaze(recipe: MazeRecipe): Maze {
 }
 
 /** The one way from the start to the goal, cell by cell, both ends included. */
-export function solutionOf(maze: Maze): number[] {
+export function solutionOf(maze: Pick<MazeCore, "links" | "start" | "goal">): number[] {
   const { before } = walk(maze.links, maze.start);
   const out: number[] = [];
   for (let cell = maze.goal; cell !== -1; cell = before[cell]!) out.push(cell);
@@ -254,7 +267,7 @@ export function passageCount(links: Links): number {
 }
 
 /** Whether the passages are a spanning tree of the grid: every cell reached, and exactly one way to each. */
-export function isPerfect(grid: Grid, links: Links): boolean {
+export function isPerfect(grid: MazeCore["grid"], links: Links): boolean {
   if (passageCount(links) !== grid.cells - 1) return false;
   for (let cell = 0; cell < grid.cells; cell += 1) for (const next of links[cell]!) if (!grid.neighbours[cell]!.includes(next) || !links[next]!.includes(cell)) return false;
   return walk(links, 0).order.length === grid.cells;

@@ -1,4 +1,4 @@
-import { solutionOf, walk, type Maze } from "./maze.ts";
+import { solutionOf, walk, type MazeCore } from "./maze.ts";
 
 /**
  * HOW HARD A MAZE IS, measured from the maze alone (docs/MAZES.md says why each number is here).
@@ -37,7 +37,7 @@ export type MazeMeasure = {
 };
 
 /** Measure a maze. */
-export function measureMaze(maze: Maze): MazeMeasure {
+export function measureMaze(maze: MazeCore): MazeMeasure {
   const { links } = maze;
   const cells = links.length;
   const solution = solutionOf(maze);

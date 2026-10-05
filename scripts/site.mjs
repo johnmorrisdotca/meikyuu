@@ -18,6 +18,8 @@ const uses = [
   `import { MEIKYUU_COLOSSAL_LEVELS } from "@johnmorrisdotca/meikyuu/levels/colossal";  // 128 mazes of about ten thousand cells, and 128 tall ones`,
   `mountMeikyuu(element, { recipe: level.code, stones: { limit: 5, reach: 2 } })  // marbles to shut the passages you have given up on`,
   `mountMeikyuu(element, { recipe: level.code, ratio: level.ratio, orientation: "auto" })  // a tall maze, lying down on a wide screen`,
+  `import { solidLevelOf } from "@johnmorrisdotca/meikyuu/3d/levels";  // 960 mazes over a cube, a globe and the triangle solids`,
+  `mountSolid(element, { recipe: "cube:7:prim:48213", stones: true })  // a maze over a solid, turned by dragging, drawn from face to face`,
   `difficultyOf(maze).score  // how hard it is to play, 0 to 100`,
   `drawMaze(maze, { path, hint, board: "wood" })  // the maze as SVG text`,
   `mountMeikyuu(element, { kind: "maze", level: 12, tap: true })  // a board to play, by touch and mouse`,
@@ -91,6 +93,27 @@ const page = `<!doctype html>
         <h2 id="shapes-title" data-say="shapesTitle"></h2>
         <p data-say="shapesText"></p>
         <ul class="shapes" id="gallery" data-testid="gallery"></ul>
+      </section>
+      <section class="more solids" aria-labelledby="solids-title">
+        <h2 id="solids-title" data-say="solidsTitle"></h2>
+        <p data-say="solidsText"></p>
+        <div class="setup fam-row" data-help-en="Choose the solid: a cube, a globe, or a solid of four, eight or twenty triangles." data-help-ja="立体を選びます（立方体、球、または4・8・20枚の三角形でできた立体）。">
+          <span class="fam-label" data-say="solid"></span>
+          <div class="fam-seg" role="group" data-say-label="solid" id="solid-kinds" data-testid="solid-kinds"></div>
+        </div>
+        <div class="setup fam-row" data-help-en="Small, medium or large: the same solid cut into more and more cells." data-help-ja="小・中・大：同じ立体を、だんだん細かく区切ります。">
+          <span class="fam-label" data-say="size"></span>
+          <div class="fam-seg" role="group" data-say-label="size" id="solid-sizes" data-testid="solid-sizes"></div>
+        </div>
+        <div class="setup fam-row" data-help-en="Step to the next or the previous level, or type a number. Inside a size, every level is a little harder than the one before." data-help-ja="矢印で前後のレベルに移るか、番号を入力して移ります。どの大きさでも、前のレベルより少し難しくなっています。">
+          <span class="fam-label" data-say="level"></span>
+          <button type="button" class="fam-button" id="solid-previous" data-testid="solid-previous" data-say-label="previous">←</button>
+          <input class="fam-field level-input" id="solid-level-input" data-testid="solid-level-input" type="number" min="1" step="1" inputmode="numeric" data-say-label="level" />
+          <span class="of" id="solid-level-of" data-testid="solid-level-of"></span>
+          <button type="button" class="fam-button" id="solid-next" data-testid="solid-next" data-say-label="next">→</button>
+        </div>
+        <p class="info" id="solid-info" data-testid="solid-info"></p>
+        <div class="table fam-felt" id="solid-board" data-testid="solid-board"></div>
       </section>
       ${familyUnreviewed({ id })}
       <section class="more" aria-labelledby="more-title">

@@ -1,7 +1,7 @@
 <h1 align="center">Meikyuu <sub>迷宮</sub></h1>
 
 <p align="center"><strong>A maze game for JavaScript and TypeScript.</strong><br>
-Draw a line through over a thousand mazes, and as many tall ones for a phone held upright, with a finger or the mouse: squares, hexagons, triangles, circles and shapes cut out of them (a heart, a leaf, a star), from a few cells to thousands, each level a short recipe that rebuilds the same maze in every browser. Seven algorithms, a difficulty measure, a score for how hard each is to play, lists that never get easier, zoom and pan, and arrow puzzles too. The maze drawn as SVG and played in any page with one call or one tag. No dependencies.</p>
+Draw a line through over a thousand mazes, and as many tall ones for a phone held upright, with a finger or the mouse: squares, hexagons, triangles, circles and shapes cut out of them (a heart, a leaf, a star), from a few cells to thousands, and mazes over the whole surface of a cube, a globe and the solids made of triangles that you turn to follow your line round, each level a short recipe that rebuilds the same maze in every browser. Seven algorithms, a difficulty measure, a score for how hard each is to play, lists that never get easier, zoom and pan, and arrow puzzles too. The maze drawn as SVG and played in any page with one call or one tag. No dependencies.</p>
 
 <p align="center">
   <a href="https://github.com/johnmorrisdotca/meikyuu/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/johnmorrisdotca/meikyuu/actions/workflows/ci.yml/badge.svg"></a>
@@ -60,6 +60,7 @@ And in a page, a level to play, by touch and mouse, with nothing else to set up:
 - **A thousand mazes, then arrow puzzles and mixed ones.** 1,024 maze levels, 300 arrow levels and 100 mixed levels: four sizes of 256 mazes, each size ordered by effort so that no level is easier to draw than the one before, and each scored 0 to 100 for how hard it is to play.
 - **Tall mazes for a phone held upright.** 1,536 portrait levels, two columns to three rows, in six sizes of 256 (6×9 to 20×30 cells), that lie down by themselves on a wide screen (`orientation`) without changing the maze or a line drawn on it.
 - **Colossal mazes.** Two more lists, in an entry of their own (`/levels/colossal`): 128 square mazes of about ten thousand cells (a hundred across or so, every shape) and 128 tall ones 64 across and 96 down, each a recipe that builds in about twenty milliseconds, drawn and played with the same zoom, gutters and panning as any other.
+- **Mazes over a solid.** A perfect maze over the whole surface of a cube, a globe (a football of hexagons and twelve pentagons), a tetrahedron, an octahedron or an icosahedron (`/3d`, `/3d/play`, `/3d/levels`): 960 levels, drawn in 3D on a canvas, turned by dragging, by arrows and by two fingers, with the line crossing from face to face over the edges and the solid turning by itself to keep the end of the line in view. The answer is a list of cells, the same however the solid is turned.
 - **Stones.** A marble (`stones` option) laid beside the line on a passage the player has given up on, which the line cannot enter: a helper for the big mazes, never a pen. Laid only within `reach` cells of the line (2 by default), as many as `limit` allows (a few, or none for no limit), by the Stone button, by pressing and holding, or by Shift and an arrow key. Part of the game for Undo, Restart and saving a run, never part of the maze or its answer.
 - **Made for a thumb.** Always some page beside the board to scroll by, touches kept only by the board, a pinch to zoom, two fingers to move a zoomed maze, and the view following a line drawn to the edge.
 - **Every shape.** Squares, hexagons, triangles and circles, and shapes cut out of them (a heart, a leaf, a star, a ring, a diamond, a cross, a moon), from a few cells to thousands.
@@ -186,6 +187,40 @@ host.addEventListener("meikyuu-stones", (event) => console.log((event as CustomE
 
 Three ways to lay one, none of which needs the button: **the Stone mode** (the board's own Stone button, or `mount.stoneMode(true)` from a button of your own: while it is on a one-finger drag only moves the view and a tap lays or takes up a stone), **press and hold** (a finger or the mouse held still on a cell for about half a second lays a stone there, or takes up the one there, whatever the mode; a hold on the line itself is a pause, and does nothing), and **Shift and an arrow key** beside the end of the line. A refusal says why in the board's words (`stoneFar`, `stoneOnLine`, `stoneLimit`, ...) and a hold with no line to lay beside says nothing. The marble is drawn as `.mk-stone` with a `.mk-gleam` (`--mk-stone`, `--mk-stone-edge`; `drawMaze` takes `stones`), and the element has `stones`, `stone-limit` (a number or `none`) and `stone-reach`.
 
+## Mazes over a solid
+
+<p align="center">
+  <img src="docs/solid-cube.jpg" alt="A maze over a cube, seen at the corner where three faces meet, with a green line drawn from the start across the edge from one face to the next, and the gold goal on the face to the right" width="230">
+  <img src="docs/solid-sphere.jpg" alt="A maze over a globe of hexagons and twelve pentagons, with a green line drawn a good way over it and the globe turned to keep the end of the line in the middle" width="230">
+  <img src="docs/solid-icosahedron.jpg" alt="A maze over an icosahedron, twenty triangular faces each cut into small triangles, with a green line drawn across several faces" width="230">
+</p>
+
+A maze needs only a **cell graph**, and the surface of a solid is one: a cube is six squares joined across every edge, a globe is a football, and an icosahedron is twenty triangles. The same seven algorithms (all but Eller's, which needs rows) carve a perfect maze over it, so there is exactly one way between any two cells however many edges and faces it crosses. The player looks at the solid from outside, sees one side at a time, draws the line along the passages and **turns the solid** to follow it round. The rules are the very rules of the flat game (`pressMaze`, `dragMaze`, `hintMaze`, stones, `lineToSteps`): they read a maze through `MazeCore`, which a maze over a solid is as a flat one is.
+
+```ts
+import { buildSolidMaze, checkSolidAnswer, solidDifficultyOf, solidSolutionOf } from "@johnmorrisdotca/meikyuu/3d";
+import { mountSolid } from "@johnmorrisdotca/meikyuu/3d/play";
+import { solidLevelOf } from "@johnmorrisdotca/meikyuu/3d/levels";
+
+const level = solidLevelOf("cube", "medium", 12)!;        // level 12 of the 64 medium cubes: "cube:7:prim:…", 294 cells
+const maze = buildSolidMaze(level.recipe);                  // the same maze in every browser and every Node
+solidDifficultyOf(maze).score;                              // 0 to 100, on the scale the flat mazes are scored on
+checkSolidAnswer(maze, solidSolutionOf(maze));              // true: a list of cells, from the start to the goal, in time of its length
+const board = mountSolid(host, { recipe: level.code, stones: true, tap: true });   // a board to play, by touch and mouse
+board?.turn("left"); board?.faceMe(); board?.place(maze.goal);   // turn it, bring the end of the line round, find a cell on the picture
+```
+
+- **Five solids.** `cube` (six squares, 6 n^2 cells), `sphere` (a geodesic globe: 12 pentagons and the rest hexagons, 10 n^2 + 2 cells), `tetrahedron` (4 n^2 triangles), `octahedron` (8 n^2) and `icosahedron` (20 n^2). The globe was weighed against a cube with its corners rounded off, which has the very graph of the cube and so would be the same maze in a different coat; the football's cells are nearly equal in size all over, with no poles and no seams. A triangle has three ways out, so the triangle solids branch least and run longest.
+- **A recipe** is `cube:7:prim:48213` (the solid, how many ways it is cut, the algorithm, the seed). The start is chosen from the seed and the goal among the farthest third from it over the surface, and deep along the passages, so the goal is usually on the far side.
+- **Levels.** `/3d/levels` has 64 for each of three sizes (small, medium, large) of each solid, 960 in all, from 72 to 720 cells (`SOLID_CUTS`), each list in the order of the difficulty it scores. Made by `node --experimental-strip-types scripts/meikyuu-solid.ts` (about twenty seconds), seeded, into `src/levels/solid.data.ts`.
+- **Looking at it.** The solid is turned by a quaternion and seen from a point a few times its reach away (a gentle perspective), at the size that just fits the box; only the cells facing the eye are drawn, shaded by how squarely they face it, and a cell is *on the near side* when its outline runs the right way round. A point of the picture is on a cell when it is inside that outline, so what a finger lands on is what the eye saw, and the tests check it against an independent method (a ray from the eye through the point, tested against the cell's polygon in three dimensions).
+- **Turning.** Drag anywhere that is not the end of your line (or the start, before there is a line) to turn the solid like a ball in the hand; two fingers also pinch to zoom (`SOLID_ZOOM_LEAST` to `SOLID_ZOOM_MOST`) and twist; the wheel zooms; the arrow keys and buttons turn a step; **Face me** (`faceMe()`, the F key) brings the end of the line round to face you with a side of its cell level; **Turn only** makes every drag turn.
+- **Across an edge.** When the end of a line being drawn faces away (`EDGE_SAFE`) or a passage leads from it to a cell that is hidden or nearly edge-on (`EDGE_NEIGHBOUR`), the solid turns by itself, gently (`EDGE_RATE`), so that the head and the cells it leads to together face you, which puts the edge between them at the front. A line can be drawn from one face to the next, all the way round, without letting go. `edgeTurn: false` turns it off.
+- **Performance.** The picture is a canvas painted in about a dozen fills and two strokes whatever the number of cells, and at a lower resolution while it moves: on a phone-sized Chromium (390 px wide, 3x) slowed four times over, all five solids at 576 to 720 cells turn at the screen's 60 frames a second with no frame over 20 ms.
+- **The answer** is the list of cells, never the view: `lineToSteps` (a character a step, the place of the next cell among the neighbours of the last) writes it, `encodeRun` / `decodeRun` keep it with its stones, and `checkSolidAnswer` checks it. `drawSolid(maze, options)` is a still picture as SVG text.
+- The design, with the numbers: [docs/SOLIDS.md](./docs/SOLIDS.md).
+- Keys on the board: arrows turn; W, A, S and D step the line (Shift lays a stone); F or Home is Face me; + and − zoom; Backspace or Ctrl/Cmd+Z undoes. Words in English and Japanese (`solid_cube`, `faceMe`, `turnLeft`, ...).
+
 ## Tall mazes, turning and touch
 
 A phone held upright leaves a box about two thirds as wide as it is tall (a 390 by 844 phone, less the page's header and the board's buttons, leaves about 342 by 560 with a gutter each side), so the tall levels are **2:3**, width to height. A 1:2 tower fits the same phone at 82% of the width, and a 1:1 square at 100% but 50% fewer cells at the same cell size; `docs/LEVELS.md` has the table for five phones. Squares are 6×9 up to 20×30; hexagons and triangles are laid out to fill the same container.
@@ -223,6 +258,9 @@ Entry points, so a page loads only what it uses:
 | `@johnmorrisdotca/meikyuu/levels/tall` | The 1,536 tall (portrait) maze levels, in six sizes |
 | `@johnmorrisdotca/meikyuu/levels/colossal` | The 256 colossal maze levels (about ten thousand cells): 128 square and 128 tall |
 | `@johnmorrisdotca/meikyuu/levels/legacy` | The 1,000 maze levels of 1.0.0, and where each went |
+| `@johnmorrisdotca/meikyuu/3d` | Mazes over the surface of a solid, no page needed: the graph of a cube, a globe or a solid of triangles, the maze on it, how hard it is, where a turned solid lands on a picture and which cell a point is on, the checker, a still as SVG |
+| `@johnmorrisdotca/meikyuu/3d/play` | `mountSolid`: a solid to turn and draw on in any element, with its buttons, words and events |
+| `@johnmorrisdotca/meikyuu/3d/levels` | The 960 levels of the solids: 64 for each of three sizes of each of five solids |
 
 ```ts
 import { buildMaze, carveMaze, gridOf, MEIKYUU_SHAPES } from "@johnmorrisdotca/meikyuu";
@@ -486,6 +524,7 @@ All of these are held by tests, and the ones with a name are exported.
 | Levels | 1,024 maze levels, 300 arrow levels, 100 mixed | `MEIKYUU_MAZE_LEVELS`, `MEIKYUU_ARROW_LEVELS`, `MEIKYUU_MIXED_LEVELS` |
 | Tall levels | 1,536, six sizes of 256 (6 to 20 cells across, 2:3) | `MEIKYUU_TALL_LEVELS`, `MEIKYUU_TALL_SIZES` |
 | Colossal levels | 256, two lists of 128: square (9,500 to 12,000 cells) and tall (64 across, 96 down, 2:3) | `MEIKYUU_COLOSSAL_LEVELS`, `MEIKYUU_COLOSSAL_TALL_LEVELS` |
+| Solid levels | 960, 64 for each of three sizes of five solids (72 to 720 cells); a recipe at most 6,000 cells | `MEIKYUU_SOLID_LEVELS`, `MEIKYUU_MOST_SOLID_CELLS` |
 | Stones | beside the line within 1 or 2 cells (default 2); a few by default (3 and one more for every hundred cells across), or no limit | `stoneLimitFor`, `MEIKYUU_STONE_REACH_MOST` |
 | The biggest maze in the lists | 8,923 cells (level 1002); the smallest is 15 (level 1) | `levelOf("maze", n).cells` |
 | A maze's size words | small under 150 cells, medium under 800, large under 4,000, huge beyond | `sizeOf`, `MEIKYUU_SIZES` |
@@ -539,6 +578,9 @@ src/
 ├── levels-tall.ts    the "/levels/tall" entry: the 1,536 tall maze levels
 ├── levels-colossal.ts the "/levels/colossal" entry: the 256 colossal maze levels
 ├── levels-legacy.ts  the "/levels/legacy" entry: the 1.0.0 maze levels, and where each went
+├── levels-solid.ts   the "/3d/levels" entry: the 960 levels of the solids
+├── solid-entry.ts    the "/3d" entry: mazes over a solid, without the page
+├── solid-play-entry.ts the "/3d/play" entry: a solid played in any element
 ├── draw-entry.ts     the "/draw" entry: the drawing, its boards and colours, its style and its words
 ├── draw.ts           a maze as SVG text: walls, line, marks, hint, solution
 ├── drawArrows.ts     an arrow board as SVG text
@@ -557,11 +599,23 @@ src/
 ├── element.ts        the "/element" entry: the <meikyuu-board> class
 ├── element-define.ts the "/element/define" entry: defines the tag on the page
 ├── version.ts        the package's version
+├── solid/
+│   ├── vec.ts          points and quaternions: the arithmetic of turning a solid
+│   ├── solidGrid.ts    the surface of a cube, a globe or a solid of triangles as a cell graph
+│   ├── solidMaze.ts    a maze over a solid: its recipe, where it starts and ends, how hard it is, the checker
+│   ├── solidSizes.ts   the three sizes of each solid
+│   ├── solidView.ts    a solid turned and put on a picture: the near side, which cell a point is on, turning to a cell, turning by itself
+│   ├── solidPaint.ts   the solid painted on a canvas: shaded cells, walls, line, marks, stones, hint
+│   ├── solidColours.ts the colours the canvas reads from the page's custom properties
+│   ├── solidDraw.ts    a maze over a solid as SVG text
+│   ├── solidStyle.ts   the style of a playable solid, beside the board's
+│   └── solidMount.ts   mountSolid: draws a solid into an element and plays it: turning, drawing, stones, words, events
 └── levels/
     ├── mazes.data.ts   the 1,024 maze levels, each a recipe with its effort, its cells and its score
     ├── tall.data.ts    the 1,536 tall levels, the same
     ├── colossal.data.ts the 256 colossal levels, the same
     ├── legacy.data.ts  the 1.0.0 maze levels, kept, with the score each is given now
+    ├── solid.data.ts   the 960 solid levels, each a recipe with its effort, its cells and its score
     ├── arrows.data.ts  the arrow levels, each a recipe with its effort
     └── mixed.data.ts   the mixed levels, each two recipes with their effort
 ```
@@ -632,7 +686,7 @@ What is **not**, and could come next:
 - A mixed puzzle has one unlock button that frees every locked arrow; a puzzle with several buttons for several groups of locks is not made.
 - The Japanese in the demo and in the package's words is written by the author of the package and has not been read by a native reader: corrections are welcome (the issue template says how).
 - No sound recordings. The sounds are tones made in the browser; a recorded set could be added if one that is public domain is found.
-- Mazes with loops (braids), weaves, and mazes in three dimensions are not made.
+- Mazes with loops (braids) and weaves are not made, and neither is a maze whose layers turn like a Rubik's cube: the solids' mazes are over a surface that stays as it is.
 
 ## Development
 

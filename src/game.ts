@@ -1,4 +1,4 @@
-import { solutionOf, walk, type Maze } from "./maze.ts";
+import { solutionOf, walk, type Maze, type MazeCore } from "./maze.ts";
 import type { StoneRules } from "./stones.ts";
 
 /**
@@ -15,8 +15,8 @@ import type { StoneRules } from "./stones.ts";
  * the line, which cuts it back there), `dragMaze` follows it into each cell, `liftMaze` ends it and
  * is what Undo undoes. A tap, where the page offers it, is `tapMaze`.
  */
-export type MazeGame = {
-  readonly maze: Maze;
+export type MazeGame<M extends MazeCore = Maze> = {
+  readonly maze: M;
   /** The line, from the start; empty until it is begun. */
   readonly path: readonly number[];
   /** The keys picked up, in the order they were. */
@@ -35,19 +35,19 @@ export type MazeGame = {
 };
 
 /** A game of the maze, with nothing drawn, and, if given, the rules of its stones (stones.ts). */
-export function newMazeGame(maze: Maze, rules: StoneRules | null = null): MazeGame {
+export function newMazeGame<M extends MazeCore>(maze: M, rules: StoneRules | null = null): MazeGame<M> {
   return { maze, path: [], collected: [], solved: false, drawing: false, strokes: 0, undo: [], stones: [], rules };
 }
 
 /** The end of the line, or null while there is none. */
-export function headOf(game: MazeGame): number | null {
+export function headOf(game: MazeGame<MazeCore>): number | null {
   return game.path.length === 0 ? null : game.path[game.path.length - 1]!;
 }
 
-const finished = (game: MazeGame, path: readonly number[], collected: readonly number[]): boolean => path.length > 0 && path[path.length - 1] === game.maze.goal && game.maze.keys.every((key) => collected.includes(key));
+const finished = (game: MazeGame<MazeCore>, path: readonly number[], collected: readonly number[]): boolean => path.length > 0 && path[path.length - 1] === game.maze.goal && game.maze.keys.every((key) => collected.includes(key));
 
 /** The line with the cell added or cut back to; the same game when the cell is not a step the line can take. */
-function step(game: MazeGame, cell: number): MazeGame {
+function step<M extends MazeCore>(game: MazeGame<M>, cell: number): MazeGame<M> {
   if (game.solved) return game;
   const { path } = game;
   const head = headOf(game);
@@ -59,28 +59,28 @@ function step(game: MazeGame, cell: number): MazeGame {
   return withLine(game, [...path, cell]);
 }
 
-function withLine(game: MazeGame, path: readonly number[]): MazeGame {
+function withLine<M extends MazeCore>(game: MazeGame<M>, path: readonly number[]): MazeGame<M> {
   const last = path[path.length - 1]!;
   const collected = game.maze.keys.includes(last) && !game.collected.includes(last) ? [...game.collected, last] : game.collected;
   return { ...game, path, collected, solved: finished(game, path, collected) };
 }
 
 /** A finger down on a cell: it begins a stroke if the cell is the start, the line's end, or on the line. */
-export function pressMaze(game: MazeGame, cell: number): MazeGame {
+export function pressMaze<M extends MazeCore>(game: MazeGame<M>, cell: number): MazeGame<M> {
   if (game.solved || game.drawing) return game;
   const onLine = game.path.includes(cell);
   if (!(game.path.length === 0 ? cell === game.maze.start : onLine)) return game;
-  const begun: MazeGame = { ...game, drawing: true, undo: [...game.undo, { path: game.path, collected: game.collected, solved: game.solved, stones: game.stones }] };
+  const begun: MazeGame<M> = { ...game, drawing: true, undo: [...game.undo, { path: game.path, collected: game.collected, solved: game.solved, stones: game.stones }] };
   return step(begun, cell);
 }
 
 /** The finger moved into a cell. A cell that is not next to the line's end is ignored: a page that moves faster than cells go calls this for each cell between. */
-export function dragMaze(game: MazeGame, cell: number): MazeGame {
+export function dragMaze<M extends MazeCore>(game: MazeGame<M>, cell: number): MazeGame<M> {
   return game.drawing ? step(game, cell) : game;
 }
 
 /** The finger lifted. A stroke that changed nothing is forgotten, so Undo never has a step that did nothing. */
-export function liftMaze(game: MazeGame): MazeGame {
+export function liftMaze<M extends MazeCore>(game: MazeGame<M>): MazeGame<M> {
   if (!game.drawing) return game;
   const last = game.undo[game.undo.length - 1]!;
   const same = last.path.length === game.path.length && last.path.every((cell, i) => cell === game.path[i]) && last.collected.length === game.collected.length;
@@ -88,14 +88,14 @@ export function liftMaze(game: MazeGame): MazeGame {
 }
 
 /** Put the whole line back as it was before the last stroke. */
-export function undoMaze(game: MazeGame): MazeGame {
+export function undoMaze<M extends MazeCore>(game: MazeGame<M>): MazeGame<M> {
   const last = game.undo[game.undo.length - 1];
   if (last === undefined) return game;
   return { ...game, path: last.path, collected: last.collected, solved: last.solved, stones: last.stones, drawing: false, undo: game.undo.slice(0, -1) };
 }
 
 /** Everything off the maze again. */
-export function restartMaze(game: MazeGame): MazeGame {
+export function restartMaze<M extends MazeCore>(game: MazeGame<M>): MazeGame<M> {
   return game.path.length === 0 && game.strokes === 0 && game.stones.length === 0 ? game : newMazeGame(game.maze, game.rules);
 }
 
@@ -104,7 +104,7 @@ export function restartMaze(game: MazeGame): MazeGame {
  * another way, or to the cell itself if that comes first. A tap on a cell of the line cuts the line back to
  * it. It begins the line when the tap is on the start. It never decides a fork for the player.
  */
-export function tapMaze(game: MazeGame, cell: number): MazeGame {
+export function tapMaze<M extends MazeCore>(game: MazeGame<M>, cell: number): MazeGame<M> {
   if (game.solved || game.drawing) return game;
   const head = headOf(game);
   if (head === null) return cell === game.maze.start ? liftMaze(pressMaze(game, cell)) : game;
@@ -126,7 +126,7 @@ export function tapMaze(game: MazeGame, cell: number): MazeGame {
 }
 
 /** How far the line has got, for a progress line: cells drawn, keys, and whether it is solved. */
-export function mazeProgress(game: MazeGame): { cells: number; keys: number; keysOf: number; solved: boolean } {
+export function mazeProgress(game: MazeGame<MazeCore>): { cells: number; keys: number; keysOf: number; solved: boolean } {
   return { cells: game.path.length, keys: game.collected.length, keysOf: game.maze.keys.length, solved: game.solved };
 }
 
@@ -136,7 +136,7 @@ export function mazeProgress(game: MazeGame): { cells: number; keys: number; key
  * counting the one the line is on. The right way goes to the nearest key not yet picked up, and to the goal
  * when there are none. Empty `ahead` when the maze is solved.
  */
-export function hintMaze(game: MazeGame, ahead = 8): { back: number; cells: number[] } {
+export function hintMaze(game: MazeGame<MazeCore>, ahead = 8): { back: number; cells: number[] } {
   const { maze } = game;
   if (game.solved) return { back: 0, cells: [] };
   if (game.path.length === 0) return { back: 0, cells: [maze.start] };
@@ -158,7 +158,7 @@ export function hintMaze(game: MazeGame, ahead = 8): { back: number; cells: numb
 }
 
 /** Draw the maze's whole solution through the game, a cell at a time, as a finger would: the way a test or a demo plays. Keys are collected on the way. */
-export function playSolution(game: MazeGame): MazeGame {
+export function playSolution<M extends MazeCore>(game: MazeGame<M>): MazeGame<M> {
   let next = pressMaze(game, game.maze.start);
   const { maze } = game;
   // Visit each key and come back, then go to the goal.

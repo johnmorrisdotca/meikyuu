@@ -7,6 +7,8 @@ import { mountMeikyuu } from "./dist/play-entry.js";
 import { levelsOf, MEIKYUU_KINDS, MEIKYUU_LEVELS_PER_SIZE, MEIKYUU_SIZES } from "./dist/levels.js";
 import { MEIKYUU_TALL_LEVELS, MEIKYUU_TALL_SIZES, TALL_SHAPES } from "./dist/levels-tall.js";
 import { MEIKYUU_COLOSSAL_LEVELS, MEIKYUU_COLOSSAL_TALL_LEVELS } from "./dist/levels-colossal.js";
+import { mountSolid } from "./dist/solid-play-entry.js";
+import { MEIKYUU_SOLID_PER_LIST, SOLID_KINDS, SOLID_SIZE_NAMES, solidLevelOf } from "./dist/levels-solid.js";
 
 // The page's own words, in the two languages it speaks. Set as text, never as HTML. The names of the shapes and the ways to play are the package's own.
 const WORDS = {
@@ -55,6 +57,11 @@ const WORDS = {
     shapesText: "Each shape is a maze of its own. Press one to play its levels.",
     moreTitle: "Using it",
     moreText: "The board above is the package itself: the rules, the drawing and every level. Each line below is all it takes.",
+    solidsTitle: "Over a solid",
+    solidsText: "A maze over the whole surface of a cube, a globe or a solid of triangles. Draw from the green start; drag away from your line to turn the solid, and it turns by itself when your line reaches the edge of the side you can see, so the line can cross from one face to the next.",
+    solid: "Solid",
+    solidSizes: { small: "Small", medium: "Medium", large: "Large" },
+    solidInfo: (name, size, place, cells, score) => `${name} · ${size} · level ${place} of ${MEIKYUU_SOLID_PER_LIST} · ${cells} cells · difficulty ${score} of 100`,
     tagTitle: "As a tag",
     tagText: "The same board in one element, with no framework: an arrow puzzle, level 6.",
     foot: "Every level is a short recipe that rebuilds the same maze in every browser, and each size is checked on every build to get a little harder, level by level. Your progress stays on this device.",
@@ -105,6 +112,11 @@ const WORDS = {
     shapesText: "どの形も、それぞれ別の迷路です。押すと、その形のレベルを遊べます。",
     moreTitle: "使い方",
     moreText: "上の盤面は、このパッケージそのもの（ルール、描き方、すべてのレベル）で動いています。下の各行がそれぞれ必要なコードのすべてです。",
+    solidsTitle: "立体の上で",
+    solidsText: "立方体、球、三角形でできた立体の、表面全体にわたる迷路です。緑のスタートから線を引きます。線から離れたところをドラッグすると立体が回り、線が見えている面の端に近づくと立体がひとりでに回るので、線は面から面へ渡れます。",
+    solid: "立体",
+    solidSizes: { small: "小", medium: "中", large: "大" },
+    solidInfo: (name, size, place, cells, score) => `${name}・${size}・レベル${place}／${MEIKYUU_SOLID_PER_LIST}・${cells}マス・難しさ${score}／100`,
     tagTitle: "タグとして",
     tagText: "同じ盤面を、フレームワークなしの一つの要素で。矢印パズルのレベル6です。",
     foot: "どのレベルも、どのブラウザでも同じ迷路を作り直せる短いレシピです。どの大きさも、レベルが進むごとに少しずつ難しくなることを、ビルドのたびに確かめています。進み具合はこの端末に残ります。",
@@ -175,6 +187,13 @@ const stoneChoice = {
 const stonesOption = () => (stoneChoice.on ? { limit: stoneChoice.limit === "none" ? null : undefined, reach: stoneChoice.reach } : false);
 let orientation = pick(params.get("orientation"), ORIENTATIONS, kept.orientation, "auto");
 let mount = null;
+/** The solid section's choice: which solid, which size, which level of its sixty-four. */
+const solid = {
+  kind: pick(params.get("solid"), [...SOLID_KINDS], kept.solid?.kind, "cube"),
+  size: pick(params.get("solidsize"), [...SOLID_SIZE_NAMES], kept.solid?.size, "small"),
+  level: Number(params.get("solidlevel") ?? kept.solid?.level ?? 1),
+};
+let solidMount = null;
 
 const language = familyLanguage({ id: "meikyuu", words: WORDS, onChange: () => render() });
 const say = (key, ...args) => {
@@ -182,7 +201,7 @@ const say = (key, ...args) => {
   return typeof word === "function" ? word(...args) : word;
 };
 const pkg = (key, values) => meikyuuSay(language.lang, key, values);
-const keep = () => write({ numbering: 2, kind, levels, solved, filter, look, play, orientation, stones: stoneChoice });
+const keep = () => write({ numbering: 2, kind, levels, solved, filter, look, play, orientation, stones: stoneChoice, solid });
 
 const host = document.getElementById("board");
 
@@ -273,6 +292,38 @@ function render() {
   seg(document.getElementById("stone-limit"), ["default", "none"], stoneChoice.limit, (value) => changeStones({ limit: value }), (value) => say(value === "none" ? "stonesNone" : "stonesDefault"));
   seg(document.getElementById("stone-reach"), [1, 2], stoneChoice.reach, (value) => changeStones({ reach: value }), (value) => say(value === 1 ? "stonesNear" : "stonesTwo"));
   gallery();
+  renderSolids();
+}
+
+/** The solid section's choosers, and the solid. */
+function renderSolids() {
+  solid.level = Math.min(Math.max(1, Number.isInteger(solid.level) ? solid.level : 1), MEIKYUU_SOLID_PER_LIST);
+  seg(document.getElementById("solid-kinds"), [...SOLID_KINDS], solid.kind, (each) => chooseSolid({ kind: each }), (each) => pkg(`solid_${each}`));
+  seg(document.getElementById("solid-sizes"), [...SOLID_SIZE_NAMES], solid.size, (each) => chooseSolid({ size: each }), (each) => say("solidSizes")[each]);
+  const input = document.getElementById("solid-level-input");
+  if (document.activeElement !== input) input.value = String(solid.level);
+  input.max = String(MEIKYUU_SOLID_PER_LIST);
+  document.getElementById("solid-level-of").textContent = ` / ${MEIKYUU_SOLID_PER_LIST}`;
+  document.getElementById("solid-previous").disabled = solid.level <= 1;
+  document.getElementById("solid-next").disabled = solid.level >= MEIKYUU_SOLID_PER_LIST;
+  const level = solidLevelOf(solid.kind, solid.size, solid.level);
+  document.getElementById("solid-info").textContent = say("solidInfo", pkg(`solid_${solid.kind}`), say("solidSizes")[solid.size], solid.level, level.cells, level.score);
+}
+
+function putSolid() {
+  const level = solidLevelOf(solid.kind, solid.size, solid.level);
+  const host = document.getElementById("solid-board");
+  if (solidMount === null) solidMount = mountSolid(host, { recipe: level.code, ...look, ...play, stones: stonesOption() });
+  else solidMount.load(level.code);
+  host.dataset.level = String(solid.level);
+  host.dataset.ready = "true";
+}
+
+function chooseSolid(next) {
+  Object.assign(solid, next);
+  keep();
+  putSolid();
+  renderSolids();
 }
 
 /** Which way up the maze is shown: the board turns it (a quarter) and the line already drawn is the same line. */
@@ -287,18 +338,21 @@ function change(next) {
   Object.assign(look, next);
   keep();
   mount?.set(look);
+  solidMount?.set(look);
   render();
 }
 function changePlay(next) {
   Object.assign(play, next);
   keep();
   mount?.set(play);
+  solidMount?.set({ tap: play.tap, hints: play.hints, sound: play.sound });
   render();
 }
 function changeStones(next) {
   Object.assign(stoneChoice, next);
   keep();
   mount?.set({ stones: stonesOption() });
+  solidMount?.set({ stones: stonesOption() });
   render();
 }
 function refilter(next) {
@@ -399,5 +453,13 @@ document.getElementById("level-input").addEventListener("change", (event) => {
   choose(kind, asked);
 });
 
+document.getElementById("solid-previous").addEventListener("click", () => chooseSolid({ level: solid.level - 1 }));
+document.getElementById("solid-next").addEventListener("click", () => chooseSolid({ level: solid.level + 1 }));
+document.getElementById("solid-level-input").addEventListener("change", (event) => {
+  const asked = Number(event.target.value);
+  if (Number.isInteger(asked)) chooseSolid({ level: asked });
+});
+
 choose(kind, null);
+putSolid();
 host.dataset.ready = "true";

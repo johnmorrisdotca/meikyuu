@@ -1,4 +1,4 @@
-import { solutionOf, type Maze } from "./maze.ts";
+import { solutionOf, type Maze, type MazeCore } from "./maze.ts";
 import { measureMaze, type MazeMeasure } from "./measure.ts";
 
 /**
@@ -57,11 +57,35 @@ const BEND = (25 * Math.PI) / 180;
 
 const share = (count: number, ceiling: number): number => Math.min(1, Math.log(1 + count) / Math.log(1 + ceiling));
 
-/** Walk the straight guess from the start: always the open passage nearest the goal, backing out of dead ends, and count the wrong cells entered. */
-function straightGuess(maze: Maze, onWay: Uint8Array): number {
+/**
+ * How a maze lies in space, which is all the measure needs to know of it besides the passages: how far a cell is from the goal (any measure that
+ * rises with distance will do, the squared distance is cheapest) and how far the line bends going from one cell through another to a third, in
+ * radians from 0 (straight on) to pi (back the way it came). A flat maze reads these off its cell centres; a maze over a solid reads them in
+ * three dimensions.
+ */
+export type MazeGeometry = {
+  distanceToGoal(cell: number): number;
+  bend(before: number, cell: number, after: number): number;
+};
+
+/** The geometry of a flat maze: its cell centres on the page. */
+function flatGeometry(maze: Maze): MazeGeometry {
   const { centres } = maze.grid;
   const [gx, gy] = centres[maze.goal]!;
-  const distance = (cell: number): number => (centres[cell]![0] - gx) ** 2 + (centres[cell]![1] - gy) ** 2;
+  return {
+    distanceToGoal: (cell) => (centres[cell]![0] - gx) ** 2 + (centres[cell]![1] - gy) ** 2,
+    bend: (before, cell, after) => {
+      const [px, py] = centres[before]!;
+      const [cx, cy] = centres[cell]!;
+      const [nx, ny] = centres[after]!;
+      const turn = Math.abs(Math.atan2(ny - cy, nx - cx) - Math.atan2(cy - py, cx - px));
+      return turn > Math.PI ? 2 * Math.PI - turn : turn;
+    },
+  };
+}
+
+/** Walk the straight guess from the start: always the open passage nearest the goal, backing out of dead ends, and count the wrong cells entered. */
+function straightGuess(maze: MazeCore, onWay: Uint8Array, distance: (cell: number) => number): number {
   const seen = new Uint8Array(maze.links.length);
   let wasted = 0;
   const stack: number[] = [maze.start];
@@ -84,15 +108,18 @@ function straightGuess(maze: Maze, onWay: Uint8Array): number {
 
 /** How hard a maze is, from 0 to 100, and what that is made of. */
 export function difficultyOf(maze: Maze): MazeDifficulty {
+  return difficultyOfGraph(maze, flatGeometry(maze));
+}
+
+/** The same for any maze, flat or over a solid, given how it lies in space (`MazeGeometry`). `difficultyOf` is this with a flat maze's own. */
+export function difficultyOfGraph(maze: MazeCore, geometry: MazeGeometry): MazeDifficulty {
   const measure = measureMaze(maze);
   const way = solutionOf(maze);
   const onWay = new Uint8Array(maze.links.length);
   for (const cell of way) onWay[cell] = 1;
-  const { centres } = maze.grid;
   const { links } = maze;
+  const distance = geometry.distanceToGoal;
   // The forks where the cell nearest the goal is not the next cell of the way.
-  const [gx, gy] = centres[maze.goal]!;
-  const distance = (cell: number): number => (centres[cell]![0] - gx) ** 2 + (centres[cell]![1] - gy) ** 2;
   let traps = 0;
   let turns = 0;
   for (let at = 0; at < way.length - 1; at += 1) {
@@ -102,16 +129,9 @@ export function difficultyOf(maze: Maze): MazeDifficulty {
       const best = [...open].sort((a, b) => distance(a) - distance(b) || a - b)[0]!;
       if (best !== way[at + 1]) traps += 1;
     }
-    if (at > 0) {
-      const [px, py] = centres[way[at - 1]!]!;
-      const [cx, cy] = centres[cell]!;
-      const [nx, ny] = centres[way[at + 1]!]!;
-      let bend = Math.abs(Math.atan2(ny - cy, nx - cx) - Math.atan2(cy - py, cx - px));
-      if (bend > Math.PI) bend = 2 * Math.PI - bend;
-      if (bend > BEND) turns += 1;
-    }
+    if (at > 0 && geometry.bend(way[at - 1]!, cell, way[at + 1]!) > BEND) turns += 1;
   }
-  const waste = straightGuess(maze, onWay);
+  const waste = straightGuess(maze, onWay, distance);
   const reach = Math.min(1, Math.max(0, Math.log(measure.effort / 9) / Math.log(5400 / 9)));
   const terms = {
     reach,
