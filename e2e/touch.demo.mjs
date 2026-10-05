@@ -32,10 +32,20 @@ async function cdpDraw(page, points, { lift = true } = {}) {
   return client;
 }
 
-/** A real swipe by touch at a point, `distance` pixels up the screen (the page scrolls down): Chromium's own gesture, so the browser decides what the touch does. */
+/**
+ * A real swipe by touch at a point, `distance` pixels up the screen (the page scrolls down): Chromium's own touch events, so the browser decides what the
+ * touch does. Made of touch events and not of `Input.synthesizeScrollGesture`, which scrolls on a Mac but does nothing in Linux's headless Chromium.
+ */
 async function swipeUp(page, x, y, distance) {
   const client = await page.context().newCDPSession(page);
-  await client.send("Input.synthesizeScrollGesture", { x, y, yDistance: -distance, gestureSourceType: "touch", speed: 1200 });
+  const touch = (at) => [{ x, y: at, id: 1 }];
+  const steps = 15;
+  await client.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: touch(y) });
+  for (let step = 1; step <= steps; step += 1) {
+    await client.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: touch(y - (distance * step) / steps) });
+    await page.waitForTimeout(16);
+  }
+  await client.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
   await client.detach();
 }
 
