@@ -180,7 +180,7 @@ board?.stones();               // the cells with a stone
 board?.stonesLeft();           // 3, or null with no limit
 board?.clearStones();          // one Undo puts them back
 const saved = board?.run();    // "0231~1a.2f": the line's steps, a tilde, the stones' cells in base 36
-board?.restore(saved!);        // the same line and stones, with nothing to Undo
+board?.restore(saved!);        // the same line and stones, with one Undo that takes them all back
 host.addEventListener("meikyuu-stones", (event) => console.log((event as CustomEvent).detail.stonesLeft));
 ```
 

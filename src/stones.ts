@@ -132,7 +132,7 @@ export function withStoneRules(game: MazeGame, rules: StoneRules | null): MazeGa
 /**
  * A run kept as one short text: the line as its steps (`lineToSteps`), and, if any stones are down, a `~` and their cells in base 36 joined by dots,
  * such as `0231~1a.2f`. The same text is the same run on every device and however the board is turned. A run has no history, so it comes back
- * with nothing to Undo.
+ * with one Undo, which takes the whole of it back to a maze with nothing drawn (what a player who left a half-drawn maze and came back expects: it can be cleared).
  */
 export function encodeRun(game: MazeGame): string {
   const steps = lineToSteps(game.maze, game.path) ?? "";
@@ -168,5 +168,5 @@ export function decodeRun(maze: Maze, code: string, rules: StoneRules | null): M
   }
   const collected = maze.keys.filter((key) => path.includes(key));
   const solved = path.length > 0 && path[path.length - 1] === maze.goal && maze.keys.every((key) => collected.includes(key));
-  return { maze, path, collected, solved, drawing: false, strokes: path.length > 1 || stones.length > 0 ? 1 : 0, undo: [], stones, rules };
+  return { maze, path, collected, solved, drawing: false, strokes: path.length > 1 || stones.length > 0 ? 1 : 0, undo: path.length > 0 || stones.length > 0 ? [{ path: [], collected: [], solved: false, stones: [] }] : [], stones, rules };
 }

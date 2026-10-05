@@ -184,7 +184,7 @@ export type MeikyuuMount = {
   clearStones: () => void;
   /** The run so far as one short text, the line's steps and its stones (`encodeRun`): what to keep to carry on later. */
   run: () => string;
-  /** Carry on a run kept by `run()`: draws the line and the stones as they were, with nothing to Undo. False, and nothing changed, for a text that is not a run of this maze (or for arrows). */
+  /** Carry on a run kept by `run()`: draws the line and the stones as they were, with one Undo that takes it all back. False, and nothing changed, for a text that is not a run of this maze (or for arrows). */
   restore: (code: string) => boolean;
   /** For a mixed puzzle: look at the arrows or the labyrinth. */
   show: (board: "arrows" | "maze") => void;

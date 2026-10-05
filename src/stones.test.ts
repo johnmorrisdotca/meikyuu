@@ -266,7 +266,10 @@ describe("a stone and Undo, Restart and the run kept", () => {
     expect(back.path).toEqual(game.path);
     expect(back.stones).toEqual(game.stones);
     expect(back.rules).toEqual(RULES);
-    expect(back.undo).toEqual([]);
+    expect(back.undo).toEqual([{ path: [], collected: [], solved: false, stones: [] }]);
+    expect(undoMaze(back).path).toEqual([]);
+    expect(undoMaze(back).stones).toEqual([]);
+    expect(decodeRun(maze, "", RULES)!.undo).toEqual([]);
     expect(back.solved).toBe(false);
     expect(encodeRun(back)).toBe(code);
     // No stones, no tilde; and the whole way is a solved run.
