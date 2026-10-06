@@ -1,7 +1,7 @@
 {
   "name": "@johnmorrisdotca/meikyuu",
-  "version": "2.2.0",
-  "description": "Meikyuu 迷宮, a maze game for JavaScript and TypeScript: mazes on squares, hexagons, triangles, circles and cut-out shapes (a heart, a leaf, a star), made by seven algorithms from a seed, with a difficulty score, over a thousand levels from a few cells to thousands and over a thousand tall ones for a phone held upright, and colossal ones of ten thousand cells, each a recipe that rebuilds the same maze everywhere. Drawn as SVG and played by drawing a line with a finger or the mouse, with zoom and pan and page left beside the board to scroll by, turning to lie down on a wide screen, in any page, as a function call or a tag. Stones to shut the passages you have given up on, laid only beside your line. Mazes over the whole surface of a cube, a globe or a solid of triangles, turned to follow your line round: 960 levels. Arrow puzzles too. Zero dependencies.",
+  "version": "2.2.1",
+  "description": "Meikyuu 迷宮, mazes for JavaScript and TypeScript: squares, hexagons, triangles, circles and cut-out shapes, even a cube or a globe, made by seven algorithms from a seed and drawn through with a finger or the mouse. Zero dependencies.",
   "keywords": [
     "maze",
     "labyrinth",
@@ -33,7 +33,7 @@
     "solid",
     "canvas"
   ],
-  "homepage": "https://github.com/johnmorrisdotca/meikyuu#readme",
+  "homepage": "https://johnmorrisdotca.github.io/meikyuu/",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/johnmorrisdotca/meikyuu.git"
