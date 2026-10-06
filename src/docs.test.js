@@ -21,7 +21,9 @@ import { MOST_CELL_PIXELS } from "./viewport.ts";
 import { VERSION } from "./version.ts";
 
 const pkg = JSON.parse(readFileSync("package.json", "utf8"));
-const readme = readFileSync("README.md", "utf8");
+// The README and the pages its long sections moved to: what the package says about itself is held to the code across all of them.
+const moved = ["docs/MORE-MAZES.md", "docs/SOLID-MAZES.md", "docs/PLAYING.md"].map((file) => readFileSync(file, "utf8")).join("\n");
+const readme = `${readFileSync("README.md", "utf8")}\n${moved}`;
 
 /** A README section's text, from its heading to the next heading of the same level. */
 const section = (heading) => {
@@ -70,7 +72,7 @@ describe("the documents", () => {
 
 describe("the README's promises", () => {
   it("has the sections a package of this family has, each with something in it", () => {
-    for (const heading of ["In 30 seconds", "Who it is for", "Features", "Use it in your project", "API", "Theming", "Limits", "Browser support", "Languages", "Roadmap", "Architecture", "The name", "Where it comes from", "Development", "Contributing", "Changes", "Licence"]) {
+    for (const heading of ["In 30 seconds", "Who it is for", "Features", "Use it in your project", "API", "Theming", "Limits", "Browser support", "Languages", "Roadmap", "Architecture", "The name", "Where it comes from, and where it is used", "Development", "Contributing", "Changes", "Licence"]) {
       expect(section(heading).length, heading).toBeGreaterThan(heading.length + 40);
     }
   });
@@ -85,7 +87,7 @@ describe("the README's promises", () => {
   });
 
   it("links only to files that exist", () => {
-    const targets = [...readme.matchAll(/\]\((?!https?:|#|mailto:)([^)\s#]+)/g)].map((match) => match[1]);
+    const targets = [...readFileSync("README.md", "utf8").matchAll(/\]\((?!https?:|#|mailto:)([^)\s#]+)/g)].map((match) => match[1]);   // the README's own links: the pages it moved to link back from their own folder
     expect(targets.length).toBeGreaterThan(5);
     for (const target of targets) expect(existsSync(target), target).toBe(true);
   });

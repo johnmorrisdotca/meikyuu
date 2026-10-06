@@ -1,6 +1,6 @@
 # Mazes over a solid
 
-How `@johnmorrisdotca/meikyuu/3d` is made, and what it was weighed against. The usage is in the README ("Mazes over a solid").
+How `@johnmorrisdotca/meikyuu/3d` is made, and what it was weighed against. The usage is in [SOLID-MAZES.md](SOLID-MAZES.md) and summarised in the README ("Mazes over a solid").
 
 ## The graph
 

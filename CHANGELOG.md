@@ -6,8 +6,15 @@ All notable changes to this project are written here. The format follows
 
 ## [Unreleased]
 
+## [2.2.2] - 2026-10-06
+
+Nothing that was exported has changed.
+
 ### Changed
 
+- The README takes the family's one layout, fully: a hero picture of the demo on a desk and on a phone in light and dark, a picture of the shapes (hexagons, triangles, a circle, a leaf), of the keys, arrow and mixed puzzles, of a tall maze on a phone and of a cube, a globe and an icosahedron, an Install section, an Examples section of eleven examples whose output is what they print, an Accessibility section and a short list of the calls to learn first. Its pictures are in `docs/images` (WebP, light and dark) and are retaken with `pnpm screenshots:readme` (it replaces `pnpm pictures`, `docs/desktop.jpg`, `docs/phone.jpg` and the three `docs/solid-*.jpg`); they are not in the tarball, and `pnpm test:package` fails if one is. The tall mazes' pictures that `docs/LEVELS.md` shows are retaken by `pnpm pictures:levels`.
+- To keep the README under the 64,000 characters npm can show, the long sections moved to pages under `docs/`, each with its heading and a summary left in the README: colossal mazes, stones and tall mazes to `docs/MORE-MAZES.md`; mazes over a solid to `docs/SOLID-MAZES.md`; the board's options and events to `docs/PLAYING.md`; the source tree to `docs/ARCHITECTURE.md`. Nothing was removed, and the tests that hold these to the code read the README and these pages together.
+- "Where it comes from" now carries "Used by" and "The family" with it, the Roadmap sits before the Architecture, and the README has an Accessibility section.
 - Repository only: the package and everything it exports are unchanged. `CONTRIBUTING.md` is the family's one text with a section of its own for Meikyuu, held to the master in johnmorrisdotca/.github by `src/family.test.js`; `ci.yml` and `pages.yml` are the family's one text (`pnpm check`, the demo, and the package on Linux, macOS and Windows), and any jobs of the package's own after them.
 - The demo's own colours on the felt (the gold and mint of its marks, the cream banner and its ink, the shade and the pale edge of its buttons) are named once in `demo/meikyuu.css`.
 
