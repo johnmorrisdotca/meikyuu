@@ -98,6 +98,19 @@ open a *Fix a translation* issue with the string's name. `{name}` and the other 
 | `solid_tetrahedron` | Tetrahedron | 正四面体 |
 | `solid_octahedron` | Octahedron | 正八面体 |
 | `solid_icosahedron` | Icosahedron | 正二十面体 |
+| `solid_prism` | Triangular prism | 三角柱 |
+| `solid_trapezohedron` | Trapezohedron | 五角偏方面体 |
+| `solid_dodecahedron` | Dodecahedron | 正十二面体 |
+| `solid_rhombic-dodecahedron` | Rhombic dodecahedron | 菱形十二面体 |
+| `solid_bipyramid` | Bipyramid | 八角両錐 |
+| `solid_icositetrahedron` | Icositetrahedron | 凧形二十四面体 |
+| `solid_triacontahedron` | Triacontahedron | 菱形三十面体 |
+| `solid_box` | Box | 直方体 |
+| `solid_cross` | Cross | 十字 |
+| `solid_ring` | Ring | 四角いリング |
+| `solid_torus` | Torus | トーラス |
+| `solid_star` | Star | 星 |
+| `solid_heart` | Heart | ハート |
 | `play_solid` | Draw a line from the green start to the gold goal over the surface. Turn the solid to follow your line round it. | 緑のスタートから金色のゴールまで、表面をたどって線を引きます。線を追って立体を回します。 |
 | `solidHow` | Draw from the green start. Drag away from your line, or use the arrows, to turn the solid. It also turns by itself when your line nears the edge of the side you can see. | 緑のスタートから線を引きます。線から離れたところをドラッグするか、矢印を使うと立体が回ります。線が見えている面の端に近づくと、立体はひとりでに回ります。 |
 | `solidHidden` | The end of your line is out of sight. Turn the solid, or press Face me. | 線の先が見えない面にあります。立体を回すか「こちらへ」を押してください。 |

@@ -1,7 +1,7 @@
 {
   "name": "@johnmorrisdotca/meikyuu",
-  "version": "3.0.0",
-  "description": "Meikyuu 迷宮, mazes for JavaScript and TypeScript: squares, hexagons, triangles, circles and cut-out shapes, even a cube or a globe, made by seven algorithms from a seed and drawn through with a finger or the mouse. Zero dependencies.",
+  "version": "3.1.0",
+  "description": "Meikyuu 迷宮, mazes for JavaScript and TypeScript: squares, hexagons, triangles, circles and cut-out shapes, even dice, a globe, a torus or a heart, made by seven algorithms from a seed and drawn through with a finger or the mouse. Zero dependencies.",
   "keywords": [
     "maze",
     "labyrinth",
@@ -30,6 +30,10 @@
     "sphere",
     "icosahedron",
     "octahedron",
+    "dice",
+    "dodecahedron",
+    "torus",
+    "heart",
     "solid",
     "canvas"
   ],
@@ -110,6 +114,26 @@
       "types": "./dist/levels-solid.d.ts",
       "import": "./dist/levels-solid.js",
       "default": "./dist/levels-solid.js"
+    },
+    "./3d/levels/dice": {
+      "types": "./dist/levels-solid-dice.d.ts",
+      "import": "./dist/levels-solid-dice.js",
+      "default": "./dist/levels-solid-dice.js"
+    },
+    "./3d/levels/shapes": {
+      "types": "./dist/levels-solid-shapes.d.ts",
+      "import": "./dist/levels-solid-shapes.js",
+      "default": "./dist/levels-solid-shapes.js"
+    },
+    "./3d/levels/recipes": {
+      "types": "./dist/levels-solid-recipes.d.ts",
+      "import": "./dist/levels-solid-recipes.js",
+      "default": "./dist/levels-solid-recipes.js"
+    },
+    "./3d/levels/all": {
+      "types": "./dist/levels-solid-all.d.ts",
+      "import": "./dist/levels-solid-all.js",
+      "default": "./dist/levels-solid-all.js"
     }
   },
   "files": [

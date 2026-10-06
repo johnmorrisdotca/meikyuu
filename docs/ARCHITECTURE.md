@@ -30,7 +30,11 @@ src/
 ├── levels-tall.ts    the "/levels/tall" entry: the 1,536 tall maze levels
 ├── levels-colossal.ts the "/levels/colossal" entry: the 256 colossal maze levels
 ├── levels-legacy.ts  the "/levels/legacy" entry: the 1.0.0 maze levels, and where each went
-├── levels-solid.ts   the "/3d/levels" entry: the 960 levels of the solids
+├── levels-solid.ts   the "/3d/levels" entry: the 1,600 levels of the first five solids
+├── levels-solid-dice.ts the "/3d/levels/dice" entry: the 2,240 levels of the seven further dice
+├── levels-solid-shapes.ts the "/3d/levels/shapes" entry: the 1,920 levels of the six shapes
+├── levels-solid-all.ts the "/3d/levels/all" entry: every solid's 5,760 levels together
+├── levels-solid-recipes.ts the "/3d/levels/recipes" entry: the recipe of every solid level and nothing else, for a server
 ├── solid-entry.ts    the "/3d" entry: mazes over a solid, without the page
 ├── solid-play-entry.ts the "/3d/play" entry: a solid played in any element
 ├── draw-entry.ts     the "/draw" entry: the drawing, its boards and colours, its style and its words
@@ -54,11 +58,19 @@ src/
 ├── version.ts        the package's version
 ├── solid/
 │   ├── vec.ts          points and quaternions: the arithmetic of turning a solid
-│   ├── solidGrid.ts    the surface of a cube, a globe or a solid of triangles as a cell graph
+│   ├── solidGrid.ts    the surface of a cube, a globe or a solid of triangles as a cell graph, and how a cut is allowed
+│   ├── solidParts.ts   joining polygons into a cell graph, and the lattice of a triangular face
+│   ├── solidShapes.ts  the other thirteen solids: the further dice, a box, a cross, a ring, a torus, a star, a heart
+│   ├── solidHeart.ts   the surface of a puffed heart, a distance along each direction
+│   ├── solidKinds.ts   the solids by how they are met: the dice with their sides, the shapes, the first five
 │   ├── solidMaze.ts    a maze over a solid: its recipe, where it starts and ends, how hard it is, the checker
-│   ├── solidSizes.ts   the three sizes of each solid
+│   ├── solidSizes.ts   the five sizes of each solid, and how each is cut
+│   ├── solidLevelList.ts the levels of a solid as lists, and the calls over them every levels entry shares
 │   ├── solidView.ts    a solid turned and put on a picture: the near side, which cell a point is on, turning to a cell, turning by itself
-│   ├── solidPaint.ts   the solid painted on a canvas: shaded cells, walls, line, marks, stones, hint
+│   ├── solidPaint.ts   a convex solid painted on a canvas: shaded cells, walls, line, marks, stones, hint
+│   ├── solidPaintOrdered.ts a solid whose parts hide parts, painted back to front a slab of depth at a time
+│   ├── solidPaintParts.ts what the two painters share: shades, open edges, marks, the slabs
+│   ├── solidReveal.ts  where to look from to see a cell a part of the solid hides
 │   ├── solidColours.ts the colours the canvas reads from the page's custom properties
 │   ├── solidDraw.ts    a maze over a solid as SVG text
 │   ├── solidStyle.ts   the style of a playable solid, beside the board's
@@ -68,7 +80,10 @@ src/
     ├── tall.data.ts    the 1,536 tall levels, the same
     ├── colossal.data.ts the 256 colossal levels, the same
     ├── legacy.data.ts  the 1.0.0 maze levels, kept, with the score each is given now
-    ├── solid.data.ts   the 960 solid levels, each a recipe with its effort, its cells and its score
+    ├── solid.data.ts   the 1,600 levels of the first five solids, each a recipe with its effort, its cells and its score
+    ├── solid-dice.data.ts the 2,240 levels of the seven further dice, the same
+    ├── solid-shapes.data.ts the 1,920 levels of the six shapes, the same
+    ├── solid-recipes.data.ts the recipes of all 5,760 solid levels as one short text a list
     ├── arrows.data.ts  the arrow levels, each a recipe with its effort
     └── mixed.data.ts   the mixed levels, each two recipes with their effort
 ```

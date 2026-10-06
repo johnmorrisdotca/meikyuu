@@ -19,10 +19,13 @@ import { difficultyOf } from "../src/difficulty.ts";
 import { MEIKYUU_COLOSSAL_ROWS, MEIKYUU_COLOSSAL_TALL_ROWS } from "../src/levels/colossal.data.ts";
 import { MEIKYUU_LEGACY_MAZE_ROWS } from "../src/levels/legacy.data.ts";
 import { MEIKYUU_MAZE_ROWS } from "../src/levels/mazes.data.ts";
+import { MEIKYUU_SOLID_DICE_ROWS } from "../src/levels/solid-dice.data.ts";
+import { MEIKYUU_SOLID_SHAPE_ROWS } from "../src/levels/solid-shapes.data.ts";
 import { MEIKYUU_SOLID_ROWS } from "../src/levels/solid.data.ts";
 import { MEIKYUU_TALL_ROWS } from "../src/levels/tall.data.ts";
 import { buildMaze, parseRecipe } from "../src/maze.ts";
 import { buildSolidMaze, parseSolidRecipe, solidDifficultyOf } from "../src/solid/solidMaze.ts";
+import { SOLID_GROUP_FILES } from "./solid-groups.ts";
 
 type Row = readonly [string, number, number, number];
 type Scored = { row: Row; exact: number; at: number };
@@ -93,13 +96,17 @@ const files: { name: string; text: string }[] = [];
   });
 }
 
-// The solids: a solid, then a size.
+// The solids, in their three files: a solid, then a size.
 {
-  const kinds = Object.keys(MEIKYUU_SOLID_ROWS).map((kind) => {
-    const sizes = Object.entries(MEIKYUU_SOLID_ROWS[kind]!).map(([size, rows]) => `    ${size}: [\n${block("      ", ordered(rows, true))}\n    ],`);
-    return `  ${kind}: {\n${sizes.join("\n")}\n  },`;
-  });
-  files.push({ name: "solid.data.ts", text: `${head("solid.data.ts")}export const MEIKYUU_SOLID_ROWS: Record<string, Record<string, readonly (readonly [string, number, number, number])[]>> = {\n${kinds.join("\n")}\n};\n` });
+  const sources = { first: MEIKYUU_SOLID_ROWS, dice: MEIKYUU_SOLID_DICE_ROWS, shapes: MEIKYUU_SOLID_SHAPE_ROWS } as const;
+  for (const [group, file] of Object.entries(SOLID_GROUP_FILES)) {
+    const rows = sources[group as keyof typeof sources] as Record<string, Record<string, readonly Row[]>>;
+    const kinds = Object.keys(rows).map((kind) => {
+      const sizes = Object.entries(rows[kind]!).map(([size, list]) => `    ${size}: [\n${block("      ", ordered(list, true))}\n    ],`);
+      return `  ${/-/.test(kind) ? `"${kind}"` : kind}: {\n${sizes.join("\n")}\n  },`;
+    });
+    files.push({ name: file.name, text: `${head(file.name)}export const ${file.constant}: Record<string, Record<string, readonly (readonly [string, number, number, number])[]>> = {\n${kinds.join("\n")}\n};\n` });
+  }
 }
 
 // The 1.0.0 list: its own order, a new score column.

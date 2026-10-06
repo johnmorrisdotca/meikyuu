@@ -18,7 +18,7 @@ const uses = [
   `import { MEIKYUU_COLOSSAL_LEVELS } from "@johnmorrisdotca/meikyuu/levels/colossal";  // 128 mazes of about ten thousand cells, and 128 tall ones`,
   `mountMeikyuu(element, { recipe: level.code, stones: { limit: 5, reach: 2 } })  // marbles to shut the passages you have given up on`,
   `mountMeikyuu(element, { recipe: level.code, ratio: level.ratio, orientation: "auto" })  // a tall maze, lying down on a wide screen`,
-  `import { solidLevelOf } from "@johnmorrisdotca/meikyuu/3d/levels";  // 960 mazes over a cube, a globe and the triangle solids`,
+  `import { solidLevelOf } from "@johnmorrisdotca/meikyuu/3d/levels";  // 1,600 mazes over a cube, a globe and the triangle solids (dice and shapes: 3d/levels/dice, 3d/levels/shapes)`,
   `mountSolid(element, { recipe: "cube:7:prim:48213", stones: true })  // a maze over a solid, turned by dragging, drawn from face to face`,
   `difficultyOf(maze).score  // how hard it is to play, 0 to 100`,
   `drawMaze(maze, { path, hint, board: "wood" })  // the maze as SVG text`,
@@ -97,11 +97,10 @@ const page = `<!doctype html>
       <section class="more solids" aria-labelledby="solids-title">
         <h2 id="solids-title" data-say="solidsTitle"></h2>
         <p data-say="solidsText"></p>
-        <div class="setup fam-row" data-help-en="Choose the solid: a cube, a globe, or a solid of four, eight or twenty triangles." data-help-ja="立体を選びます（立方体、球、または4・8・20枚の三角形でできた立体）。">
-          <span class="fam-label" data-say="solid"></span>
-          <div class="fam-seg" role="group" data-say-label="solid" id="solid-kinds" data-testid="solid-kinds"></div>
+        <div class="setup fam-row" data-help-en="Choose the solid: a die (a d3 to a d30) or a shape (a globe, a box, a cross, a ring, a torus, a star, a heart)." data-help-ja="立体を選びます（サイコロ：3面から30面まで、または形：球、直方体、十字、リング、トーラス、星、ハート）。">
+          <div class="solid-kinds" role="group" data-say-label="solid" id="solid-kinds" data-testid="solid-kinds"></div>
         </div>
-        <div class="setup fam-row" data-help-en="Small, medium or large: the same solid cut into more and more cells." data-help-ja="小・中・大：同じ立体を、だんだん細かく区切ります。">
+        <div class="setup fam-row" data-help-en="Small, medium, large, huge or colossal: the same solid cut into more and more cells (about 4,400 for colossal, which is played zoomed in)." data-help-ja="小・中・大・特大・巨大：同じ立体を、だんだん細かく区切ります（巨大は約4,400マスで、拡大して遊びます）。">
           <span class="fam-label" data-say="size"></span>
           <div class="fam-seg" role="group" data-say-label="size" id="solid-sizes" data-testid="solid-sizes"></div>
         </div>

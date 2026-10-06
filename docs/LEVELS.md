@@ -193,6 +193,33 @@ A size keeps its **places**. The first release's levels, by size and place (the 
 4. `legacyLevelOf` and `levels/legacy` now answer from the new lists: `now` and `nowInSize` are where a 1.0.0 maze stands in the new order; `nearest` is the same maze where it is still a level, else the level of its size scoring nearest.
 5. Scores moved (the table above): a site's dots are `ceil(score / 20)` of the new integer.
 
+## The levels of the solids (3.1.0)
+
+5,760 levels: 18 solids, 5 sizes each (small, medium, large, huge, colossal), 64 to a list, each list in the order of its score, in three files (`3d/levels`, `3d/levels/dice`, `3d/levels/shapes`; `3d/levels/all` has them all). The first score of a list, and the last, with the cells of the size (`node --experimental-strip-types scripts/meikyuu-rescore.ts` writes them in order; the table is read off the data):
+
+| Solid | small (cells, scores) | medium (cells, scores) | large (cells, scores) | huge (cells, scores) | colossal (cells, scores) |
+| --- | --- | --- | --- | --- | --- |
+| prism (d3) | 72: 24–41 | 288: 31–57 | 648: 37–66 | 1352: 43–75 | 4232: 51–91 |
+| tetrahedron (d4) | 100: 24–41 | 256: 30–52 | 576: 33–62 | 1296: 42–75 | 4356: 51–91 |
+| cube (d6) | 96: 24–42 | 294: 31–54 | 600: 36–62 | 1350: 45–77 | 4374: 54–91 |
+| octahedron (d8) | 72: 22–38 | 288: 27–53 | 648: 33–63 | 1352: 41–76 | 4232: 50–91 |
+| trapezohedron (d10) | 90: 25–45 | 250: 30–56 | 640: 37–66 | 1210: 41–76 | 4410: 49–91 |
+| dodecahedron (d12) | 60: 23–39 | 240: 29–56 | 540: 35–64 | 1500: 42–77 | 4860: 50–92 |
+| rhombic-dodecahedron (d12) | 108: 26–47 | 300: 30–58 | 588: 35–67 | 1200: 40–74 | 4332: 49–92 |
+| bipyramid (d16) | 64: 23–40 | 256: 29–55 | 576: 35–65 | 1296: 41–76 | 4624: 49–92 |
+| icosahedron (d20) | 80: 23–39 | 320: 31–55 | 720: 36–64 | 1280: 42–75 | 4500: 51–91 |
+| icositetrahedron (d24) | 96: 26–45 | 384: 32–60 | 600: 36–67 | 1176: 40–74 | 4704: 49–93 |
+| triacontahedron (d30) | 120: 28–48 | 270: 30–58 | 750: 39–68 | 1470: 44–77 | 4320: 51–92 |
+| sphere | 92: 26–41 | 252: 27–52 | 642: 35–63 | 1212: 42–74 | 4412: 51–92 |
+| box | 88: 26–44 | 352: 34–61 | 550: 38–64 | 1408: 44–76 | 4312: 53–92 |
+| cross | 120: 27–47 | 270: 29–57 | 750: 37–69 | 1470: 41–77 | 3630: 48–90 |
+| ring | 128: 29–49 | 288: 31–57 | 800: 39–69 | 1152: 42–74 | 3872: 50–90 |
+| torus | 75: 26–42 | 300: 33–58 | 675: 40–67 | 1323: 45–75 | 4332: 54–91 |
+| star | 60: 22–40 | 240: 30–56 | 600: 36–66 | 1260: 42–75 | 3600: 48–89 |
+| heart | 80: 25–42 | 320: 32–58 | 720: 37–68 | 1280: 42–75 | 3920: 50–90 |
+
+The top of the scale takes about four thousand cells: a maze of twelve hundred cannot reach it (the hardest huge level of any solid scores 74 to 77), and the colossal lists end at 89 (the star, 3,600 cells) to 93 (the deltoidal icositetrahedron). The star, the heart, the cross and the ring are cut to 3,600 to 3,900 cells and not 4,400 because a solid whose parts hide parts takes about twice as long to paint (`docs/SOLIDS.md`).
+
 ## How many more could be published
 
 | Size | Drawn | Seconds | ms a maze | Hard enough (not too easy) | Distinct | Easy-band scores | Medium-band | Hard-band |

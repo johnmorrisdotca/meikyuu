@@ -8,7 +8,18 @@ import { levelsOf, MEIKYUU_KINDS, MEIKYUU_LEVELS_PER_SIZE, MEIKYUU_SIZES } from 
 import { MEIKYUU_TALL_LEVELS, MEIKYUU_TALL_SIZES, TALL_SHAPES } from "./dist/levels-tall.js";
 import { MEIKYUU_COLOSSAL_LEVELS, MEIKYUU_COLOSSAL_TALL_LEVELS } from "./dist/levels-colossal.js";
 import { mountSolid } from "./dist/solid-play-entry.js";
-import { MEIKYUU_SOLID_PER_LIST, SOLID_KINDS, SOLID_SIZE_NAMES, solidLevelOf } from "./dist/levels-solid.js";
+import { MEIKYUU_SOLID_PER_LIST, SOLID_DICE, SOLID_DIE_SIDES, SOLID_FIRST, SOLID_KINDS, SOLID_MORE_DICE, SOLID_SHAPES, SOLID_SIZE_NAMES } from "./dist/solid-entry.js";
+
+/** The file a solid's levels are in: a page loads the one of the solid it shows, and no other. */
+const SOLID_FILES = { first: "./dist/levels-solid.js", dice: "./dist/levels-solid-dice.js", shapes: "./dist/levels-solid-shapes.js" };
+const solidFileOf = (kind) => (SOLID_FIRST.includes(kind) ? SOLID_FILES.first : SOLID_MORE_DICE.includes(kind) ? SOLID_FILES.dice : SOLID_FILES.shapes);
+const solidModules = new Map();
+/** The levels of a solid, fetched once. */
+async function loadSolidLevels(kind) {
+  const file = solidFileOf(kind);
+  if (!solidModules.has(file)) solidModules.set(file, await import(file));
+}
+const solidLevelOf = (kind, size, n) => solidModules.get(solidFileOf(kind)).solidLevelOf(kind, size, n);
 
 // The page's own words, in the two languages it speaks. Set as text, never as HTML. The names of the shapes and the ways to play are the package's own.
 const WORDS = {
@@ -58,9 +69,11 @@ const WORDS = {
     moreTitle: "Using it",
     moreText: "The board above is the package itself: the rules, the drawing and every level. Each line below is all it takes.",
     solidsTitle: "Over a solid",
-    solidsText: "A maze over the whole surface of a cube, a globe or a solid of triangles. Draw from the green start; drag away from your line to turn the solid, and it turns by itself when your line reaches the edge of the side you can see, so the line can cross from one face to the next.",
+    solidsText: "A maze over the whole surface of a die (a d3 to a d30) or a shape (a globe, a box, a cross, a ring, a torus, a star, a heart). Draw from the green start; drag away from your line to turn the solid, and it turns by itself when your line reaches the edge of the side you can see, so the line can cross from one face to the next.",
     solid: "Solid",
-    solidSizes: { small: "Small", medium: "Medium", large: "Large" },
+    solidSizes: { small: "Small", medium: "Medium", large: "Large", huge: "Huge", colossal: "Colossal" },
+    solidDice: "Dice",
+    solidShapes: "Shapes",
     solidInfo: (name, size, place, cells, score) => `${name} · ${size} · level ${place} of ${MEIKYUU_SOLID_PER_LIST} · ${cells} cells · difficulty ${score} of 100`,
     tagTitle: "As a tag",
     tagText: "The same board in one element, with no framework: an arrow puzzle, level 6.",
@@ -113,9 +126,11 @@ const WORDS = {
     moreTitle: "使い方",
     moreText: "上の盤面は、このパッケージそのもの（ルール、描き方、すべてのレベル）で動いています。下の各行がそれぞれ必要なコードのすべてです。",
     solidsTitle: "立体の上で",
-    solidsText: "立方体、球、三角形でできた立体の、表面全体にわたる迷路です。緑のスタートから線を引きます。線から離れたところをドラッグすると立体が回り、線が見えている面の端に近づくと立体がひとりでに回るので、線は面から面へ渡れます。",
+    solidsText: "サイコロ（3面から30面まで）や形（球、直方体、十字、リング、トーラス、星、ハート）の、表面全体にわたる迷路です。緑のスタートから線を引きます。線から離れたところをドラッグすると立体が回り、線が見えている面の端に近づくと立体がひとりでに回るので、線は面から面へ渡れます。",
     solid: "立体",
-    solidSizes: { small: "小", medium: "中", large: "大" },
+    solidSizes: { small: "小", medium: "中", large: "大", huge: "特大", colossal: "巨大" },
+    solidDice: "サイコロ",
+    solidShapes: "形",
     solidInfo: (name, size, place, cells, score) => `${name}・${size}・レベル${place}／${MEIKYUU_SOLID_PER_LIST}・${cells}マス・難しさ${score}／100`,
     tagTitle: "タグとして",
     tagText: "同じ盤面を、フレームワークなしの一つの要素で。矢印パズルのレベル6です。",
@@ -298,7 +313,30 @@ function render() {
 /** The solid section's choosers, and the solid. */
 function renderSolids() {
   solid.level = Math.min(Math.max(1, Number.isInteger(solid.level) ? solid.level : 1), MEIKYUU_SOLID_PER_LIST);
-  seg(document.getElementById("solid-kinds"), [...SOLID_KINDS], solid.kind, (each) => chooseSolid({ kind: each }), (each) => pkg(`solid_${each}`));
+  // Two rows, the dice by their sides and the shapes, each its own group of buttons under the one `solid-kinds`.
+  const kinds = document.getElementById("solid-kinds");
+  if (kinds.children.length === 0) {
+    for (const [id, label] of [["solid-dice", "solidDice"], ["solid-shapes", "solidShapes"]]) {
+      const row = document.createElement("div");
+      row.className = "solid-row";
+      const caption = document.createElement("span");
+      caption.className = "solid-row-label";
+      caption.dataset.sayRow = label;
+      const choices = document.createElement("div");
+      choices.className = "fam-seg";
+      choices.id = id;
+      choices.dataset.testid = id;
+      choices.setAttribute("role", "group");
+      choices.dataset.sayLabel = label;
+      row.append(caption, choices);
+      kinds.append(row);
+    }
+  }
+  for (const caption of kinds.querySelectorAll("[data-say-row]")) caption.textContent = say(caption.dataset.sayRow);
+  for (const choices of kinds.querySelectorAll(".fam-seg")) choices.setAttribute("aria-label", say(choices.dataset.sayLabel));
+  const named = (each) => pkg(`solid_${each}`);
+  seg(document.getElementById("solid-dice"), [...SOLID_DICE], solid.kind, (each) => chooseSolid({ kind: each }), (each) => `d${SOLID_DIE_SIDES[each]} ${named(each)}`);
+  seg(document.getElementById("solid-shapes"), [...SOLID_SHAPES], solid.kind, (each) => chooseSolid({ kind: each }), named);
   seg(document.getElementById("solid-sizes"), [...SOLID_SIZE_NAMES], solid.size, (each) => chooseSolid({ size: each }), (each) => say("solidSizes")[each]);
   const input = document.getElementById("solid-level-input");
   if (document.activeElement !== input) input.value = String(solid.level);
@@ -319,9 +357,10 @@ function putSolid() {
   host.dataset.ready = "true";
 }
 
-function chooseSolid(next) {
+async function chooseSolid(next) {
   Object.assign(solid, next);
   keep();
+  await loadSolidLevels(solid.kind);
   putSolid();
   renderSolids();
 }
@@ -460,6 +499,8 @@ document.getElementById("solid-level-input").addEventListener("change", (event) 
   if (Number.isInteger(asked)) chooseSolid({ level: asked });
 });
 
+// The levels of the solid chosen are here before the first picture, which says what it is and how big.
+await loadSolidLevels(solid.kind);
 choose(kind, null);
 putSolid();
 host.dataset.ready = "true";

@@ -54,3 +54,8 @@ body[data-kind="tall"] #board { max-width: min(100%, 960px); }
   #board, #solid-board { padding: 10px 10px 8px; }
   .settings .fam-label { min-width: 100%; }
 }
+
+/* The solids' picker: a row of dice, by their sides, and a row of shapes, each with its name. */
+.solid-kinds { display: flex; flex-direction: column; gap: 8px; min-width: 0; max-width: 100%; }
+.solid-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+.solid-row-label { min-width: 4.5em; font-size: .78rem; letter-spacing: .06em; text-transform: uppercase; color: var(--muted, inherit); }

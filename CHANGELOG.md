@@ -6,6 +6,24 @@ All notable changes to this project are written here. The format follows
 
 ## [Unreleased]
 
+## [3.1.0] - 2026-10-06
+
+### Added
+
+- **Eighteen solids to put a maze over** (there were five): the dice, by their sides (`SOLID_DICE`, `SOLID_DIE_SIDES`): the triangular prism (d3), the tetrahedron (d4), the cube (d6), the octahedron (d8), the pentagonal trapezohedron (d10), the dodecahedron and the rhombic dodecahedron (the two d12), the octagonal bipyramid (d16), the icosahedron (d20), the deltoidal icositetrahedron (d24) and the rhombic triacontahedron (d30); and the shapes (`SOLID_SHAPES`): the globe, a box, a cross of cubes, a ring, a torus, a star and a heart. They are made the same way as the first five (every face cut into cells, joined across every edge), exactly, so a recipe builds the same maze everywhere. A d2 is a coin and a d100 a d10, so neither is a solid of its own.
+- **Five sizes, up to about four and a half thousand cells.** Huge (about 1,300 cells) and colossal (about 4,400; 3,600 to 3,900 for the star, the heart, the cross and the ring) join small, medium and large (`SOLID_SIZE_NAMES`, `SOLID_CUTS`). A colossal solid is played zoomed in (a cell is a finger wide at a zoom of four), where only the cells in the picture are painted: 6 to 30 ms a frame on a phone-sized Chromium slowed four times, rasterising in software (`docs/SOLIDS.md`, "The big sizes").
+- **5,760 levels**: 64 for each size of each solid, each list in the order of its score. The last colossal level of a solid scores 89 (the star) to 93, as hard as the hardest of the flat lists' huge mazes. In three files so a page loads only what it shows: `3d/levels` (the first five solids, 1,600 levels, as before with two sizes more), `3d/levels/dice` (the seven further dice, 2,240), `3d/levels/shapes` (the six shapes, 1,920), `3d/levels/all` (every one) and `3d/levels/recipes` (the recipe of each of the 5,760 and nothing else, fifty kilobytes, for a server that has only to say which recipe is which level: `solidRecipesOf`, `solidLevelNumberOf`). New in the main `/3d` entry: `SOLID_DICE`, `SOLID_SHAPES`, `SOLID_FIRST`, `SOLID_MORE_DICE`, `SOLID_MORE_SHAPES`, `SOLID_DIE_SIDES`, `isSolidDie`, `isSolidCut`, `SOLID_CUTS`, `SOLID_SIZE_NAMES`, `solidCellsOf`, `solidCutOf`, `MEIKYUU_SOLID_PER_LIST`.
+- **Solids whose parts hide parts** (the cross, the ring, the torus, the star, the heart; `grid.convex` is false): painted from the back in slabs of depth, a point is on the nearest cell under it, a line is not drawn over a cell that is hidden, and the solid turns to the direction a hidden cell can be seen from (`revealDirection`), or, where two passages cancel, to the lowest numbered; Face me does the same. The star and the heart are first seen from the front. `drawSolid` (SVG) is back to front too.
+- The names of the thirteen new solids (`solid_prism`, `solid_trapezohedron`, ..., `solid_heart`), in English and Japanese (the Japanese is not yet reviewed by a native reader), and the demo's picker: a row of dice by their sides and a row of shapes, and five sizes.
+- `scripts/meikyuu-solid.ts` makes the lists a solid at a time (`--kind`, `--size`, `--force`, then `--write`), seeded; `pnpm levels:rescore` puts them in the order of the score.
+
+### Changed
+
+- **Only the cells in the picture are painted** (a solid zoomed in): `frame.shown`, `frame.near` and `frame.count` count the cells on the near side that are in the picture (and 24 pixels round it). A solid at zoom 1 paints as it did.
+- A cut of 1 is allowed for a solid with sixty cells uncut (the dodecahedron: five squares to each pentagon).
+- `MEIKYUU_MOST_SOLID_CELLS` is 10,000 (it was 6,000). `SolidSize` has `huge` and `colossal`; `SolidKind` has thirteen more names; `SolidGrid` has `convex` and `upright`; `SolidFrame` has `order`, `seen` and `shown`; `edgeTurn` takes a `hidden` test.
+- `3d/levels` has 1,600 levels (five solids at five sizes) where it had 960: the first three sizes of each list are as they were in 3.0.0.
+
 ## [3.0.0] - 2026-10-06
 
 **Level numbers name different mazes.** Every level list has the same recipes as 2.3.0, in a new order, so "Huge level 12" is another maze. A solve kept by recipe is unaffected; a solve, a kept run or a link kept by size and number is not (see `docs/LEVELS.md`, "3.0.0").

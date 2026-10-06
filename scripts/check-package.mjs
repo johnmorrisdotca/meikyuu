@@ -101,7 +101,17 @@ const { MEIKYUU_SOLID_LEVELS, solidLevelOf } = await import(${JSON.stringify(`${
 const solid = solidLevelOf("cube", "small", 5);
 const solidMaze = buildSolidMaze(solid.recipe);
 if (solidMaze.grid.cells !== 96 || !isPerfect(solidMaze.grid, solidMaze.links) || !checkSolidAnswer(solidMaze, solidSolutionOf(solidMaze)) || !playSolution(newMazeGame(solidMaze)).solved) throw new Error("a level of the solids is not a perfect cube that can be solved");
-if (!drawSolid(solidMaze).startsWith("<svg") || Object.values(MEIKYUU_SOLID_LEVELS).flatMap((sizes) => Object.values(sizes)).flat().length !== 960) throw new Error("the solid levels or the drawing of a solid are not what they should be");
+if (!drawSolid(solidMaze).startsWith("<svg") || Object.values(MEIKYUU_SOLID_LEVELS).flatMap((sizes) => Object.values(sizes)).flat().length !== 1600) throw new Error("the solid levels or the drawing of a solid are not what they should be");
+const { solidLevelOf: heartOf } = await import(${JSON.stringify(`${pkg.name}/3d/levels/shapes`)});
+const { solidLevelOf: dieOf } = await import(${JSON.stringify(`${pkg.name}/3d/levels/dice`)});
+const { MEIKYUU_SOLID_LEVELS: EVERY_SOLID } = await import(${JSON.stringify(`${pkg.name}/3d/levels/all`)});
+for (const level of [heartOf("heart", "small", 5), dieOf("dodecahedron", "small", 5)]) {
+  const made = buildSolidMaze(level.recipe);
+  if (!isPerfect(made.grid, made.links) || !checkSolidAnswer(made, solidSolutionOf(made)) || !playSolution(newMazeGame(made)).solved || !drawSolid(made).startsWith("<svg")) throw new Error(level.code + " is not a perfect maze that can be solved");
+}
+if (Object.values(EVERY_SOLID).flatMap((sizes) => Object.values(sizes)).flat().length !== 5760) throw new Error("the levels of every solid are not 5,760");
+const { solidRecipesOf } = await import(${JSON.stringify(`${pkg.name}/3d/levels/recipes`)});
+if (solidRecipesOf("heart", "colossal")[63] !== EVERY_SOLID.heart.colossal[63].code) throw new Error("the recipes of the solid levels are not the levels' own");
 const { mountSolid } = await import(${JSON.stringify(`${pkg.name}/3d/play`)});
 if (typeof mountSolid !== "function") throw new Error("mountSolid is not a function");
 console.log(names.join(" "));

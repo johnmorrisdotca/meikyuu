@@ -9,7 +9,7 @@ import { applyLook, readColours } from "./solidColours.ts";
 import { SOLID_PLAY_STYLE } from "./solidStyle.ts";
 import { paintSolid, type PaintContext } from "./solidPaint.ts";
 import { buildSolidMaze, parseSolidRecipe, type SolidMaze, type SolidRecipe } from "./solidMaze.ts";
-import { cellsAlongDrag, createFrame, dragTurn, edgeTurn, faceCellTurn, openingTurn, pickCell, projectFrame, SOLID_ZOOM_LEAST, SOLID_ZOOM_MOST, stepTurn, type SolidFrame } from "./solidView.ts";
+import { cellSeen, cellsAlongDrag, createFrame, dragTurn, edgeTurn, faceCellTurn, openingTurn, pickCell, projectFrame, SOLID_ZOOM_LEAST, SOLID_ZOOM_MOST, stepTurn, type SolidFrame } from "./solidView.ts";
 import { quatAxisAngle, quatMul, quatNormalize, quatSlerp, type Quat } from "./vec.ts";
 
 /**
@@ -311,7 +311,8 @@ export function mountSolid(host: HTMLElement, options: SolidMountOptions): Solid
     if (drawing && edgeOn && !game.solved) {
       const head = headOf(game);
       if (head !== null) {
-        const next = edgeTurn(maze.grid, maze.links, turned, head, seconds);
+        // On a solid with parts that hide parts a cell the line is running into may be hidden: the solid is then turned to a side it can be seen from.
+        const next = edgeTurn(maze.grid, maze.links, turned, head, seconds, maze.grid.convex ? undefined : (cell) => !cellSeen(frameNow(), maze.grid, cell));
         if (next !== null) {
           turned = next;
           frameStale = true;
@@ -785,7 +786,7 @@ export function mountSolid(host: HTMLElement, options: SolidMountOptions): Solid
 
   const cellPlace = (cell: number): SolidCellPlace => {
     const now = frameNow();
-    return { x: now.cx[cell]!, y: now.cy[cell]!, visible: now.visible[cell] === 1, facing: now.facing[cell]!, room: maze.grid.radii[cell]! * now.scale * (now.eye / (now.eye - now.cz[cell]!)) };
+    return { x: now.cx[cell]!, y: now.cy[cell]!, visible: cellSeen(now, maze.grid, cell), facing: now.facing[cell]!, room: maze.grid.radii[cell]! * now.scale * (now.eye / (now.eye - now.cz[cell]!)) };
   };
 
   const api: SolidMount = {

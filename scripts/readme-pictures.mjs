@@ -65,7 +65,7 @@ const maze = (subject, level, share = 0.5) => ({ subject, views: ["desk"], scale
 /** A puzzle of another kind, its board cropped. */
 const kind = (subject, query) => ({ subject, views: ["desk"], scale: 1, url: `/?${query}&lang=en&help=off`, ready: '#board[data-ready="true"]', target: "#board" });
 /** A maze over a solid, its board cropped. */
-const solid = (subject, name) => ({ subject, views: ["desk"], scale: 1, url: `/?solid=${name}&solidsize=small&solidlevel=1&lang=en&help=off`, ready: '[data-testid="solid-board"][data-ready="true"] canvas.mk-solid', target: '[data-testid="solid-board"] .mk-box' });
+const solid = (subject, name) => ({ subject, views: ["desk"], scale: 1, url: `/?solid=${name}&solidsize=medium&solidlevel=12&lang=en&help=off`, ready: '[data-testid="solid-board"][data-ready="true"] canvas.mk-solid', target: '[data-testid="solid-board"] .mk-box' });
 
 await takePictures({
   shots: [
@@ -97,8 +97,9 @@ await takePictures({
     kind("arrows", "kind=arrows&level=40"),
     kind("mixed", "kind=mixed&level=1"),
     { subject: "tall", views: ["phone"], url: `/?kind=tall&level=${tall.number}&lang=en&help=off`, ready: READY, target: BOARD, prepare: async (page) => { const made = buildMaze(tall.recipe); const way = solutionOf(made); const svg = page.locator(`${BOARD} svg`); await dragCells(page, svg, made, way.slice(0, Math.floor(way.length * 0.5)), { steps: 2 }); await page.waitForFunction((n) => Number(document.getElementById("board").dataset.cells) >= n, Math.floor(way.length * 0.5)); } },
-    solid("cube", "cube"),
-    solid("globe", "sphere"),
-    solid("icosahedron", "icosahedron"),
+    solid("dodecahedron", "dodecahedron"),
+    solid("torus", "torus"),
+    solid("heart", "heart"),
   ],
+  only: process.env.ONLY?.split(","),
 });

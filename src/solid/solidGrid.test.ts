@@ -3,7 +3,29 @@ import { describe, expect, it } from "vitest";
 import { SOLID_KINDS, solidCells, solidGridOf, type SolidGrid, type SolidKind } from "./solidGrid.ts";
 import { cross, dot, length, sub } from "./vec.ts";
 
-const SIZES: Record<SolidKind, readonly number[]> = { cube: [2, 3, 5], sphere: [2, 3, 5], tetrahedron: [2, 3, 5], octahedron: [2, 3, 5], icosahedron: [2, 3, 4] };
+const SIZES: Record<SolidKind, readonly number[]> = {
+  cube: [2, 3, 5],
+  sphere: [2, 3, 5],
+  tetrahedron: [2, 3, 5],
+  octahedron: [2, 3, 5],
+  icosahedron: [2, 3, 4],
+  prism: [2, 3, 4],
+  trapezohedron: [2, 3, 4],
+  dodecahedron: [1, 2, 3],
+  "rhombic-dodecahedron": [2, 3, 4],
+  bipyramid: [2, 3, 4],
+  icositetrahedron: [2, 3, 4],
+  triacontahedron: [2, 3, 4],
+  box: [2, 3, 4],
+  cross: [2, 3, 4],
+  ring: [2, 3, 4],
+  torus: [3, 4, 6],
+  star: [2, 3, 4],
+  heart: [2, 3, 4],
+};
+
+/** How many holes through the solid: Euler's V - E + F is 2 - 2 g. A ring and a torus have one. */
+const HOLES: Partial<Record<SolidKind, number>> = { ring: 1, torus: 1 };
 
 describe("the surface of a solid as a cell graph", () => {
   for (const kind of SOLID_KINDS) {
@@ -28,21 +50,38 @@ describe("the surface of a solid as a cell graph", () => {
         }
       });
 
-      it(`${kind} ${n}: it is a closed surface (Euler's V - E + F = 2) and every edge has two cells`, () => {
-        expect(grid.vertices.length - grid.edges.length + grid.cells).toBe(2);
+      it(`${kind} ${n}: it is a closed surface (Euler's V - E + F = 2 - 2 holes) and every edge has two cells`, () => {
+        expect(grid.vertices.length - grid.edges.length + grid.cells).toBe(2 - 2 * (HOLES[kind] ?? 0));
         for (const edge of grid.edges) expect(edge.left).not.toBe(edge.right);
         const uses = new Int32Array(grid.edges.length);
         for (const row of grid.sideEdge) for (const id of row) uses[id] = (uses[id] ?? 0) + 1;
         expect([...uses].every((count) => count === 2)).toBe(true);
       });
 
-      it(`${kind} ${n}: each cell faces outward, counter-clockwise seen from outside`, () => {
+      it(`${kind} ${n}: each cell faces outward, counter-clockwise seen from outside, and runs the other way round each edge than the cell across it`, () => {
         for (let cell = 0; cell < grid.cells; cell += 1) {
           const corners = grid.corners[cell]!.map((v) => grid.vertices[v]!);
           const normal = cross(sub(corners[1]!, corners[0]!), sub(corners[2]!, corners[1]!));
-          expect(dot(normal, grid.centres[cell]!)).toBeGreaterThan(0);
-          expect(dot(grid.normals[cell]!, grid.centres[cell]!)).toBeGreaterThan(0);
+          // A convex solid is round its middle, so every normal points away from it; a star, a cross or a ring is not, and has cells that face the hole.
+          if (grid.convex) {
+            expect(dot(normal, grid.centres[cell]!)).toBeGreaterThan(0);
+            expect(dot(grid.normals[cell]!, grid.centres[cell]!)).toBeGreaterThan(0);
+          }
           expect(length(grid.normals[cell]!)).toBeCloseTo(1, 9);
+        }
+        // The surface is oriented: of the two cells at an edge, one goes along it from the lower corner to the higher and the other back.
+        const along = new Map<string, number>();
+        grid.corners.forEach((loop) =>
+          loop.forEach((v, k) => {
+            const w = loop[(k + 1) % loop.length]!;
+            const key = `${v},${w}`;
+            along.set(key, (along.get(key) ?? 0) + 1);
+          }),
+        );
+        for (const [key, count] of along) {
+          const [v, w] = key.split(",").map(Number) as [number, number];
+          expect(count, key).toBe(1);
+          expect(along.get(`${w},${v}`), key).toBe(1);
         }
       });
     }
@@ -77,8 +116,10 @@ describe("the surface of a solid as a cell graph", () => {
     for (const kind of SOLID_KINDS) expect(solidGridOf(kind, 3).neighbours).toEqual(solidGridOf(kind, 3).neighbours);
   });
 
-  it("refuses a solid cut fewer than two ways", () => {
+  it("refuses a solid cut fewer than two ways, except one that already has sixty cells uncut", () => {
     expect(() => solidGridOf("cube", 1)).toThrow();
     expect(() => solidGridOf("cube", 2.5)).toThrow();
+    expect(solidGridOf("dodecahedron", 1).cells).toBe(60);
+    expect(() => solidGridOf("dodecahedron", 0)).toThrow();
   });
 });

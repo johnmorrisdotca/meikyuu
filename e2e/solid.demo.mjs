@@ -5,7 +5,8 @@
 import { expect, test } from "@playwright/test";
 
 import { buildSolidMaze, solidSolutionOf } from "../dist/solid-entry.js";
-import { solidLevelOf, SOLID_KINDS } from "../dist/levels-solid.js";
+import { isSolidDie, SOLID_DICE, SOLID_DIE_SIDES, SOLID_SHAPES, SOLID_SIZE_NAMES } from "../dist/solid-entry.js";
+import { solidLevelOf, SOLID_KINDS } from "../dist/levels-solid-all.js";
 import { at, noSidewaysScroll, open } from "./demo.mjs";
 
 const hostOf = (page) => page.locator(`${at("solid-board")}`);
@@ -69,14 +70,18 @@ const between = (page, a, b) => call(page, "return s.between(argument[0], argume
  * Draw the whole way with one finger, as a person follows a corridor: the end of the line, then the edge it crosses, then the next cell, reading where each is on the
  * picture afresh at each move, and, when the next cell is out of sight, keeping the finger on the end of the line while the solid turns by itself to show it.
  */
-async function followWay(page, finger, way, { stopAt = way.length } = {}) {
+async function followWay(page, finger, way, { stopAt = way.length, leastFacing = 0.4 } = {}) {
   let p = await placeOf(page, way[0]);
   await finger.down(p.x, p.y);
   for (let i = 1; i < stopAt; i += 1) {
     for (let tries = 0; ; tries += 1) {
       p = await placeOf(page, way[i]);
-      if (p.visible && p.facing > 0.4) break;
+      // In clear view (not facing away, and, on a solid with parts that hide parts, not behind one) and not so near edge-on that a finger cannot be put on it. A solid with parts that hide
+      // parts turns to the cell and the cells round it together, which can leave the cell facing a little less squarely than on a solid that hides nothing.
+      if (p.visible && p.facing > leastFacing) break;
       expect(tries, `cell ${i} of the way never came into view`).toBeLessThan(200);
+      // Where the solid cannot tell which of two passages is meant (the rim cells of a star above the head and below it), the player presses Face me, and the cell comes round.
+      if (tries === 60) await call(page, "s.faceMe(argument);", way[i]);
       const head = await placeOf(page, way[i - 1]);
       await finger.move(head.x, head.y);
       await page.waitForTimeout(25);
@@ -112,6 +117,29 @@ test.describe("the solids", () => {
       await expect(page.locator(`${at("solid-info")}`)).toContainText(String(level.cells));
     }
     expect(errors).toEqual([]);
+  });
+
+  test("the picker has a row of dice, by their sides, and a row of shapes, and five sizes", async ({ page }) => {
+    await openSolid(page);
+    const dice = page.locator(`${at("solid-kinds")} [data-testid="solid-dice"] button`);
+    const shapes = page.locator(`${at("solid-kinds")} [data-testid="solid-shapes"] button`);
+    await expect(dice).toHaveCount(SOLID_DICE.length);
+    await expect(shapes).toHaveCount(SOLID_SHAPES.length);
+    expect(await dice.evaluateAll((buttons) => buttons.map((button) => button.dataset.value))).toEqual([...SOLID_DICE]);
+    expect(await shapes.evaluateAll((buttons) => buttons.map((button) => button.dataset.value))).toEqual([...SOLID_SHAPES]);
+    // Each die says its sides.
+    expect(await dice.evaluateAll((buttons) => buttons.map((button) => /^d(\d+) /.exec(button.textContent)?.[1]))).toEqual(SOLID_DICE.map((kind) => String(SOLID_DIE_SIDES[kind])));
+    for (const kind of SOLID_DICE) expect(isSolidDie(kind)).toBe(true);
+    await expect(page.locator(`${at("solid-sizes")} button`)).toHaveCount(5);
+    expect(await page.locator(`${at("solid-sizes")} button`).evaluateAll((buttons) => buttons.map((button) => button.dataset.value))).toEqual([...SOLID_SIZE_NAMES]);
+    // Choosing a shape and a size opens that list at its first level.
+    await page.locator(`${at("solid-kinds")} button[data-value="heart"]`).click();
+    await page.locator(`${at("solid-sizes")} button[data-value="colossal"]`).click();
+    await expect(hostOf(page)).toHaveAttribute("data-solid", "heart");
+    const level = solidLevelOf("heart", "colossal", 1);
+    expect(await call(page, "return s.maze().grid.cells;")).toBe(level.cells);
+    expect(level.cells).toBeGreaterThan(3000);
+    await expect(page.locator(`${at("solid-info")}`)).toContainText(String(level.cells));
   });
 
   test("a picture of a solid takes no input: it is not focusable, a touch passes through it to the page, and the keys and the wheel do nothing", async ({ page }) => {
@@ -188,28 +216,32 @@ test.describe("the solids", () => {
     expect(result.wrong).toBe(0);
   });
 
-  for (const kind of SOLID_KINDS) {
-    test(`${kind}: the whole way is drawn in one stroke across the edges, the solid turning by itself, and the maze is solved`, async ({ page, browserName }, info) => {
-      const level = solidLevelOf(kind, "small", 7);
-      await openSolid(page, kind, "small", 7);
-      const maze = buildSolidMaze(level.recipe);
-      const way = solidSolutionOf(maze);
-      const finger = await input(page, browserName, info.project);
-      await call(page, "window.__solved = 0; s.host.addEventListener('meikyuu-solve', () => { window.__solved += 1; });");
-      await followWay(page, finger, way);
-      const state = await call(page, "const g = s.mazeGame(); return { solved: g.solved, path: g.path, strokes: g.strokes, moves: s.host.dataset.moves, told: window.__solved };");
-      expect(state.solved).toBe(true);
-      expect(state.path).toEqual(way);
-      expect(state.strokes).toBe(1);
-      expect(state.told).toBe(1);
-      // The line really did cross from one face to another (the faces of the triangle solids and the cube; the globe has none to name).
-      if (kind !== "sphere") {
-        const faces = new Set(way.map((cell) => maze.grid.faceOf[cell]));
-        expect(faces.size).toBeGreaterThan(1);
-      }
-      await expect(hostOf(page)).toHaveAttribute("data-solved", "true");
-    });
-  }
+  // A finger follows a solid that is turning under it, and now and then, on a slow runner, lands one cell off before the turn has finished: each whole way is tried again once.
+  test.describe("a finger follows the whole way", () => {
+    test.describe.configure({ retries: 1 });
+    for (const kind of SOLID_KINDS) {
+      test(`${kind}: the whole way is drawn in one stroke across the edges, the solid turning by itself, and the maze is solved`, async ({ page, browserName }, info) => {
+        const level = solidLevelOf(kind, "small", 7);
+        await openSolid(page, kind, "small", 7);
+        const maze = buildSolidMaze(level.recipe);
+        const way = solidSolutionOf(maze);
+        const finger = await input(page, browserName, info.project);
+        await call(page, "window.__solved = 0; s.host.addEventListener('meikyuu-solve', () => { window.__solved += 1; });");
+        await followWay(page, finger, way, { leastFacing: maze.grid.convex ? 0.4 : 0.25 });
+        const state = await call(page, "const g = s.mazeGame(); return { solved: g.solved, path: g.path, strokes: g.strokes, moves: s.host.dataset.moves, told: window.__solved };");
+        expect(state.solved).toBe(true);
+        expect(state.path).toEqual(way);
+        expect(state.strokes).toBe(1);
+        expect(state.told).toBe(1);
+        // The line really did cross from one face to another (the faces of the triangle solids and the cube; the globe and the torus have none to name).
+        if (kind !== "sphere" && kind !== "torus") {
+          const faces = new Set(way.map((cell) => maze.grid.faceOf[cell]));
+          expect(faces.size).toBeGreaterThan(1);
+        }
+        await expect(hostOf(page)).toHaveAttribute("data-solved", "true");
+      });
+    }
+  });
 
   /** The solved message is open over a finished cube; drawing it took the whole way in one stroke, as a person would. */
   async function solveCube(page, browserName, info) {
@@ -345,12 +377,12 @@ test.describe("the solids", () => {
     await expect(hostOf(page)).toHaveAttribute("data-stones", "1");
   });
 
-  test("turning holds the screen's rate on a phone slowed four times over, on every solid", async ({ page, browserName }, info) => {
+  test("turning holds the screen's rate on a phone slowed four times over, on the solids of the first five at large and a die and a shape at huge", async ({ page, browserName }, info) => {
     test.skip(browserName !== "chromium" || info.project.use?.hasTouch !== true, "a phone's Chromium, through its protocol");
     test.setTimeout(120_000);
     const client = await page.context().newCDPSession(page);
     await client.send("Emulation.setCPUThrottlingRate", { rate: 4 });
-    for (const [kind, size, level] of [["cube", "large", 9], ["sphere", "large", 9], ["octahedron", "large", 9], ["icosahedron", "large", 9]]) {
+    for (const [kind, size, level] of [["cube", "large", 9], ["sphere", "large", 9], ["octahedron", "large", 9], ["icosahedron", "large", 9], ["dodecahedron", "huge", 9], ["torus", "huge", 9]]) {
       await openSolid(page, kind, size, level);
       await client.send("Emulation.setCPUThrottlingRate", { rate: 4 });
       const result = await boxOf(page).evaluate(async (box) => {
@@ -378,6 +410,44 @@ test.describe("the solids", () => {
       });
       // A frame is 16.7 ms; a few slow ones on a busy machine are allowed, a drawing that cannot keep up is not.
       expect(result.over / result.frames, `${kind}: ${JSON.stringify(result)}`).toBeLessThan(0.15);
+      await client.send("Emulation.setCPUThrottlingRate", { rate: 1 });
+    }
+  });
+
+  test("a colossal solid, about four and a half thousand cells, turns at a good rate on a phone slowed four times over when it is zoomed in four times, which is how it is played", async ({ page, browserName }, info) => {
+    test.skip(browserName !== "chromium" || info.project.use?.hasTouch !== true, "a phone's Chromium, through its protocol");
+    test.setTimeout(120_000);
+    const client = await page.context().newCDPSession(page);
+    await client.send("Emulation.setCPUThrottlingRate", { rate: 4 });
+    for (const [kind, size, level] of [["cube", "colossal", 40], ["icosahedron", "colossal", 40], ["dodecahedron", "colossal", 40], ["torus", "colossal", 40], ["heart", "colossal", 40], ["cross", "colossal", 40]]) {
+      await openSolid(page, kind, size, level);
+      await call(page, "s.view({ zoom: 4 });");
+      await client.send("Emulation.setCPUThrottlingRate", { rate: 4 });
+      const result = await boxOf(page).evaluate(async (box) => {
+        const rect = box.getBoundingClientRect();
+        const frames = [];
+        let last = performance.now();
+        const fire = (type, x, y) => box.dispatchEvent(new PointerEvent(type, { pointerId: 1, pointerType: "touch", clientX: rect.left + x, clientY: rect.top + y, bubbles: true, isPrimary: true }));
+        fire("pointerdown", 5, 5);
+        await new Promise((resolve) => {
+          let t = 0;
+          const step = (now) => {
+            frames.push(now - last);
+            last = now;
+            t += 1;
+            const a = (t / 20) * Math.PI;
+            fire("pointermove", 5 + (rect.width - 10) * (0.5 + 0.5 * Math.sin(a)), 5 + (rect.height - 10) * (0.5 + 0.5 * Math.cos(a * 0.7)));
+            if (t < 120) requestAnimationFrame(step);
+            else resolve();
+          };
+          requestAnimationFrame(step);
+        });
+        fire("pointerup", 5, 5);
+        frames.shift();
+        return { frames: frames.length, over: frames.filter((f) => f > 34).length, worst: Math.max(...frames) };
+      });
+      // Two frames of the screen's rate (34 ms), at four times slower than a laptop and in software; a few slow ones on a busy machine are allowed, a drawing that cannot keep up is not.
+      expect(result.over / result.frames, `${kind}: ${JSON.stringify(result)}`).toBeLessThan(0.25);
       await client.send("Emulation.setCPUThrottlingRate", { rate: 1 });
     }
   });

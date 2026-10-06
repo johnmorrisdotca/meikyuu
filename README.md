@@ -1,7 +1,7 @@
 <h1 align="center">Meikyuu <sub>迷宮</sub></h1>
 
 <p align="center"><strong>A maze game for JavaScript and TypeScript.</strong><br>
-Draw a line through over a thousand mazes, and as many tall ones for a phone held upright, with a finger or the mouse: squares, hexagons, triangles, circles and shapes cut out of them (a heart, a leaf, a star), from a few cells to thousands, and mazes over the whole surface of a cube, a globe and the solids made of triangles that you turn to follow your line round, each level a short recipe that rebuilds the same maze in every browser. Seven algorithms, a difficulty measure, a score for how hard each is to play, lists that never get easier, zoom and pan, and arrow puzzles too. The maze drawn as SVG and played in any page with one call or one tag. No dependencies.</p>
+Draw a line through over a thousand mazes, and as many tall ones for a phone held upright, with a finger or the mouse: squares, hexagons, triangles, circles and shapes cut out of them (a heart, a leaf, a star), from a few cells to thousands, and mazes over the whole surface of dice and shapes (a cube, a d12, a globe, a torus, a star, a heart) that you turn to follow your line round, each level a short recipe that rebuilds the same maze in every browser. Seven algorithms, a difficulty measure, a score for how hard each is to play, lists that never get easier, zoom and pan, and arrow puzzles too. The maze drawn as SVG and played in any page with one call or one tag. No dependencies.</p>
 
 <p align="center">
   <a href="https://github.com/johnmorrisdotca/meikyuu/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/johnmorrisdotca/meikyuu/actions/workflows/ci.yml/badge.svg"></a>
@@ -73,10 +73,10 @@ And in a page, a level to play, by touch and mouse, with nothing else to set up:
 ## Features
 
 - **A thousand mazes, then arrow puzzles and mixed ones.** 1,024 maze levels, 300 arrow levels and 100 mixed levels: four sizes of 256 mazes, each size in the order of its score, 0 to 100, for how hard it is to play, which counts how much of the map the answer covers.
-- **Tall mazes for a phone held upright.** 1,536 portrait levels, two columns to three rows, in six sizes of 256 (6×9 to 20×30 cells), that lie down by themselves on a wide screen (`orientation`) without changing the maze or a line drawn on it.
+- **Tall mazes for a phone held upright.** 1,536 portrait levels, in six sizes of 256 (6×9 to 20×30 cells), that lie down by themselves on a wide screen (`orientation`) without changing the maze or its line.
 - **Colossal mazes.** Two more lists, in an entry of their own (`/levels/colossal`): 128 square mazes of about ten thousand cells (a hundred across or so, every shape) and 128 tall ones 64 across and 96 down, each a recipe that builds in about twenty milliseconds, drawn and played with the same zoom, gutters and panning as any other.
-- **Mazes over a solid.** A perfect maze over the whole surface of a cube, a globe (a football of hexagons and twelve pentagons), a tetrahedron, an octahedron or an icosahedron (`/3d`, `/3d/play`, `/3d/levels`): 960 levels, drawn in 3D on a canvas, turned by dragging, by arrows and by two fingers, with the line crossing from face to face over the edges and the solid turning by itself to keep the end of the line in view. The answer is a list of cells, the same however the solid is turned.
-- **Stones.** A marble (`stones` option) laid beside the line on a passage the player has given up on, which the line cannot enter: a helper for the big mazes, never a pen. Laid only within `reach` cells of the line (2 by default), as many as `limit` allows (a few, or none for no limit), by the Stone button, by pressing and holding, or by Shift and an arrow key. Part of the game for Undo, Restart and saving a run, never part of the maze or its answer.
+- **Mazes over a solid.** A perfect maze over the whole surface of a die (a d3 to a d30: the cube, the dodecahedron, the ten-sided trapezohedron, the icosahedron and more) or a shape (a globe, a box, a cross of cubes, a ring, a torus, a star, a heart): 18 solids, 5,760 levels in five sizes to a solid, up to four thousand cells (`/3d`, `/3d/play`, `/3d/levels`), drawn in 3D on a canvas, turned by dragging, by arrows and by two fingers, with the line crossing from face to face over the edges and the solid turning by itself to keep the end of the line in view. The answer is a list of cells, the same however the solid is turned.
+- **Stones.** A marble (`stones` option) laid beside the line on a passage the player has given up on, which the line cannot enter: a helper for the big mazes, never a pen. Laid within `reach` cells of the line (2 by default), as many as `limit` allows, by the Stone button, by pressing and holding, or by Shift and an arrow key. Part of Undo, Restart and a saved run, never of the maze or its answer.
 - **Made for a thumb.** Always some page beside the board to scroll by, touches kept only by the board, a pinch to zoom, two fingers to move a zoomed maze, and the view following a line drawn to the edge.
 - **Every shape.** Squares, hexagons, triangles and circles, and shapes cut out of them (a heart, a leaf, a star, a ring, a diamond, a cross, a moon), from a few cells to thousands.
 - **Four ways to play**: in and out through the wall, find the goal, out from the centre, and collect the keys on the way.
@@ -157,26 +157,26 @@ Each picture is a board the package draws, taken from [the demo](https://johnmor
 </td>
 <td align="center" valign="top" width="33%">
 <picture>
-<source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/johnmorrisdotca/meikyuu/main/docs/images/cube-desk-dark.webp">
-<img src="https://raw.githubusercontent.com/johnmorrisdotca/meikyuu/main/docs/images/cube-desk-light.webp" alt="A maze over a cube seen at a corner where three faces meet: walls drawn on each face, and the start marked by a green disc." width="300">
+<source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/johnmorrisdotca/meikyuu/main/docs/images/dodecahedron-desk-dark.webp">
+<img src="https://raw.githubusercontent.com/johnmorrisdotca/meikyuu/main/docs/images/dodecahedron-desk-light.webp" alt="A maze over a dodecahedron, the twelve-sided die: walls drawn on each pentagonal face cut into five squares, and the start marked by a green disc." width="300">
 </picture>
-<br><em><strong>A cube</strong>: a maze over the surface of a solid, turned by dragging.</em>
+<br><em><strong>A d12</strong>: a maze over the surface of a die, turned by dragging.</em>
 </td>
 </tr>
 <tr>
 <td align="center" valign="top" width="33%">
 <picture>
-<source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/johnmorrisdotca/meikyuu/main/docs/images/globe-desk-dark.webp">
-<img src="https://raw.githubusercontent.com/johnmorrisdotca/meikyuu/main/docs/images/globe-desk-light.webp" alt="A maze over a globe of hexagons and twelve pentagons, a football-shaped solid with walls drawn over its surface." width="300">
+<source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/johnmorrisdotca/meikyuu/main/docs/images/torus-desk-dark.webp">
+<img src="https://raw.githubusercontent.com/johnmorrisdotca/meikyuu/main/docs/images/torus-desk-light.webp" alt="A maze over a torus, a doughnut: walls drawn round the ring and through its hole, and the start marked by a green disc." width="300">
 </picture>
-<br><em><strong>A globe</strong>: hexagons and twelve pentagons.</em>
+<br><em><strong>A torus</strong>: a doughnut, whose far side shows through.</em>
 </td>
 <td align="center" valign="top" width="33%">
 <picture>
-<source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/johnmorrisdotca/meikyuu/main/docs/images/icosahedron-desk-dark.webp">
-<img src="https://raw.githubusercontent.com/johnmorrisdotca/meikyuu/main/docs/images/icosahedron-desk-light.webp" alt="A maze over an icosahedron, twenty triangular faces each cut into small triangles, with walls drawn across them." width="300">
+<source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/johnmorrisdotca/meikyuu/main/docs/images/heart-desk-dark.webp">
+<img src="https://raw.githubusercontent.com/johnmorrisdotca/meikyuu/main/docs/images/heart-desk-light.webp" alt="A maze over a heart, a rounded solid with a cleft at the top, with walls drawn over its surface and the start marked by a green disc." width="300">
 </picture>
-<br><em><strong>An icosahedron</strong>: twenty faces of triangles.</em>
+<br><em><strong>A heart</strong>, a star, a cross, a ring and a box too.</em>
 </td>
 </tr>
 </table>
@@ -218,7 +218,11 @@ Entry points, so a page loads only what it uses:
 | `@johnmorrisdotca/meikyuu/levels/legacy` | The 1,000 maze levels of 1.0.0, and where each went |
 | `@johnmorrisdotca/meikyuu/3d` | Mazes over the surface of a solid, no page needed: the graph of a cube, a globe or a solid of triangles, the maze on it, how hard it is, where a turned solid lands on a picture and which cell a point is on, the checker, a still as SVG |
 | `@johnmorrisdotca/meikyuu/3d/play` | `mountSolid`: a solid to turn and draw on in any element, with its buttons, words and events |
-| `@johnmorrisdotca/meikyuu/3d/levels` | The 960 levels of the solids: 64 for each of three sizes of each of five solids |
+| `@johnmorrisdotca/meikyuu/3d/levels` | The levels of the first five solids (cube, globe, tetrahedron, octahedron, icosahedron): 64 for each of five sizes |
+| `@johnmorrisdotca/meikyuu/3d/levels/dice` | The levels of the seven further dice: the prism (d3), d10, two d12, d16, d24 and d30 |
+| `@johnmorrisdotca/meikyuu/3d/levels/shapes` | The levels of the six shapes: a box, a cross, a ring, a torus, a star and a heart |
+| `@johnmorrisdotca/meikyuu/3d/levels/all` | Every solid's levels, 5,760 of them, in one file (a page showing one solid loads that solid's) |
+| `@johnmorrisdotca/meikyuu/3d/levels/recipes` | The recipe of each of the 5,760 solid levels and nothing else, 50 KB, for a server to say which is which |
 
 ```ts
 import { buildMaze, carveMaze, gridOf, MEIKYUU_SHAPES } from "@johnmorrisdotca/meikyuu";
@@ -536,13 +540,13 @@ The seven algorithms (`MeikyuuAlgorithm`) each make a perfect maze, one with exa
 There are 1,024 maze levels, 300 arrow levels and 100 mixed levels, and 1,536 tall maze levels in a list of their own (below). The maze list is four sizes of 256, small, medium, large and huge, in that order; inside a size every level scores at least as much as the one before (the score below, which is what a site shows as dots). The arrow and mixed lists are one list each, ordered by their effort.
 A level is a recipe, such as `square:12x9:wilson:to-goal:48213` (shape, size, algorithm, way to play, seed) or `heart:25:prim:keys-3:7`, never a drawing. A recipe rebuilds
 the same maze every time, on every browser, because every choice a generator makes comes from a seeded integer stream (mulberry32) and none from the geometry.
-The lists are made on a desk by `scripts/meikyuu-levels.ts` and `scripts/meikyuu-tall.ts`, put in the order of their score by `scripts/meikyuu-rescore.ts`, and kept as data in `src/levels/`. `docs/LEVELS.md` has the tables: how many levels there are in every size and third, how hard they are, how many more could be made, and what became of the 1.0.0 list.
+The lists are made on a desk by `scripts/meikyuu-levels.ts` and `scripts/meikyuu-tall.ts`, put in the order of their score by `scripts/meikyuu-rescore.ts`, and kept as data in `src/levels/`. `docs/LEVELS.md` has the tables: the levels of every size and third, how hard they are, how many more could be made, and what became of the 1.0.0 list.
 
 - **Small and quick first, huge and slow last.** Level 1 is a 15-cell maze; level 1,024 has 8,911 cells. 256 levels are small (under 150 cells), 256 medium (under 800), 256 large (under 4,000) and 256 huge. A size is sixteen pages of sixteen levels, and a third of it (86, 85 and 85 levels) is its easy, medium and hard.
 - **Mixed.** The shapes and the ways to play arrive as the small list goes on (squares first, then circles, hexagons, triangles, and the cut-out shapes one after another; in and out first, then the goal, the centre and keys), and every size has all of them.
   Maze levels by shape: square 156, hex 90, circle 85, triangle 77, heart 74, leaf 74, hexagon 74, pyramid 73, diamond 72, star 67, cross 66, ring 65, moon 51; by way to play: `to-goal` 268, `centre-out` 262, `keys` 253, `enter-leave` 241.
-- **Difficulty is measured twice.** `measureMaze` counts the passages alone, in whole numbers: the cells on the way through, the places on it where the line could have gone another way, the lengths of the wrong branches that leave it, the dead ends, the `river` (the share of cells with exactly two passages), and for keys the detour to fetch them. They are added to an `effort`, an estimate in cells drawn: the way, plus the wrong turns (a person at a fork goes the wrong way half the time and walks to the end of it and back), plus two for every fork, plus the keys. `ratingOf` puts it on a scale of 1 to 100 where doubling the effort adds the same each time.
-- **And scored** (`difficultyOf`, 0 to 100): effort says how much there is to draw, which is mostly size; the score adds what makes two mazes of one size easy or tricky (the forks, the forks where *the straight guess* is wrong, the cells that guess draws that it need not, the longest wrong branch and the bends; forty per cent is the effort, each term on a log scale), then multiplies it by **how much of the map the answer covers** (`coverageOf`): a maze whose answer crosses the whole map keeps its score, and one whose answer stays in a corner counts for half. A maze whose straight guess walks to the goal is not a level (`isTooEasy`: at least 4 wasted cells, 2 traps, 3 forks, 3 wrong branches and 4 dead ends). `docs/LEVELS.md` explains the choices and shows the score of every level, and [LEVELS-STANDARD.md](https://github.com/johnmorrisdotca/.github/blob/main/LEVELS-STANDARD.md) is the rule every package of the family follows.
+- **Difficulty is measured twice.** `measureMaze` counts the passages alone, in whole numbers (the cells on the way through, its forks, the wrong branches, the dead ends, the `river`, the detour for keys) and adds them to an `effort`, an estimate in cells drawn: the way, plus the wrong turns (a person at a fork goes the wrong way half the time and walks to the end of it and back), plus two for every fork, plus the keys. `ratingOf` puts it on a scale of 1 to 100 where doubling the effort adds the same each time.
+- **And scored** (`difficultyOf`, 0 to 100): effort is mostly size; the score adds what makes two mazes of one size easy or tricky (the forks, the forks where *the straight guess* is wrong, the cells it draws in vain, the longest wrong branch, the bends), then multiplies it by **how much of the map the answer covers** (`coverageOf`): an answer across the whole map keeps its score, one that stays in a corner counts for half. A maze the straight guess walks through is not a level (`isTooEasy`). `docs/LEVELS.md` has the choices and every level's score; [LEVELS-STANDARD.md](https://github.com/johnmorrisdotca/.github/blob/main/LEVELS-STANDARD.md) is the family's rule.
 - **Tested on every build**: every level rebuilds from its recipe, is a perfect maze of the cells the list says, measures the effort and the score the list says, is not too easy, and is solved by drawing its way with the game's own rules; and the scores never go down along a size.
 
 ```ts no-check
@@ -568,7 +572,7 @@ The options, the numbers and every example are in [docs/MORE-MAZES.md](docs/MORE
 
 ## Mazes over a solid
 
-A perfect maze over the whole surface of a cube, a globe (a football of hexagons and twelve pentagons), a tetrahedron, an octahedron or an icosahedron (`/3d`, `/3d/play`, `/3d/levels`): 960 levels, drawn on a canvas, turned by dragging away from the line, with the solid turning by itself to keep the end of the line in view.
+A perfect maze over the whole surface of 18 solids (`/3d`, `/3d/play`, `/3d/levels`): the dice (d3, d4, d6, d8, d10, two d12, d16, d20, d24, d30) and the shapes (a globe, a box, a cross of cubes, a ring, a torus, a star and a heart), 5,760 levels, drawn on a canvas, turned by dragging away from the line, with the solid turning by itself to keep the end of the line in view.
 
 The options, the numbers and every example are in [docs/SOLID-MAZES.md](docs/SOLID-MAZES.md#mazes-over-a-solid).
 
@@ -616,7 +620,7 @@ board?.host.addEventListener("meikyuu-solve", (event) => console.log((event as C
 board?.load({ kind: "arrows", level: 5 });   // another puzzle in the same box
 ```
 
-A board is drawn with a finger or the mouse (the line follows the corridors and snaps to cells; a wall stops it and drawing back shortens it), zoomed with a pinch or the wheel, helped with Hint, taken back with Undo, its solved message put away with a tap, its close button or Escape, and it says what happens with the events `meikyuu-move`, `meikyuu-solve`, `meikyuu-key`, `meikyuu-unlock`, `meikyuu-bump`, `meikyuu-lose` and `meikyuu-stones`. The tag is `<meikyuu-board>`, with the options as attributes (`kind` and `level`, or `recipe`; `board`, `trail`, `tap`, `hints`, `sound`, `controls`, `zoom`, `lang`, `ratio`, `orientation`, `gutter`). The behaviour of each, every option, the handle's methods and the element's attributes are in [docs/PLAYING.md](docs/PLAYING.md#playing-it-in-a-page).
+A board is drawn with a finger or the mouse (a wall stops the line and drawing back shortens it), zoomed with a pinch or the wheel, helped with Hint, taken back with Undo, its solved message put away with a tap, its close button or Escape, and it says what happens with the events `meikyuu-move`, `meikyuu-solve`, `meikyuu-key`, `meikyuu-unlock`, `meikyuu-bump`, `meikyuu-lose` and `meikyuu-stones`. The tag is `<meikyuu-board>`, with the options as attributes (`kind` and `level`, or `recipe`; `board`, `trail`, `tap`, `hints`, `sound`, `controls`, `zoom`, `lang`, `ratio`, `orientation`, `gutter`). The behaviour of each, every option, the handle's methods and the element's attributes are in [docs/PLAYING.md](docs/PLAYING.md#playing-it-in-a-page).
 
 ## API
 
@@ -691,7 +695,7 @@ All of these are held by tests, and the ones with a name are exported.
 | Levels | 1,024 maze levels, 300 arrow levels, 100 mixed | `MEIKYUU_MAZE_LEVELS`, `MEIKYUU_ARROW_LEVELS`, `MEIKYUU_MIXED_LEVELS` |
 | Tall levels | 1,536, six sizes of 256 (6 to 20 cells across, 2:3) | `MEIKYUU_TALL_LEVELS`, `MEIKYUU_TALL_SIZES` |
 | Colossal levels | 256, two lists of 128: square (9,500 to 12,000 cells) and tall (64 across, 96 down, 2:3) | `MEIKYUU_COLOSSAL_LEVELS`, `MEIKYUU_COLOSSAL_TALL_LEVELS` |
-| Solid levels | 960, 64 for each of three sizes of five solids (72 to 720 cells); a recipe at most 6,000 cells | `MEIKYUU_SOLID_LEVELS`, `MEIKYUU_MOST_SOLID_CELLS` |
+| Solid levels | 5,760, 64 for each of five sizes of 18 solids (60 to 4,860 cells); a recipe at most 10,000 cells | `MEIKYUU_SOLID_LEVELS`, `MEIKYUU_MOST_SOLID_CELLS` |
 | Stones | beside the line within 1 or 2 cells (default 2); a few by default (3 and one more for every hundred cells across), or no limit | `stoneLimitFor`, `MEIKYUU_STONE_REACH_MOST` |
 | The biggest maze in the lists | 8,923 cells (level 943); the smallest is 15 (level 1) | `levelOf("maze", n).cells` |
 | A maze's size words | small under 150 cells, medium under 800, large under 4,000, huge beyond | `sizeOf`, `MEIKYUU_SIZES` |
@@ -726,7 +730,7 @@ Any browser with ES2020 modules, custom elements, Pointer Events, `ResizeObserve
 
 ## Languages
 
-English and Japanese, chosen by the `language` option, the host's `lang` or the page's, and followed when the page's `lang` changes. The demo has a chooser of its own and takes the browser's language on a first visit. The board's words and the names of the shapes and the ways to play (`MEIKYUU_STRINGS`) are in both. **Japanese: included; not yet reviewed by a native reader. Corrections welcome.** Every string is listed beside its English in [docs/strings-ja.md](./docs/strings-ja.md), and there is an [issue template](https://github.com/johnmorrisdotca/meikyuu/issues/new?template=fix-a-translation.md) for fixing one. Any other language is a table of your own, passed beside these two.
+English and Japanese, chosen by the `language` option, the host's `lang` or the page's, and followed when the page's `lang` changes. The demo has a chooser of its own and takes the browser's language on a first visit. The board's words and the names of the shapes, solids and ways to play (`MEIKYUU_STRINGS`) are in both. **Japanese: included; not yet reviewed by a native reader. Corrections welcome.** Every string is listed beside its English in [docs/strings-ja.md](./docs/strings-ja.md), with an [issue template](https://github.com/johnmorrisdotca/meikyuu/issues/new?template=fix-a-translation.md) for fixing one. Any other language is a table of your own.
 
 ## Roadmap
 
@@ -826,7 +830,7 @@ Please follow the [code of conduct](./CODE_OF_CONDUCT.md). A recipe that makes t
 
 See [CHANGELOG.md](./CHANGELOG.md).
 
-The latest release is 3.0.0: a level's score counts how much of the map its answer covers, and every list is in the order of its score, so level numbers name different mazes.
+The latest release is 3.1.0: 18 solids (a d3 to a d30, a box, a cross, a ring, a torus, a star, a heart), five sizes to the colossal, 5,760 levels.
 
 ## Licence
 

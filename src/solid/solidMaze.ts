@@ -3,7 +3,7 @@ import { difficultyOfGraph, type MazeDifficulty, type MazeGeometry } from "../di
 import { solutionOf, walk, type MazeCore } from "../maze.ts";
 import { below, seededRandom } from "../random.ts";
 import { lineToSteps } from "../steps.ts";
-import { MEIKYUU_MOST_SOLID_CELLS, SOLID_KINDS, solidCells, solidGridOf, type SolidGrid, type SolidKind } from "./solidGrid.ts";
+import { isSolidCut, MEIKYUU_MOST_SOLID_CELLS, SOLID_KINDS, solidCells, solidGridOf, type SolidGrid, type SolidKind } from "./solidGrid.ts";
 import { distanceSquared, dot, length, sub, type Vec3 } from "./vec.ts";
 
 /**
@@ -56,7 +56,7 @@ export function parseSolidRecipe(code: string): SolidRecipe | null {
   if (!(SOLID_KINDS as readonly string[]).includes(kind) || !(SOLID_ALGORITHMS as readonly string[]).includes(algorithm)) return null;
   if (!/^\d{1,4}$/.test(size) || !/^\d{1,10}$/.test(seed)) return null;
   const n = Number(size);
-  if (n < 2 || solidCells(kind as SolidKind, n) > MEIKYUU_MOST_SOLID_CELLS) return null;
+  if (!isSolidCut(kind as SolidKind, n) || solidCells(kind as SolidKind, n) > MEIKYUU_MOST_SOLID_CELLS) return null;
   const number = Number(seed);
   if (number > 4_294_967_295) return null;
   return { kind: kind as SolidKind, n, algorithm: algorithm as SolidAlgorithm, seed: number };

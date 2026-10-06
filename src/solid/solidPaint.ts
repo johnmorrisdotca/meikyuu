@@ -1,6 +1,7 @@
-import type { SolidFrame } from "./solidView.ts";
+import { paintSolidOrdered } from "./solidPaintOrdered.ts";
+import { SHADES, openEdges, discOn, roomPixels, trace, shadeAt, shadeOf, placeOn, tangentsOf, type PaintContext, type SolidColours, type SolidPaintState } from "./solidPaintParts.ts";
 import type { SolidMaze } from "./solidMaze.ts";
-import { cross, dot, scale as times, sub, unit, type Vec3 } from "./vec.ts";
+import type { SolidFrame } from "./solidView.ts";
 import { quatMatrix } from "./vec.ts";
 
 /**
@@ -12,144 +13,12 @@ import { quatMatrix } from "./vec.ts";
  * The colours are the drawing's own custom properties (`--mk-paper`, `--mk-wall`, `--mk-trail`, ...), read by the mount and handed in; the painter
  * knows nothing of a page. A cell facing the viewer squarely is the paper's own colour; the rest fall away toward the limb, which gives the depth,
  * and the picture sits on a ground a little off the paper's colour so that the solid has an outline even where it is bright.
+ *
+ * A solid whose parts can hide parts (a star, a cross, a ring, a heart) is painted by `paintSolidOrdered` instead, cell by cell from the back to the front.
  */
 
-/** The three parts of a colour, from 0 to 255. */
-export type Rgb = readonly [number, number, number];
-
-export type SolidColours = {
-  /** The cell facing the viewer, as the paper is. */
-  readonly paper: Rgb;
-  /** What the picture sits on: the paper, a little toward the wall's colour. */
-  readonly ground: string;
-  readonly wall: string;
-  readonly trail: string;
-  readonly start: string;
-  readonly goal: string;
-  readonly hint: string;
-  readonly bad: string;
-  readonly stone: string;
-  readonly stoneEdge: string;
-};
-
-/** What is on the solid besides the solid. */
-export type SolidPaintState = {
-  readonly path: readonly number[];
-  readonly stones: readonly number[];
-  readonly hint: { readonly back: number; readonly cells: readonly number[] } | null;
-  readonly won: boolean;
-  /** The thickness of a wall and of the line, in cells (as the drawing's `wall` and `line` options have them). */
-  readonly wall: number;
-  readonly line: number;
-};
-
-/** The drawing surface the painter needs: a 2D canvas context, or anything shaped like one. */
-export type PaintContext = Pick<CanvasRenderingContext2D, "beginPath" | "moveTo" | "lineTo" | "closePath" | "fill" | "stroke" | "arc" | "fillRect" | "clearRect" | "save" | "restore" | "setTransform"> & {
-  fillStyle: string | CanvasGradient | CanvasPattern;
-  strokeStyle: string | CanvasGradient | CanvasPattern;
-  lineWidth: number;
-  lineCap: CanvasLineCap;
-  lineJoin: CanvasLineJoin;
-  globalAlpha: number;
-};
-
-/** How many degrees of shade a cell can be in; the cells of one are filled in one go. */
-const SHADES = 10;
-/** The darkest a cell at the limb is, as a share of the paper's colour. */
-const DARKEST = 0.52;
-
-const OPEN = new WeakMap<SolidMaze, Uint8Array>();
-
-/** For each edge of the solid, 1 when the passage is open (the two cells are joined) and there is no wall. */
-function openEdges(maze: SolidMaze): Uint8Array {
-  let open = OPEN.get(maze);
-  if (open === undefined) {
-    const { edges } = maze.grid;
-    open = new Uint8Array(edges.length);
-    edges.forEach((edge, id) => {
-      if (maze.links[edge.left]!.includes(edge.right)) open![id] = 1;
-    });
-    OPEN.set(maze, open);
-  }
-  return open;
-}
-
-/** The colour of a cell facing the viewer so squarely, from the paper's. */
-export function shadeOf(paper: Rgb, shade: number): string {
-  const k = DARKEST + (1 - DARKEST) * shade;
-  return `rgb(${Math.round(paper[0] * k)},${Math.round(paper[1] * k)},${Math.round(paper[2] * k)})`;
-}
-
-/** How a cell facing the viewer at `facing` (the turned normal's z) is shaded, from 0 at the limb to 1 face on. */
-export function shadeAt(facing: number): number {
-  return Math.max(0, Math.min(1, facing)) ** 0.7;
-}
-
-/** A point of the solid, turned and put on the picture: `[x, y, depth]`. */
-export function placeOn(frame: SolidFrame, m: readonly number[], point: Vec3): [number, number, number] {
-  const px = m[0]! * point[0] + m[1]! * point[1] + m[2]! * point[2];
-  const py = m[3]! * point[0] + m[4]! * point[1] + m[5]! * point[2];
-  const pz = m[6]! * point[0] + m[7]! * point[1] + m[8]! * point[2];
-  const k = (frame.eye / (frame.eye - pz)) * frame.scale;
-  return [frame.width / 2 + px * k, frame.height / 2 + py * k, pz];
-}
-
-/** The two directions along the surface at a cell, at right angles, the first toward its first corner. */
-export function tangentsOf(maze: SolidMaze, cell: number): [Vec3, Vec3] {
-  const { grid } = maze;
-  const n = grid.normals[cell]!;
-  const toward = sub(grid.vertices[grid.corners[cell]![0]!]!, grid.centres[cell]!);
-  const u = unit(sub(toward, times(n, dot(toward, n))));
-  return [u, cross(n, u)];
-}
-
-/** A circle lying on the surface at a cell, as the points of its outline put on the picture. */
-function discOn(frame: SolidFrame, m: readonly number[], maze: SolidMaze, cell: number, radius: number, steps = 16): [number, number][] {
-  const { grid } = maze;
-  const [u, v] = tangentsOf(maze, cell);
-  const centre = grid.centres[cell]!;
-  const lift = times(grid.normals[cell]!, grid.radii[cell]! * 0.04);
-  const out: [number, number][] = [];
-  for (let i = 0; i < steps; i += 1) {
-    const a = (i / steps) * 2 * Math.PI;
-    const point: Vec3 = [centre[0] + lift[0] + radius * (Math.cos(a) * u[0] + Math.sin(a) * v[0]), centre[1] + lift[1] + radius * (Math.cos(a) * u[1] + Math.sin(a) * v[1]), centre[2] + lift[2] + radius * (Math.cos(a) * u[2] + Math.sin(a) * v[2])];
-    const [x, y] = placeOn(frame, m, point);
-    out.push([x, y]);
-  }
-  return out;
-}
-
-/** The pixels a cell is across, near enough, for a mark in it: the room from its middle to its nearest side, as drawn. */
-function roomPixels(frame: SolidFrame, maze: SolidMaze, cell: number): number {
-  const k = frame.eye / (frame.eye - frame.cz[cell]!);
-  return maze.grid.radii[cell]! * frame.scale * k;
-}
-
-/** Where the line passes from one cell to the next, on the picture: the middle of the edge between them. */
-function crossing(maze: SolidMaze, frame: SolidFrame, from: number, to: number): [number, number] {
-  const side = maze.grid.neighbours[from]!.indexOf(to);
-  const edge = maze.grid.edges[maze.grid.sideEdge[from]![side]!]!;
-  return [(frame.sx[edge.a]! + frame.sx[edge.b]!) / 2, (frame.sy[edge.a]! + frame.sy[edge.b]!) / 2];
-}
-
-/** Trace a line through cells onto the context's current path: through each cell's middle and across the edge to the next, only where the cell is on the near side. */
-function trace(ctx: PaintContext, maze: SolidMaze, frame: SolidFrame, cells: readonly number[]): void {
-  let drawnTo = -2;
-  for (let at = 0; at < cells.length; at += 1) {
-    const cell = cells[at]!;
-    if (frame.visible[cell] === 0) continue;
-    if (drawnTo !== at - 1) {
-      const [x, y] = at === 0 ? [frame.cx[cell]!, frame.cy[cell]!] : crossing(maze, frame, cells[at - 1]!, cell);
-      ctx.moveTo(x, y);
-    }
-    ctx.lineTo(frame.cx[cell]!, frame.cy[cell]!);
-    if (at < cells.length - 1) {
-      const [x, y] = crossing(maze, frame, cell, cells[at + 1]!);
-      ctx.lineTo(x, y);
-    }
-    drawnTo = at;
-  }
-}
+export { placeOn, shadeAt, shadeOf, tangentsOf };
+export type { PaintContext, Rgb, SolidColours, SolidPaintState } from "./solidPaintParts.ts";
 
 /** The shade a cell is filled with, bucketed. */
 const shadeBucket = (frame: SolidFrame, cell: number): number => Math.min(SHADES - 1, Math.floor(shadeAt(frame.facing[cell]!) * SHADES));
@@ -160,6 +29,10 @@ const SEAMS = new WeakMap<SolidFrame, Int8Array>();
 /** Paint the solid, as the frame has it, with the game on it. */
 export function paintSolid(ctx: PaintContext, maze: SolidMaze, frame: SolidFrame, colours: SolidColours, state: SolidPaintState): void {
   const { grid } = maze;
+  if (!grid.convex) {
+    paintSolidOrdered(ctx, maze, frame, colours, state);
+    return;
+  }
   const { width, height } = frame;
   ctx.fillStyle = colours.ground;
   ctx.fillRect(0, 0, width, height);

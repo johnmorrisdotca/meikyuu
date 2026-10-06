@@ -8,7 +8,7 @@ import { lineToSteps, stepsToLine } from "../steps.ts";
 import { SOLID_KINDS, solidCells, type SolidKind } from "./solidGrid.ts";
 import { buildSolidMaze, checkSolidAnswer, parseSolidRecipe, SOLID_ALGORITHMS, solidAnswerSteps, solidDifficultyOf, solidRecipeCode, solidSolutionOf, type SolidRecipe } from "./solidMaze.ts";
 
-const SIZE: Record<SolidKind, number> = { cube: 5, sphere: 4, tetrahedron: 5, octahedron: 4, icosahedron: 3 };
+const SIZE: Record<SolidKind, number> = { cube: 5, sphere: 4, tetrahedron: 5, octahedron: 4, icosahedron: 3, prism: 4, trapezohedron: 4, dodecahedron: 2, "rhombic-dodecahedron": 4, bipyramid: 3, icositetrahedron: 3, triacontahedron: 3, box: 4, cross: 3, ring: 3, torus: 7, star: 3, heart: 4 };
 
 describe("a maze over a solid", () => {
   for (const kind of SOLID_KINDS) {

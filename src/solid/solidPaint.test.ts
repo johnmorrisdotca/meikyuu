@@ -43,7 +43,7 @@ function recorder(): { ctx: PaintContext; calls: Record<string, number>; styles:
   return { ctx, calls, styles };
 }
 
-const SIZE: Record<SolidKind, number> = { cube: 10, sphere: 8, tetrahedron: 12, octahedron: 9, icosahedron: 6 };
+const SIZE: Record<SolidKind, number> = { cube: 10, sphere: 8, tetrahedron: 12, octahedron: 9, icosahedron: 6, prism: 9, trapezohedron: 8, dodecahedron: 3, "rhombic-dodecahedron": 7, bipyramid: 6, icositetrahedron: 5, triacontahedron: 5, box: 5, cross: 5, ring: 5, torus: 15, star: 6, heart: 6 };
 
 describe("painting a solid", () => {
   for (const kind of SOLID_KINDS) {
@@ -54,8 +54,10 @@ describe("painting a solid", () => {
       const way = solidSolutionOf(maze);
       const { ctx, calls } = recorder();
       paintSolid(ctx, maze, frame, COLOURS, { path: way.slice(0, 20), stones: [way[5]!], hint: { back: 2, cells: way.slice(20, 26) }, won: false, wall: 0.12, line: 0.34 });
-      expect(maze.grid.cells).toBeGreaterThan(500);
-      expect((calls["fill"] ?? 0) + (calls["stroke"] ?? 0)).toBeLessThan(60);
+      expect(maze.grid.cells).toBeGreaterThan(kind === "dodecahedron" ? 500 : 250);
+      // A solid whose parts can hide parts is painted from the back to the front, a few fills for every dozen cells; the others in a few dozen fills in all.
+      if (maze.grid.convex) expect((calls["fill"] ?? 0) + (calls["stroke"] ?? 0)).toBeLessThan(60);
+      else expect((calls["fill"] ?? 0) + (calls["stroke"] ?? 0)).toBeLessThan(maze.grid.cells / 2);
       expect(calls["beginPath"]).toBeGreaterThan(5);
       // The walls are many segments in few paths.
       expect(calls["lineTo"]).toBeGreaterThan(200);

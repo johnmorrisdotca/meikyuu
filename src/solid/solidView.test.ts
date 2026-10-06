@@ -2,10 +2,10 @@ import { describe, expect, it } from "vitest";
 
 import { seededRandom } from "../random.ts";
 import { SOLID_KINDS, solidGridOf, type SolidGrid, type SolidKind } from "./solidGrid.ts";
-import { cellsAlongDrag, createFrame, dragTurn, edgeTurn, EDGE_SAFE, faceCellTurn, openingTurn, pickCell, projectFrame, stepTurn, trackballPoint } from "./solidView.ts";
+import { cellSeen, cellsAlongDrag, createFrame, dragTurn, edgeTurn, EDGE_SAFE, faceCellTurn, openingTurn, pickCell, projectFrame, stepTurn, trackballPoint } from "./solidView.ts";
 import { dot, quatAxisAngle, quatBetween, quatMul, quatTurn, QUAT_IDENTITY, type Quat, type Vec3 } from "./vec.ts";
 
-const SIZES: Record<SolidKind, number> = { cube: 4, sphere: 3, tetrahedron: 4, octahedron: 3, icosahedron: 2 };
+const SIZES: Record<SolidKind, number> = { cube: 4, sphere: 3, tetrahedron: 4, octahedron: 3, icosahedron: 2, prism: 3, trapezohedron: 3, dodecahedron: 2, "rhombic-dodecahedron": 3, bipyramid: 2, icositetrahedron: 2, triacontahedron: 2, box: 3, cross: 3, ring: 3, torus: 5, star: 3, heart: 3 };
 const W = 360;
 const H = 300;
 
@@ -115,6 +115,8 @@ describe("looking at a solid", () => {
         projectFrame(frame, grid, randomTurn(random), 1, W, H);
         for (let at = 0; at < frame.count; at += 1) {
           const cell = frame.near[at]!;
+          // On a solid that is not convex a cell facing the viewer may be hidden by another part, and then it is not what a point at its middle hits.
+          if (!cellSeen(frame, grid, cell)) continue;
           // The middle of the outline, not of the cell in space: the outline's own centre is inside a convex polygon.
           const loop = grid.corners[cell]!;
           let x = 0;
