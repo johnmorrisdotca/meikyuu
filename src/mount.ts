@@ -1,4 +1,5 @@
 import { arrowsLeft, hintArrow, newArrowGame, restartArrows, tapArrow, undoArrow, unlockArrows, type ArrowGame } from "./arrowGame.ts";
+import { createBanner } from "./banner.ts";
 import { createArrowSurface, type ArrowSurface } from "./arrowSurface.ts";
 import { makeArrows, parseArrowRecipe, type ArrowBoard, type ArrowRecipe } from "./arrows.ts";
 import type { MazeLook } from "./draw.ts";
@@ -97,6 +98,8 @@ export type MeikyuuMountOptions = MazeLook & {
   tap?: boolean;
   /** Offer the Hint button. Default true. */
   hints?: boolean;
+  /** Show the message over the board when the puzzle is solved ("Solved in 3 strokes."); a tap on it, its close button or Escape puts it away. False for none (the line of words under the board still says so). Default true. */
+  banner?: boolean;
   /** The buttons and the lines of words under the board. Default true. */
   controls?: boolean;
   /** The zoom pad. Default true. (The wheel and the pinch always work.) */
@@ -154,7 +157,7 @@ export type MeikyuuMount = {
   /** Play another puzzle: a level or a recipe. Returns false when there is no such puzzle. */
   load: (puzzle: { kind?: MeikyuuKind; level?: number; recipe?: MeikyuuMountOptions["recipe"]; ratio?: MeikyuuMountOptions["ratio"] }) => boolean;
   /** Change how it looks or is played: board, trail, tap, sound, hints, language, the shape of the box (`ratio`), and the stones' rules (`stones`; stones already down stay down). */
-  set: (changes: MazeLook & { tap?: boolean; sound?: boolean; hints?: boolean; language?: MeikyuuLanguage; ratio?: MeikyuuMountOptions["ratio"]; stones?: StoneOption }) => void;
+  set: (changes: MazeLook & { tap?: boolean; sound?: boolean; hints?: boolean; banner?: boolean; language?: MeikyuuLanguage; ratio?: MeikyuuMountOptions["ratio"]; stones?: StoneOption }) => void;
   undo: () => void;
   restart: () => void;
   hint: () => void;
@@ -275,10 +278,8 @@ export function mountMeikyuu(host: HTMLElement, options: MeikyuuMountOptions = {
   const box = create(document, "div", "mk-box");
   box.tabIndex = 0;
   box.setAttribute("role", "group");
-  const banner = create(document, "div", "mk-banner");
-  banner.setAttribute("aria-hidden", "true");
-  banner.dataset.show = "false";
-  wrap.append(box, banner);
+  const banner = createBanner(document, host, options.banner !== false);
+  wrap.append(box, banner.element);
   const controls = create(document, "div", "mk-controls");
   const pad = create(document, "div", "mk-pad");
   pad.setAttribute("role", "group");
@@ -465,9 +466,7 @@ export function mountMeikyuu(host: HTMLElement, options: MeikyuuMountOptions = {
     arrowsTab.setAttribute("aria-selected", String(!onMaze));
     mazeTab.setAttribute("aria-selected", String(onMaze));
     tabs.setAttribute("aria-label", say("tabsLabel"));
-    banner.textContent = onMaze && !mixed ? say("solved", { n: moves }) : say("arrowsCleared");
-    banner.dataset.show = String(solved);
-    if (mixed && mazeGame?.solved === true && onMaze) banner.dataset.show = "false";
+    banner.sync(onMaze && !mixed ? say("solved", { n: moves }) : say("arrowsCleared"), say("closeMessage"), solved && !(mixed && mazeGame?.solved === true && onMaze));
     const surface = surfaceNow();
     const state = surface?.surface.state();
     undoButton.textContent = say("undo");
@@ -693,7 +692,6 @@ export function mountMeikyuu(host: HTMLElement, options: MeikyuuMountOptions = {
     pendingSolve = false;
     solveTold = false;
     moves = 0;
-    banner.dataset.show = "false";
     if (next.kind === "maze") {
       maze = buildMaze(next.recipe);
       mazeGame = newMazeGame(maze, stoneRulesOf(stoneOption, maze.grid.cells));
@@ -819,7 +817,7 @@ export function mountMeikyuu(host: HTMLElement, options: MeikyuuMountOptions = {
       return true;
     },
     set: (changes) => {
-      const { tap, sound, hints, language: nextLanguage, ratio, stones: nextStones, ...nextLook } = changes;
+      const { tap, sound, hints, banner: showBanner, language: nextLanguage, ratio, stones: nextStones, ...nextLook } = changes;
       if ("stones" in changes) {
         stoneOption = nextStones;
         if (mazeGame !== null && maze !== null) {
@@ -838,6 +836,7 @@ export function mountMeikyuu(host: HTMLElement, options: MeikyuuMountOptions = {
       }
       if (tap !== undefined) tapExtends = tap;
       if (hints !== undefined) withHints = hints;
+      if (showBanner !== undefined) banner.enable(showBanner);
       if (sound !== undefined) {
         if (sound && sounds === null) sounds = createMeikyuuSounds();
         else if (!sound) {
@@ -1011,6 +1010,7 @@ export function mountMeikyuu(host: HTMLElement, options: MeikyuuMountOptions = {
       windowOf.removeEventListener("resize", reflow);
       windowOf.visualViewport?.removeEventListener("resize", reflow);
       host.removeEventListener("keydown", onKey);
+      banner.destroy();
       host.style.removeProperty("--mkp-gutter");
       host.style.removeProperty("--mkp-reserve");
       host.replaceChildren();

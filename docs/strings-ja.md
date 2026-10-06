@@ -57,6 +57,7 @@ open a *Fix a translation* issue with the string's name. `{name}` and the other 
 | `keysOf` | Keys {k} of {total}. | 鍵 {k}／{total}。 |
 | `solved` | Solved in {n} strokes. | {n}回の線で解けました。 |
 | `solvedOne` | Solved in 1 stroke. | 1回の線で解けました。 |
+| `closeMessage` | Close the message | メッセージを閉じる |
 | `needKeys` | The goal is reached, but {n} keys are still to find. | ゴールに着きましたが、鍵があと{n}個残っています。 |
 | `needKeysOne` | The goal is reached, but 1 key is still to find. | ゴールに着きましたが、鍵があと1個残っています。 |
 | `arrowsLeft` | {n} arrows left. | 矢はあと{n}本。 |

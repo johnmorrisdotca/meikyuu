@@ -46,6 +46,7 @@ src/
 ├── arrowSurface.ts   an arrow board in the box: tapping an arrow, one sliding off, one bumping
 ├── viewport.ts       the arithmetic of zooming and moving a big board through its box
 ├── playStyle.ts      the style of a playable board: its box, buttons, words and tabs
+├── banner.ts         the message over a finished board and how it is put away: a click, its close button, Escape
 ├── sound.ts          the sounds, made in the browser
 ├── element.ts        the "/element" entry: the <meikyuu-board> class
 ├── element-define.ts the "/element/define" entry: defines the tag on the page

@@ -34,9 +34,13 @@ export const MEIKYUU_PLAY_STYLE = `${MEIKYUU_STYLE}
 .meikyuu-play .mk-box { position: absolute; inset: 0; overflow: hidden; touch-action: none; overscroll-behavior: contain; border-radius: 10px; cursor: crosshair; outline-offset: 3px; }
 .meikyuu-play .mk-box:focus-visible { outline: 2px solid var(--mkp-ink); }
 .meikyuu-play .mk-box > svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-.meikyuu-play .mk-banner { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%) scale(.9); padding: 10px 20px; border-radius: 999px; background: var(--mkp-surface); color: var(--mkp-good); font-weight: 700; font-size: 1.1rem; box-shadow: 0 2px 14px rgba(0,0,0,.3); opacity: 0; pointer-events: none; transition: opacity .3s, transform .3s; white-space: nowrap; }
-.meikyuu-play .mk-banner[data-show="true"] { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+.meikyuu-play .mk-banner { position: absolute; left: 50%; top: 10px; transform: translate(-50%, -6px) scale(.9); display: inline-flex; align-items: center; gap: 4px; max-width: calc(100% - 16px); padding: 4px 4px 4px 16px; border-radius: 999px; background: var(--mkp-surface); color: var(--mkp-good); font-weight: 700; font-size: 1rem; box-shadow: 0 2px 14px rgba(0,0,0,.3); opacity: 0; pointer-events: none; transition: opacity .3s, transform .3s; white-space: nowrap; cursor: pointer; }
+.meikyuu-play .mk-banner[data-show="true"] { opacity: 1; transform: translate(-50%, 0) scale(1); pointer-events: auto; }
 .meikyuu-play .mk-banner[data-show="false"] { visibility: hidden; }
+.meikyuu-play .mk-banner-text { overflow: hidden; text-overflow: ellipsis; }
+.meikyuu-play .mk-banner-close { flex: none; border: 0; background: transparent; color: inherit; width: 44px; height: 44px; margin: -6px 0; border-radius: 50%; font-size: 1.4rem; line-height: 1; cursor: pointer; }
+.meikyuu-play .mk-banner-close:hover { background: rgba(0,0,0,.08); }
+.meikyuu-play .mk-banner-close:focus-visible { outline: 2px solid var(--mkp-ink); outline-offset: -2px; }
 .meikyuu-play .mk-tabs, .meikyuu-play .mk-pad, .meikyuu-play .mk-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 10px; }
 .meikyuu-play .mk-tabs { margin: 0 0 10px; }
 .meikyuu-play [hidden] { display: none !important; }

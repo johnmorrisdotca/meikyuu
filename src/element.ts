@@ -22,7 +22,7 @@ import { FIT_MODES, type FitMode } from "./viewport.ts";
  *    your own as its code, such as `square:12x9:wilson:to-goal:48213` or `heart:15:6:77`.
  *  - `board`: `paper` (default), `wood`, `green`, `blue`, `red` or `black`. `trail`: the line's colour, `green`
  *    (default), `blue`, `red`, `violet` or `orange`.
- *  - `tap`: a tap runs the line along the corridor to the next fork. `hints="off"`: no Hint button. `sound`: make sounds.
+ *  - `tap`: a tap runs the line along the corridor to the next fork. `hints="off"`: no Hint button. `banner="off"`: no message over a solved board. `sound`: make sounds.
  *  - `controls="off"`: only the board. `zoom="off"`: no zoom pad.
  *  - `ratio`: the shape of the box, `square` (default), `maze`, or width over height as a number or a fraction (`2/3` for a tall level).
  *    `orientation`: `auto` (default), `portrait` or `landscape`. `gutter`: the page left beside the box, in pixels (24). `reserve`: what else
@@ -51,7 +51,7 @@ const numberOf = (value: string | null): number | undefined => (value === null |
 const oneOf = <T extends string>(value: string | null, allowed: readonly T[]): T | undefined => (allowed.includes(value as T) ? (value as T) : undefined);
 
 export class MeikyuuBoard extends ElementBase {
-  static observedAttributes = ["kind", "level", "recipe", "board", "trail", "tap", "hints", "sound", "controls", "zoom", "lang", "ratio", "orientation", "gutter", "reserve", "fit", "pan", "edge-pan", "turn-button", "stones", "stone-limit", "stone-reach"];
+  static observedAttributes = ["kind", "level", "recipe", "board", "trail", "tap", "hints", "banner", "sound", "controls", "zoom", "lang", "ratio", "orientation", "gutter", "reserve", "fit", "pan", "edge-pan", "turn-button", "stones", "stone-limit", "stone-reach"];
 
   #mount: MeikyuuMount | null = null;
   #key = "";
@@ -117,6 +117,7 @@ export class MeikyuuBoard extends ElementBase {
       trail: oneOf<MeikyuuTrailName>(this.getAttribute("trail"), MEIKYUU_TRAIL_NAMES),
       tap: isOn(this.getAttribute("tap")),
       hints: isOn(this.getAttribute("hints"), true),
+      banner: isOn(this.getAttribute("banner"), true),
       sound: isOn(this.getAttribute("sound")),
       language: oneOf<MeikyuuLanguage>(this.getAttribute("lang"), ["en", "ja"] as const),
     };

@@ -210,6 +210,101 @@ test.describe("the solids", () => {
     });
   }
 
+  /** The solved message is open over a finished cube; drawing it took the whole way in one stroke, as a person would. */
+  async function solveCube(page, browserName, info) {
+    await openSolid(page, "cube", "small", 1);
+    const opened = await call(page, "return s.view();");
+    const way = solidSolutionOf(buildSolidMaze(solidLevelOf("cube", "small", 1).recipe));
+    const finger = await input(page, browserName, info.project);
+    await followWay(page, finger, way);
+    const banner = page.locator(`${at("solid-board")} .mk-banner`);
+    await expect(hostOf(page)).toHaveAttribute("data-solved", "true");
+    await expect(banner).toHaveAttribute("data-show", "true");
+    await expect(banner).toContainText("Solved in 1 stroke.");
+    return { banner, finger, opened };
+  }
+
+  /** Turning, zooming, Fit and the arrows all still work: the message is not in their way, open or shut. */
+  async function stillTurnsAndZooms(page, finger) {
+    const q0 = await call(page, "return s.view().q;");
+    await finger.down(6, 6);
+    for (let i = 1; i <= 10; i += 1) await finger.move(6 + i * 12, 6 + i * 8);
+    await finger.up();
+    const q1 = await call(page, "return s.view().q;");
+    expect(q1).not.toEqual(q0);
+    await page.locator(`${at("solid-board")} [data-action="turn-left"]`).click();
+    await expect.poll(() => call(page, "return s.view().q;")).not.toEqual(q1);
+    const z0 = await call(page, "return s.view().zoom;");
+    await page.locator(`${at("solid-board")} [data-action="in"]`).click();
+    await expect.poll(() => call(page, "return s.view().zoom;")).toBeGreaterThan(z0);
+    await page.locator(`${at("solid-board")} [data-action="fit"]`).click();
+    await expect.poll(() => call(page, "return s.view().zoom;")).toBeCloseTo(z0, 5);
+  }
+
+  test("the solved message sits at the top of the box, covers little, and is closed by a click on it; turning and zooming work with it open and after", async ({ page, browserName }, info) => {
+    const { banner, finger } = await solveCube(page, browserName, info);
+    const box = await rectOf(page);
+    const pill = await banner.boundingBox();
+    expect(pill.y).toBeGreaterThanOrEqual(box.top);
+    expect(pill.y + pill.height).toBeLessThan(box.top + box.height * 0.3);
+    expect(pill.x).toBeGreaterThanOrEqual(box.left);
+    expect(pill.x + pill.width).toBeLessThanOrEqual(box.left + box.width);
+    await stillTurnsAndZooms(page, finger);
+    await expect(banner).toHaveAttribute("data-show", "true");
+    await banner.locator(".mk-banner-text").click();
+    await expect(banner).toHaveAttribute("data-show", "false");
+    await expect(banner).toBeHidden();
+    // It is said still, in the line below, and a new look at the state does not bring it back.
+    await expect(page.locator(`${at("solid-board")} .mk-progress`)).toContainText("Solved in 1 stroke");
+    await stillTurnsAndZooms(page, finger);
+    await expect(banner).toHaveAttribute("data-show", "false");
+    await expect(hostOf(page)).toHaveAttribute("data-solved", "true");
+  });
+
+  test("the solved message has a labelled close button, and is closed by it", async ({ page, browserName }, info) => {
+    const { banner } = await solveCube(page, browserName, info);
+    const close = page.getByRole("button", { name: "Close the message" });
+    await expect(close).toBeVisible();
+    await close.click();
+    await expect(banner).toHaveAttribute("data-show", "false");
+    await expect(close).toBeHidden();
+    await expect(hostOf(page)).toHaveAttribute("data-solved", "true");
+  });
+
+  test("Escape closes the solved message and goes no further; the next Escape does", async ({ page, browserName }, info) => {
+    const { banner, finger } = await solveCube(page, browserName, info);
+    await call(page, "window.__escapes = 0; document.addEventListener('keydown', (e) => { if (e.key === 'Escape') window.__escapes += 1; });");
+    await boxOf(page).focus();
+    await page.keyboard.press("Escape");
+    await expect(banner).toHaveAttribute("data-show", "false");
+    expect(await page.evaluate(() => window.__escapes)).toBe(0);
+    await page.keyboard.press("Escape");
+    expect(await page.evaluate(() => window.__escapes)).toBe(1);
+    await stillTurnsAndZooms(page, finger);
+    await expect(banner).toHaveAttribute("data-show", "false");
+  });
+
+  test("the solved message comes back for the next win, and `banner: false` shows none", async ({ page, browserName }, info) => {
+    const { banner, opened } = await solveCube(page, browserName, info);
+    await banner.locator(".mk-banner-close").click();
+    await expect(banner).toHaveAttribute("data-show", "false");
+    // Undo leaves it solved no more; solving again says it again.
+    await page.locator(`${at("solid-board")} [data-action="restart"]`).click();
+    await expect(hostOf(page)).toHaveAttribute("data-solved", "false");
+    const way = solidSolutionOf(buildSolidMaze(solidLevelOf("cube", "small", 1).recipe));
+    // The solid is where the first win left it: put it back as it was opened, so the finger can find the start.
+    await call(page, "s.view(argument);", opened);
+    const finger = await input(page, browserName, info.project);
+    await followWay(page, finger, way);
+    await expect(banner).toHaveAttribute("data-show", "true");
+    // Off: nothing shows, the words below still do.
+    await call(page, "s.set({ banner: false });");
+    await expect(banner).toHaveAttribute("data-show", "false");
+    await expect(page.locator(`${at("solid-board")} .mk-progress`)).toContainText("Solved in 1 stroke");
+    await call(page, "s.set({ banner: true });");
+    await expect(banner).toHaveAttribute("data-show", "true");
+  });
+
   test("the answer is the list of cells, whichever way the solid is turned: the run kept is the same text, and a fresh board takes it back", async ({ page, browserName }, info) => {
     await openSolid(page, "cube", "small", 12);
     const maze = buildSolidMaze(solidLevelOf("cube", "small", 12).recipe);

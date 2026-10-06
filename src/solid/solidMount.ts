@@ -1,3 +1,4 @@
+import { createBanner } from "../banner.ts";
 import type { MazeLook } from "../draw.ts";
 import { dragMaze, headOf, hintMaze, liftMaze, newMazeGame, pressMaze, restartMaze, tapMaze, undoMaze, type MazeGame } from "../game.ts";
 import { MEIKYUU_GUTTER, MEIKYUU_RESERVE, ensureMeikyuuPlayStyle } from "../mount.ts";
@@ -37,6 +38,8 @@ export type SolidMountOptions = MazeLook & {
   tap?: boolean;
   /** Offer the Hint button. Default true. */
   hints?: boolean;
+  /** Show the message over the solid when the maze is solved ("Solved in 3 strokes."); a tap on it, its close button or Escape puts it away. False for none (the line of words under the solid still says so). Default true. */
+  banner?: boolean;
   /** The buttons and the lines of words under the solid. Default true. */
   controls?: boolean;
   /** The zoom buttons. Default true. */
@@ -84,7 +87,7 @@ export type SolidMount = {
   mazeGame: () => MazeGame<SolidMaze>;
   /** Play another maze. Returns false for a recipe that is none. */
   load: (recipe: string | SolidRecipe) => boolean;
-  set: (changes: MazeLook & { tap?: boolean; sound?: boolean; hints?: boolean; language?: MeikyuuLanguage; stones?: StoneOption; edgeTurn?: boolean }) => void;
+  set: (changes: MazeLook & { tap?: boolean; sound?: boolean; hints?: boolean; banner?: boolean; language?: MeikyuuLanguage; stones?: StoneOption; edgeTurn?: boolean }) => void;
   undo: () => void;
   restart: () => void;
   hint: () => void;
@@ -192,10 +195,8 @@ export function mountSolid(host: HTMLElement, options: SolidMountOptions): Solid
   const canvas = create(document, "canvas", "meikyuu mk-solid");
   canvas.setAttribute("aria-hidden", "true");
   box.append(canvas);
-  const banner = create(document, "div", "mk-banner");
-  banner.setAttribute("aria-hidden", "true");
-  banner.dataset.show = "false";
-  wrap.append(box, banner);
+  const banner = createBanner(document, host, options.banner !== false);
+  wrap.append(box, banner.element);
   const controls = create(document, "div", "mk-controls");
   const pad = create(document, "div", "mk-pad");
   pad.setAttribute("role", "group");
@@ -388,8 +389,7 @@ export function mountSolid(host: HTMLElement, options: SolidMountOptions): Solid
     else delete host.dataset.stonesLeft;
     const label = say("solidLabel", { shape: say(`solid_${recipe.kind}`), n: maze.grid.cells, play: say("play_solid") });
     box.setAttribute("aria-label", label);
-    banner.textContent = say("solved", { n: moves });
-    banner.dataset.show = String(solved);
+    banner.sync(say("solved", { n: moves }), say("closeMessage"), solved);
     undoButton.textContent = say("undo");
     restartButton.textContent = say("restart");
     hintButton.textContent = say("hint");
@@ -510,7 +510,6 @@ export function mountSolid(host: HTMLElement, options: SolidMountOptions): Solid
     moves = 0;
     solveTold = false;
     pendingSolve = false;
-    banner.dataset.show = "false";
     applyLook(canvas, look);
     colours = readColours(canvas);
     measure();
@@ -801,7 +800,7 @@ export function mountSolid(host: HTMLElement, options: SolidMountOptions): Solid
       return true;
     },
     set: (changes) => {
-      const { tap, sound, hints, language: nextLanguage, stones: nextStones, edgeTurn: nextEdge, ...nextLook } = changes;
+      const { tap, sound, hints, banner: showBanner, language: nextLanguage, stones: nextStones, edgeTurn: nextEdge, ...nextLook } = changes;
       if ("stones" in changes) {
         stoneOption = nextStones;
         const before = game;
@@ -812,6 +811,7 @@ export function mountSolid(host: HTMLElement, options: SolidMountOptions): Solid
       look = { ...look, ...nextLook };
       if (tap !== undefined) tapExtends = tap;
       if (hints !== undefined) withHints = hints;
+      if (showBanner !== undefined) banner.enable(showBanner);
       if (nextEdge !== undefined) edgeOn = nextEdge;
       if (sound !== undefined) {
         if (sound && sounds === null) sounds = createMeikyuuSounds();
@@ -955,6 +955,7 @@ export function mountSolid(host: HTMLElement, options: SolidMountOptions): Solid
       box.removeEventListener("pointercancel", onCancel);
       box.removeEventListener("wheel", onWheel);
       host.removeEventListener("keydown", onKey);
+      banner.destroy();
       windowOf.removeEventListener("resize", measure);
       looking?.disconnect();
       watching?.disconnect();

@@ -15,7 +15,7 @@ board?.load({ kind: "arrows", level: 5 });   // another puzzle in the same box
 - **Drawing a path.** Press the start (or the end of the line) and drag. The line follows the corridors and snaps to cells; a wall stops it and drawing back shortens it. A fast drag that skips cells is followed through each cell it crosses. With `tap`, a tap on the maze runs the line along the corridor toward the tapped cell as far as the next fork, and never decides a fork for you.
 - **Zoom and pan.** Pinch or the wheel zooms about the fingers or the cursor, two fingers move the view, and so does a drag that starts anywhere but on the start or the end of the line. The Fit button brings the whole maze back, and the zoom pad has + and −. A line drawn near an edge of the box moves the view along with it. A big maze stays smooth on a phone: its walls are cut into tiles that are in the page only while they are on screen.
 - **Buttons.** Undo takes back the last stroke, Restart clears the line, and Hint lights the next stretch of the right way (and, if the line has gone into a wrong branch, how far to draw back). The arrow keys step the line, Backspace and Ctrl+Z undo.
-- **Solved.** The line takes the colour of a win, a banner comes in and `meikyuu-solve` is fired once. With `prefers-reduced-motion` nothing moves.
+- **Solved.** The line takes the colour of a win, a banner comes in at the top of the box, which a click on it, its close button or Escape puts away (and `banner: false` leaves out), and `meikyuu-solve` is fired once. With `prefers-reduced-motion` nothing moves.
 - **Arrows.** Tap an arrow. A free one slides away along its line, a blocked one shakes and shows what is in its way and costs a heart, a locked one tells you where its button is and costs nothing, and so does one that nothing can free until the unlock (a locked arrow is in its way, or in the way of what is). Three hearts. A mixed puzzle has two tabs, the arrows and the labyrinth; what has just happened is said on the tab it happened on, and a puzzle out of hearts says so on both until the arrows are restarted (a restart keeps the unlock).
 - **Events**, on the host and as callbacks: `meikyuu-move` (after each stroke or each arrow tapped), `meikyuu-solve` (once), `meikyuu-key`, `meikyuu-unlock`, `meikyuu-bump`, `meikyuu-lose`, and `meikyuu-stones` (a stone laid, taken up, cleared, undone or restored). Each carries `{ kind, level, moves, cells, keys, keysOf, hearts, arrowsLeft, solved, stones, stonesLeft }`.
 - **Words** in English and Japanese, following the page's `lang`.
@@ -29,6 +29,7 @@ board?.load({ kind: "arrows", level: 5 });   // another puzzle in the same box
 | `board`, `trail`, `wall`, `line` | as in drawing | how it looks |
 | `tap` | boolean, default false | a tap runs the line to the next fork |
 | `hints` | boolean, default true | offer the Hint button |
+| `banner` | boolean, default true | the message over a solved board, "Solved in 3 strokes.": a click on it, its close button or Escape puts it away; false for none (the words below still say it) |
 | `controls` | boolean, default true | the buttons and the lines of words under the board |
 | `zoom` | boolean, default true | the zoom pad (the wheel and the pinch always work) |
 | `ratio` | `square` (default), `maze`, or width over height such as `2 / 3` | the shape of the box, as the maze was made; `level.ratio` for the tall levels |
@@ -53,5 +54,5 @@ The handle: `load`, `set`, `undo`, `restart`, `hint`, `fit(mode?)`, `zoomIn`, `z
 <meikyuu-board recipe="heart:25:wilson:to-goal:5" tap></meikyuu-board>
 ```
 
-Attributes, each read again when it changes: `kind` and `level`, or `recipe`; `board`, `trail`; `tap`; `hints` (`off` for no Hint button); `sound`; `controls` (`off` for only the board); `zoom` (`off` for no pad); `lang`; `ratio`, `orientation`, `gutter`, `reserve`, `fit`, `pan`, `edge-pan` (`off`), `turn-button`, `stones`, `stone-limit`, `stone-reach`.
+Attributes, each read again when it changes: `kind` and `level`, or `recipe`; `board`, `trail`; `tap`; `hints` (`off` for no Hint button); `banner` (`off` for no message over a solved board); `sound`; `controls` (`off` for only the board); `zoom` (`off` for no pad); `lang`; `ratio`, `orientation`, `gutter`, `reserve`, `fit`, `pan`, `edge-pan` (`off`), `turn-button`, `stones`, `stone-limit`, `stone-reach`.
 Methods: `undo()`, `restart()`, `hint()`, `fit()`; `.mount` is the handle. `@johnmorrisdotca/meikyuu/element/define` defines the tag; `/element` holds the class alone.

@@ -2,7 +2,7 @@
 // hinted and solved. What the page shows is held to what the package says of the same level.
 import { expect, test } from "@playwright/test";
 
-import { at, board, cellPoint, dragCells, events, findMaze, mazeOf, noSidewaysScroll, open, recordEvents, touchDrag } from "./demo.mjs";
+import { at, bare, board, cellPoint, dragCells, events, findMaze, mazeOf, noSidewaysScroll, open, recordEvents, shownWidth, touchDrag } from "./demo.mjs";
 
 const svgOf = (page) => page.locator(`${at("board")} .mk-box svg`);
 
@@ -90,6 +90,51 @@ test("a line drawn the whole way solves it: the page says so, tells the event on
   await page.reload();
   await page.waitForSelector(`${at("board")}[data-ready="true"] .mk-box svg[viewBox]`);
   await expect(page.locator("#info")).toContainText("Solved");
+});
+
+for (const how of ["a click on it", "its close button", "Escape"]) {
+  test(`the solved message is closed by ${how}, the words below still say it, and the zoom pad works with it open and after`, async ({ page }) => {
+    await open(page, "?kind=maze&level=40");
+    const { maze, way } = mazeOf(40);
+    const svg = svgOf(page);
+    await dragCells(page, svg, maze, way);
+    const banner = page.locator(`${at("board")} .mk-banner`);
+    await expect(banner).toHaveAttribute("data-show", "true");
+    const pill = await banner.boundingBox();
+    const box = await board(page).boundingBox();
+    expect(pill.y).toBeGreaterThanOrEqual(box.y);
+    expect(pill.y + pill.height).toBeLessThan(box.y + box.height * 0.3);
+    // Open, it is not in the zoom pad's way.
+    const fitted = await shownWidth(svg);
+    await page.locator(`${at("board")} [data-action="in"]`).click();
+    await expect.poll(() => shownWidth(svg)).toBeLessThan(fitted);
+    await page.locator(`${at("board")} [data-action="fit"]`).click();
+    await expect.poll(() => shownWidth(svg)).toBeCloseTo(fitted, 1);
+    if (how === "a click on it") await banner.locator(".mk-banner-text").click();
+    else if (how === "its close button") await page.getByRole("button", { name: "Close the message" }).click();
+    else {
+      await board(page).focus();
+      await page.keyboard.press("Escape");
+    }
+    await expect(banner).toHaveAttribute("data-show", "false");
+    await expect(page.locator(`${at("board")} .mk-progress`)).toContainText("Solved in 1 stroke");
+    await expect(page.locator(at("board"))).toHaveAttribute("data-solved", "true");
+    await page.locator(`${at("board")} [data-action="in"]`).click();
+    await expect.poll(() => shownWidth(svg)).toBeLessThan(fitted);
+    await expect(banner).toHaveAttribute("data-show", "false");
+  });
+}
+
+test("with `banner=\"off\"` a solved maze shows no message, only the words below; on again, it shows", async ({ page }) => {
+  const { maze, way } = mazeOf(40);
+  await bare(page, `<meikyuu-board id="a" level="40" banner="off" style="max-width:520px"></meikyuu-board>`);
+  await page.waitForSelector("#a[data-solved] .mk-box svg[viewBox]");
+  await dragCells(page, page.locator("#a .mk-box svg"), maze, way);
+  const banner = page.locator("#a .mk-banner");
+  await expect(page.locator("#a .mk-progress")).toContainText("Solved in 1 stroke");
+  await expect(banner).toHaveAttribute("data-show", "false");
+  await page.evaluate(() => document.getElementById("a").setAttribute("banner", "on"));
+  await expect(banner).toHaveAttribute("data-show", "true");
 });
 
 test("a line is drawn by touch too, and the page does not scroll under the finger", async ({ page }) => {

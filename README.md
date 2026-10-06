@@ -616,7 +616,7 @@ board?.host.addEventListener("meikyuu-solve", (event) => console.log((event as C
 board?.load({ kind: "arrows", level: 5 });   // another puzzle in the same box
 ```
 
-A board is drawn with a finger or the mouse (the line follows the corridors and snaps to cells; a wall stops it and drawing back shortens it), zoomed with a pinch or the wheel, helped with Hint, taken back with Undo, and it says what happens with the events `meikyuu-move`, `meikyuu-solve`, `meikyuu-key`, `meikyuu-unlock`, `meikyuu-bump`, `meikyuu-lose` and `meikyuu-stones`. The tag is `<meikyuu-board>`, with the options as attributes (`kind` and `level`, or `recipe`; `board`, `trail`, `tap`, `hints`, `sound`, `controls`, `zoom`, `lang`, `ratio`, `orientation`, `gutter`). The behaviour of each, every option, the handle's methods and the element's attributes are in [docs/PLAYING.md](docs/PLAYING.md#playing-it-in-a-page).
+A board is drawn with a finger or the mouse (the line follows the corridors and snaps to cells; a wall stops it and drawing back shortens it), zoomed with a pinch or the wheel, helped with Hint, taken back with Undo, its solved message put away with a tap, its close button or Escape, and it says what happens with the events `meikyuu-move`, `meikyuu-solve`, `meikyuu-key`, `meikyuu-unlock`, `meikyuu-bump`, `meikyuu-lose` and `meikyuu-stones`. The tag is `<meikyuu-board>`, with the options as attributes (`kind` and `level`, or `recipe`; `board`, `trail`, `tap`, `hints`, `sound`, `controls`, `zoom`, `lang`, `ratio`, `orientation`, `gutter`). The behaviour of each, every option, the handle's methods and the element's attributes are in [docs/PLAYING.md](docs/PLAYING.md#playing-it-in-a-page).
 
 ## API
 
@@ -826,7 +826,7 @@ Please follow the [code of conduct](./CODE_OF_CONDUCT.md). A recipe that makes t
 
 See [CHANGELOG.md](./CHANGELOG.md).
 
-The latest release is 2.2.2: the README takes the family's full layout, with pictures of the shapes and the kinds of puzzle and examples that are run.
+The latest release is 2.3.0: the solved message can be put away, with a tap, its close button or Escape, and `banner: false` leaves it out.
 
 ## Licence
 

@@ -6,6 +6,18 @@ All notable changes to this project are written here. The format follows
 
 ## [Unreleased]
 
+## [2.3.0] - 2026-10-06
+
+### Added
+
+- The `banner` option (default true; the `banner` attribute of `<meikyuu-board>`, `off` for none; `set({ banner })`) for the message over a solved board, "Solved in 3 strokes.", on flat mazes, arrow puzzles and mazes over a solid alike. `false` leaves it out, and the line of words under the board still says the puzzle is solved.
+- A string, `closeMessage` ("Close the message", in Japanese "メッセージを閉じる"), the label of the message's close button.
+
+### Changed
+
+- The solved message can be put away. It has a close (×) button with a label, a click or tap on the message closes it too, and so does Escape while the board has focus (the press goes no further, so a page that also leaves a mode on Escape leaves it on the next press). It stays shut while the puzzle stays solved and comes back for the next win after Undo or Restart. It was a pill in the middle of the board that took no input at all and could not be closed, over the maze and the line.
+- It sits at the top of the box, so it covers little of the board, and only the message itself takes the pointer: turning a solid, drawing, the zoom pad, Fit and the arrows work with it open as they do after it is closed.
+
 ## [2.2.2] - 2026-10-06
 
 Nothing that was exported has changed.
