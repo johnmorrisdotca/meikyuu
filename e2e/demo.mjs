@@ -174,6 +174,25 @@ export async function recordEvents(page, selector, names) {
 
 export const events = (page) => page.evaluate(() => window.__events);
 
+/**
+ * Record every time an arrow of the board is marked as the one in the way (`data-by`). The mark is a flash that the board takes off again
+ * after a moment, so a test that looks for it later is looking at a clock: on a slow machine the moment has gone, and with it the mark.
+ * This keeps what the board did, with the arrow's id and whether it was locked as it was marked, for the test to read at its leisure.
+ */
+export async function recordFlashes(page, selector) {
+  await page.evaluate((selector) => {
+    window.__flashes = [];
+    new MutationObserver((records) => {
+      for (const record of records) {
+        const el = record.target;
+        if (el.getAttribute("data-by") === "true") window.__flashes.push({ id: Number(el.getAttribute("data-id")), locked: el.getAttribute("data-locked") === "true" });
+      }
+    }).observe(document.querySelector(selector), { subtree: true, attributes: true, attributeFilter: ["data-by"] });
+  }, selector);
+}
+
+export const flashes = (page) => page.evaluate(() => window.__flashes);
+
 /** Points from one pixel to another in even steps, both ends included: a finger's way for `touchDrag` and `twoTouches`. */
 export function along(from, to, steps = 12) {
   return Array.from({ length: steps + 1 }, (_, i) => ({ x: from.x + ((to.x - from.x) * i) / steps, y: from.y + ((to.y - from.y) * i) / steps }));

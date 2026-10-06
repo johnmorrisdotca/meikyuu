@@ -50,6 +50,29 @@ async function swipeUp(page, x, y, distance) {
 }
 
 const scrollY = (page) => page.evaluate(() => window.scrollY);
+
+/**
+ * Wait until the page has stopped scrolling: a swipe lets go with a speed, and the browser carries the page on for a few frames after
+ * the finger is up, the last pixel of it arriving a moment after the position was first past the mark. The position is the same for
+ * this many frames in a row, and only then is it a position to hold the page to.
+ */
+const STILL_FRAMES = 30;
+const scrolledToRest = (page) =>
+  page.evaluate(
+    (still) =>
+      new Promise((done) => {
+        let last = window.scrollY;
+        let same = 0;
+        const frame = () => {
+          same = window.scrollY === last ? same + 1 : 0;
+          last = window.scrollY;
+          if (same >= still) done(last);
+          else requestAnimationFrame(frame);
+        };
+        requestAnimationFrame(frame);
+      }),
+    STILL_FRAMES,
+  );
 const boxOf = async (page) => (await board(page).boundingBox());
 
 /** The cells of the way, as pixels now, for a finger to follow. */
@@ -186,8 +209,9 @@ test.describe("a line from the top to the bottom of the tallest tall maze", () =
     const scrolled = await scrollY(page);
     await swipeUp(page, 36, middle, 160);
     await expect.poll(() => scrollY(page)).toBeGreaterThan(scrolled + 50);
+    await scrolledToRest(page);
     await svgOf(page).scrollIntoViewIfNeeded();
-    const held = await scrollY(page);
+    const held = await scrolledToRest(page);
     await cdpDraw(page, await pointsOf(page, tallest));
     await expect(page.locator(at("board"))).toHaveAttribute("data-solved", "true");
     expect(await scrollY(page)).toBe(held);

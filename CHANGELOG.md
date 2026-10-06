@@ -13,6 +13,7 @@ All notable changes to this project are written here. The format follows
 
 ### Fixed
 
+- Two demo tests that failed now and then no longer do. The arrow in the way is marked by a flash the board takes off after 900 ms, and the tests looked for it afterwards, so on a slow runner the mark had gone; they now read what the board did, not what it still shows. The tall maze's gutter test held the page to a scroll position taken while the swipe's last pixel of momentum was still arriving; it now waits for the page to come to rest. Nothing the package exports has changed.
 - The API reference page wraps a long entry path instead of running about 2 px wider than a 360 px screen. Nothing the package exports has changed.
 
 ## [2.2.1] - 2026-10-05

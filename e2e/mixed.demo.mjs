@@ -3,7 +3,7 @@
 // once (one `meikyuu-solve`), the board says so in words, and nothing on the board is said twice.
 import { expect, test } from "@playwright/test";
 
-import { at, cellPoint, dragCells, events, mazeOf, mixedPlan, noSidewaysScroll, open, recordEvents, tapArrowOnPage, touchDrag } from "./demo.mjs";
+import { at, cellPoint, dragCells, events, flashes, mazeOf, mixedPlan, noSidewaysScroll, open, recordEvents, recordFlashes, tapArrowOnPage, touchDrag } from "./demo.mjs";
 
 // Level 2 is a cross of 12 arrows with 1 locked, and level 26 a cross of 19 with 3: one lock and several.
 const LEVELS = [2, 26];
@@ -138,6 +138,7 @@ test("an arrow that only the unlock can free costs no heart however often it is 
   await open(page, "?kind=mixed&level=2");
   const plan = await mixedPlan(2);
   await recordEvents(page, at("board"), NAMES);
+  await recordFlashes(page, at("board"));
   await takeOff(page, plan, plan.before);
   expect(plan.held.length).toBeGreaterThan(0);
   for (let again = 0; again < 4; again += 1) {
@@ -146,7 +147,9 @@ test("an arrow that only the unlock can free costs no heart however often it is 
       await expect(part(page, "messages")).toContainText("holding this one up");
     }
   }
-  await expect(page.locator(`${at("board")} .mk-arrow[data-by="true"]`).first()).toHaveAttribute("data-locked", "true");
+  // Each tap marked the locked arrow that holds it up (the mark is a flash, so what the board did is read, not what it still shows).
+  await expect.poll(async () => (await flashes(page)).length).toBeGreaterThan(0);
+  expect((await flashes(page)).every((each) => each.locked)).toBe(true);
   await expect(host(page)).toHaveAttribute("data-hearts", "3");
   await expect(host(page)).toHaveAttribute("data-status", "playing");
   expect(await count(page, "meikyuu-bump")).toBe(0);

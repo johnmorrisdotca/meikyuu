@@ -2,7 +2,7 @@
 // opened by drawing a path through a labyrinth to its hidden button.
 import { expect, test } from "@playwright/test";
 
-import { arrowsOf, at, dragCells, events, mixedOf, noSidewaysScroll, open, recordEvents, tapArrowOnPage } from "./demo.mjs";
+import { arrowsOf, at, dragCells, events, flashes, mixedOf, noSidewaysScroll, open, recordEvents, recordFlashes, tapArrowOnPage } from "./demo.mjs";
 
 const svgOf = (page) => page.locator(`${at("board")} .mk-box svg`);
 
@@ -35,12 +35,15 @@ test("a blocked arrow bumps, costs a heart, and shows which arrow is in its way;
   const { board, blockers } = await arrowsOf(40);
   const id = board.arrows.findIndex((_, each) => blockers[each].length > 0);
   await recordEvents(page, at("board"), ["meikyuu-bump", "meikyuu-lose"]);
+  await recordFlashes(page, at("board"));
   const svg = svgOf(page);
   await tapArrowOnPage(page, svg, board, id);
   await expect(page.locator(at("board"))).toHaveAttribute("data-hearts", "2");
   await expect(page.locator(`${at("board")} .mk-messages`)).toContainText("Blocked");
   await expect(page.locator(`${at("board")} .mk-arrow[data-bump="true"]`)).toHaveCount(1);
-  await expect(page.locator(`${at("board")} .mk-arrow[data-by="true"]`)).toHaveCount(1);
+  // The arrow in the way is marked once, by a flash that the board takes off again: what it did is read, not what it still shows.
+  await expect.poll(async () => (await flashes(page)).length).toBe(1);
+  expect(blockers[id]).toContain((await flashes(page))[0].id);
   await expect(page.locator(`${at("board")} .mk-progress`)).toContainText("♥♥♡");
   await tapArrowOnPage(page, svg, board, id);
   await tapArrowOnPage(page, svg, board, id);
