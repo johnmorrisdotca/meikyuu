@@ -24,6 +24,8 @@ export { buildMaze, isPerfect, layoutCells, MEIKYUU_MODES, MEIKYUU_MOST_CELLS, M
 export type { Door, MazeRecipe, Maze, MazeCore, MeikyuuMode } from "./maze.ts";
 export { EFFORT_LEAST, EFFORT_MOST, measureMaze, ratingOf } from "./measure.ts";
 export type { MazeMeasure } from "./measure.ts";
+export { COVER_FROM, COVER_SPAN, COVERAGE_FLOOR, coverageOf, SOLID_ZONES_TOP, ZONE_REAL, ZONE_VISIT, zonesAcross } from "./coverage.ts";
+export type { MazeCoverage } from "./coverage.ts";
 export { DIFFICULTY_CEILINGS, DIFFICULTY_WEIGHTS, difficultyOf, difficultyOfGraph, easyFloorAt, isTooEasy, MEIKYUU_EASY_PLACES, MEIKYUU_LEAST } from "./difficulty.ts";
 export type { MazeDifficulty, MazeGeometry } from "./difficulty.ts";
 export { autoTurn, cellsAlong, MEIKYUU_ORIENTATIONS, resolveTurn, toDisplay, toLogical, turnedBox, turnFor, turnTransform, unturnedBox } from "./orientation.ts";

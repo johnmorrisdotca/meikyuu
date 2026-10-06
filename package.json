@@ -1,6 +1,6 @@
 {
   "name": "@johnmorrisdotca/meikyuu",
-  "version": "2.3.0",
+  "version": "3.0.0",
   "description": "Meikyuu 迷宮, mazes for JavaScript and TypeScript: squares, hexagons, triangles, circles and cut-out shapes, even a cube or a globe, made by seven algorithms from a seed and drawn through with a finger or the mouse. Zero dependencies.",
   "keywords": [
     "maze",
@@ -134,6 +134,7 @@
     "test:demo": "pnpm site && playwright test",
     "docs:make": "node scripts/docs.mjs",
     "levels": "node --experimental-strip-types scripts/meikyuu-levels.ts",
+    "levels:rescore": "node --experimental-strip-types scripts/meikyuu-rescore.ts",
     "pictures:levels": "pnpm site && node scripts/levels-pictures.mjs",
     "screenshots:readme": "pnpm site && node scripts/readme-pictures.mjs",
     "test:readme": "pnpm build && node scripts/check-readme-examples.mjs"

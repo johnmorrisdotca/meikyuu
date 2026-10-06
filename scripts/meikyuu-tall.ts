@@ -11,6 +11,9 @@
  * No level is taken from any earlier list, so each size is a ramp of 256 steps of the effort, from the 3rd percentile to the 97th of a
  * pool of 30,000 mazes drawn for it that are not too easy (`isTooEasy`, and from the first place the whole floor of the end of the easy third: the smallest tall maze has 54 cells, so it can be asked), each place taking the maze nearest its step, so no level is an outlier. Seeded: the same run
  * writes the same file.
+ *
+ * Since 3.0.0 the lists are in the order of the score that counts how much of the map the answer covers: run `pnpm levels:rescore` (scripts/meikyuu-rescore.ts)
+ * after this, which scores every level again and puts each list in that order. This writes each list in the order it was chosen in.
  */
 import { writeFileSync } from "node:fs";
 

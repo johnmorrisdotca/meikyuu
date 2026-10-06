@@ -1,4 +1,5 @@
-import { solutionOf, type Maze, type MazeCore } from "./maze.ts";
+import { coverageOf, type MazeCoverage } from "./coverage.ts";
+import { solutionOf, walk, type Maze, type MazeCore } from "./maze.ts";
 import { measureMaze, type MazeMeasure } from "./measure.ts";
 
 /**
@@ -25,13 +26,21 @@ import { measureMaze, type MazeMeasure } from "./measure.ts";
  * waste, 7.5% each depth and turns. Whole numbers counted off the passages and plain arithmetic, so the same
  * maze scores the same in every engine and a list ordered by score stays ordered.
  *
- * A way to play with keys is measured by the same terms: the detour to the keys is in the effort.
+ * Then the score is multiplied by how much of the map the answer covers (`coverageOf`, src/coverage.ts): from half at an answer that stays in a corner
+ * to the whole at one that crosses the map. The six terms count what is met on the way, and none of them can tell a long answer in a corner from one
+ * across the whole map, which is the easier to play.
+ *
+ * A way to play with keys is measured by the same terms: the detour to the keys is in the effort, and the trips to the keys are in the cover.
  */
 export type MazeDifficulty = {
-  /** From 0 (a corridor) to 100 (the hardest maze in the lists), whole. */
+  /** From 0 (a corridor) to 100 (the hardest maze in the lists), whole: the six terms' sum times the coverage factor, rounded once. */
   score: number;
   /** The same before it is rounded, so a list can be put in order finer than whole numbers. */
   exact: number;
+  /** The six terms' weighted sum before the coverage factor, from 0 to 100: what the score was before 3.0.0. */
+  base: number;
+  /** How much of the map the answer covers (see `coverageOf`) and what the score was multiplied by. */
+  coverage: MazeCoverage;
   /** Each term as a share from 0 to 1, before it is weighted. */
   terms: { reach: number; forks: number; traps: number; waste: number; depth: number; turns: number };
   /** Whether the straight guess walks straight to the goal without ever entering a wrong branch. */
@@ -64,6 +73,8 @@ const share = (count: number, ceiling: number): number => Math.min(1, Math.log(1
  * three dimensions.
  */
 export type MazeGeometry = {
+  /** Where each cell lies: two numbers for a flat maze, three for a solid. The cover reads it. */
+  readonly points: readonly (readonly number[])[];
   distanceToGoal(cell: number): number;
   bend(before: number, cell: number, after: number): number;
 };
@@ -73,6 +84,7 @@ function flatGeometry(maze: Maze): MazeGeometry {
   const { centres } = maze.grid;
   const [gx, gy] = centres[maze.goal]!;
   return {
+    points: centres,
     distanceToGoal: (cell) => (centres[cell]![0] - gx) ** 2 + (centres[cell]![1] - gy) ** 2,
     bend: (before, cell, after) => {
       const [px, py] = centres[before]!;
@@ -142,8 +154,16 @@ export function difficultyOfGraph(maze: MazeCore, geometry: MazeGeometry): MazeD
     turns: share(turns, DIFFICULTY_CEILINGS.turns),
   };
   const raw = terms.reach * DIFFICULTY_WEIGHTS.reach + terms.forks * DIFFICULTY_WEIGHTS.forks + terms.traps * DIFFICULTY_WEIGHTS.traps + terms.waste * DIFFICULTY_WEIGHTS.waste + terms.depth * DIFFICULTY_WEIGHTS.depth + terms.turns * DIFFICULTY_WEIGHTS.turns;
-  const exact = Math.min(100, Math.max(0, 100 * raw));
-  return { score: Math.round(exact), exact, terms, straight: waste === 0, traps, waste, turns, measure };
+  const base = Math.min(100, Math.max(0, 100 * raw));
+  // The cells the answer draws: the way to the goal, and the way to each key.
+  const route = new Set<number>(way);
+  if (maze.keys.length > 0) {
+    const { before } = walk(maze.links, maze.start);
+    for (const key of maze.keys) for (let cell = key; cell !== -1 && !route.has(cell); cell = before[cell]!) route.add(cell);
+  }
+  const coverage = coverageOf(geometry.points, [...route]);
+  const exact = base * coverage.factor;
+  return { score: Math.round(exact), exact, base, coverage, terms, straight: waste === 0, traps, waste, turns, measure };
 }
 
 /**

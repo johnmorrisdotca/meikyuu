@@ -10,6 +10,9 @@
  *
  * The score is `difficultyOf`'s, the same arithmetic as every other list; its terms are scaled to the biggest maze the older lists reach,
  * so a colossal maze scores high (84 to 98) and the list is put in order by effort, which has more room than the score.
+ *
+ * Since 3.0.0 the lists are in the order of the score that counts how much of the map the answer covers: run `pnpm levels:rescore` (scripts/meikyuu-rescore.ts)
+ * after this, which scores every level again and puts each list in that order. This writes each list in the order it was chosen in.
  */
 import { writeFileSync } from "node:fs";
 

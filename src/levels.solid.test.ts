@@ -33,7 +33,7 @@ describe("the solid levels", () => {
 
   for (const kind of SOLID_KINDS) {
     for (const size of SOLID_SIZE_NAMES) {
-      it(`${kind} ${size}: every level is rebuilt, proved perfect, measured again, solved by drawing, and never easier than the one before`, () => {
+      it(`${kind} ${size}: every level is rebuilt, proved perfect, measured again, solved by drawing, and never scoring under the one before`, () => {
         const list = MEIKYUU_SOLID_LEVELS[kind][size];
         const seen = new Set<string>();
         let before = -Infinity;
@@ -66,7 +66,9 @@ describe("the solid levels", () => {
         const list = solidLevelsOf(kind, size);
         expect(list[63]!.score).toBeGreaterThan(list[0]!.score);
       }
-      expect(solidLevelsOf(kind, "large")[0]!.score).toBeGreaterThan(solidLevelsOf(kind, "small")[63]!.score - 4);
+      const median = (size: "small" | "medium" | "large"): number => solidLevelsOf(kind, size)[32]!.score;
+      expect(median("medium"), kind).toBeGreaterThanOrEqual(median("small"));
+      expect(median("large"), kind).toBeGreaterThan(median("medium"));
     }
   });
 });

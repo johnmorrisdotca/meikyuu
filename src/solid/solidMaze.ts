@@ -106,6 +106,7 @@ export function solidGeometry(maze: SolidMaze): MazeGeometry {
   const { centres } = maze.grid;
   const goal = centres[maze.goal]!;
   return {
+    points: centres,
     distanceToGoal: (cell) => distanceSquared(centres[cell]!, goal),
     bend: (before, cell, after) => {
       const a: Vec3 = sub(centres[cell]!, centres[before]!);

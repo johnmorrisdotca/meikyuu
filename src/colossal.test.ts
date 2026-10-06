@@ -57,14 +57,14 @@ describe("the colossal levels", () => {
     }
   });
 
-  it("climb by the effort, never easier to draw than the one before, and the score is the same measure as every other list", () => {
+  it("climb by the score, never scoring under the one before, and the score is the same measure as every other list", () => {
     for (const list of [MEIKYUU_COLOSSAL_LEVELS, MEIKYUU_COLOSSAL_TALL_LEVELS]) {
-      for (let i = 1; i < list.length; i += 1) expect(list[i]!.effort, `level ${i + 1}`).toBeGreaterThanOrEqual(list[i - 1]!.effort);
+      for (let i = 1; i < list.length; i += 1) expect(list[i]!.score, `level ${i + 1}`).toBeGreaterThanOrEqual(list[i - 1]!.score);
       const mean = (from: number, to: number): number => list.slice(from, to).reduce((a, level) => a + level.score, 0) / (to - from);
       expect(mean(0, 43)).toBeLessThan(mean(43, 86));
       expect(mean(43, 86)).toBeLessThan(mean(86, 128));
-      expect(list[127]!.effort).toBeGreaterThan(list[0]!.effort * 2.5);
-      for (const level of list) expect(level.score, level.code).toBeGreaterThan(70);
+      expect(list[127]!.score).toBeGreaterThan(list[0]!.score + 8);
+      for (const level of list) expect(level.score, level.code).toBeGreaterThan(40);
     }
     // The biggest colossal maze is harder than the hardest huge one, the smallest is no easier than a middling huge one.
     const huge = MEIKYUU_MAZE_LEVELS.slice(768);

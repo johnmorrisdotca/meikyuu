@@ -169,17 +169,46 @@ test("with the browser's own touch (Chromium), a finger held on a cell beside th
   await expect(page.locator(at("board"))).toHaveAttribute("data-cells", String(place + 1));
 });
 
+/** The arrow key whose nearest passage of `head` (the package's own rule, within `KEY_REACH`) is `cell`, or null: a hexagon's neighbours do not each lie along one of the four arrows. */
+function arrowFor(maze, head, cell) {
+  const [hx, hy] = maze.grid.centres[head];
+  const arrows = { ArrowUp: [0, -1], ArrowDown: [0, 1], ArrowLeft: [-1, 0], ArrowRight: [1, 0] };
+  for (const [key, [dx, dy]] of Object.entries(arrows)) {
+    let best = -1;
+    let bestCosine = 0.5;
+    for (const next of maze.links[head]) {
+      const [nx, ny] = maze.grid.centres[next];
+      const cosine = ((nx - hx) * dx + (ny - hy) * dy) / (Math.hypot(nx - hx, ny - hy) || 1);
+      if (cosine > bestCosine) {
+        bestCosine = cosine;
+        best = next;
+      }
+    }
+    if (best === cell) return key;
+  }
+  return null;
+}
+
+/** The first level from `from` with a fork on its way where an arrow key lies toward a passage that is not the line's own: whatever shape the list has put there, a square's four arrows reach it and a hexagon's six passages may not. */
+function forkReachedByAnArrow(from) {
+  for (let number = from; number < from + 200; number += 1) {
+    const { maze, way } = mazeOf(number);
+    for (let at = 2; at < Math.min(way.length - 2, 40); at += 1) {
+      const open_ = maze.links[way[at]].filter((cell) => cell !== way[at - 1]);
+      for (const cell of open_) {
+        const key = arrowFor(maze, way[at], cell);
+        if (open_.length > 1 && key !== null) return { number, maze, way, at, key };
+      }
+    }
+  }
+  throw new Error("no level with a fork an arrow key reaches");
+}
+
 test("Shift and an arrow key lays a stone on the open cell of the line's end that lies that way, and again takes it up", async ({ page }) => {
-  await open(page, `?kind=maze&level=${LEVEL}&stones=on`);
-  const { maze, way, at: place } = forkOf(LEVEL);
+  const { number, maze, way, at: place, key } = forkReachedByAnArrow(LEVEL);
+  await open(page, `?kind=maze&level=${number}&stones=on`);
   const svg = svgOf(page);
   await dragCells(page, svg, maze, way.slice(0, place + 1));
-  const head = way[place];
-  const open_ = maze.links[head].filter((cell) => cell !== way[place - 1]);
-  expect(open_.length).toBeGreaterThan(0);
-  const [hx, hy] = maze.grid.centres[head];
-  const [nx, ny] = maze.grid.centres[open_[0]];
-  const key = Math.abs(nx - hx) > Math.abs(ny - hy) ? (nx > hx ? "ArrowRight" : "ArrowLeft") : ny > hy ? "ArrowDown" : "ArrowUp";
   await board(page).focus();
   await page.keyboard.press(`Shift+${key}`);
   await expect(page.locator(at("board"))).toHaveAttribute("data-stones", "1");

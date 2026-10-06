@@ -20,7 +20,7 @@ describe("where the 1.0.0 maze levels went", () => {
     expect(legacyLevelOfCode("square:9x9:prim:enter-leave:1")).toBeNull();
   });
 
-  it("answers every one: the same maze where it stayed, and the level at its place now where it did not", () => {
+  it("answers every one: the same maze at its place now where it is still a level, and the level of its size that scores nearest where it is not", () => {
     const now = new Map(MEIKYUU_MAZE_LEVELS.map((level) => [level.code, level]));
     const perSize = new Map<string, number>();
     for (const level of MEIKYUU_LEGACY_MAZE_LEVELS) {
@@ -35,32 +35,30 @@ describe("where the 1.0.0 maze levels went", () => {
         expect(level.now, level.code).toBe(current.number);
         expect(level.nowInSize, level.code).toBe(current.inSize);
         expect(current.size, level.code).toBe(level.size);
+        expect(level.nearest, level.code).toBe(current.number);
       }
-      // The level at its place now is one of its size, at the same place (the last, for a place past 256).
+      // The level to point at is one of the size, and none of the size scores nearer.
       const near = MEIKYUU_MAZE_LEVELS[level.nearest - 1]!;
       expect(near.size, level.code).toBe(level.size);
-      expect(near.inSize, level.code).toBe(Math.min(place, 256));
+      if (current === undefined) for (const other of MEIKYUU_MAZE_LEVELS.filter((l) => l.size === level.size)) expect(Math.abs(near.score - level.score), level.code).toBeLessThanOrEqual(Math.abs(other.score - level.score));
     }
   });
 
-  it("changes as few numbers as can be: a level that was good enough keeps its place, a level that was too easy has a new maze there, and only the hardest of Large and Huge are cut off", () => {
-    const stable = MEIKYUU_LEGACY_MAZE_LEVELS.filter((level) => level.nowInSize === level.place);
-    // Every level that is still in the list is still at its place: nothing was moved.
-    expect(MEIKYUU_LEGACY_MAZE_LEVELS.filter((level) => level.now !== null && level.nowInSize !== level.place)).toEqual([]);
-    expect(stable.length).toBe(MEIKYUU_LEGACY_MAZE_LEVELS.filter((level) => level.now !== null).length);
+  it("keeps every level that was good enough in the list, a new maze where one was too easy, and cuts off only the hardest of Large and Huge", () => {
     const count = (size: string, test: (level: (typeof MEIKYUU_LEGACY_MAZE_LEVELS)[number]) => boolean): number => MEIKYUU_LEGACY_MAZE_LEVELS.filter((level) => level.size === size && test(level)).length;
-    // Large and Huge keep their first 256 places exactly; the rest of 1.0.0's are gone.
+    // 843 of the 1,000 are still levels; 157 are not (117 places a new maze took, 40 cut off the end).
+    expect(MEIKYUU_LEGACY_MAZE_LEVELS.filter((level) => level.now !== null).length).toBe(843);
+    // Large and Huge keep their first 256 places' mazes exactly; the rest of 1.0.0's are gone.
     for (const size of ["large", "huge"]) {
       expect(count(size, (level) => level.place <= 256 && level.now === null), size).toBe(0);
       expect(count(size, (level) => level.place > 256 && level.now !== null), size).toBe(0);
     }
     expect(count("large", (level) => level.place > 256)).toBe(29);
     expect(count("huge", (level) => level.place > 256)).toBe(11);
-    // The ones replaced are the ones that were too easy for their place, and only those.
+    // The ones that stayed are not too easy to be levels, and the ones replaced were.
     for (const level of MEIKYUU_LEGACY_MAZE_LEVELS) {
-      const tooEasy = isTooEasy(difficultyOf(buildMaze(parseRecipe(level.code)!)), level.place <= 256 ? level.place : undefined);
-      if (level.place <= 256 && level.now === null) continue;
-      if (level.now !== null) expect(tooEasy, `${level.code} stayed but is too easy`).toBe(false);
+      if (level.now === null) continue;
+      expect(isTooEasy(difficultyOf(buildMaze(parseRecipe(level.code)!))), `${level.code} stayed but is too easy`).toBe(false);
     }
     expect(MEIKYUU_SIZES.length).toBe(4);
   }, 60_000);

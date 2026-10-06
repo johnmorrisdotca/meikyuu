@@ -5,6 +5,9 @@
  * difficulty `solidDifficultyOf` scores, one step to a place, from the 3rd percentile of a pool of mazes that are not too easy to the 97th, each
  * place taking the maze nearest its step and avoiding the algorithms the places just before it had; the list is then put in order of that score.
  * A level is a recipe, never a drawing. Seeded, so the same run writes the same file; the file is what everybody plays.
+ *
+ * Since 3.0.0 the lists are in the order of the score that counts how much of the map the answer covers: run `pnpm levels:rescore` (scripts/meikyuu-rescore.ts)
+ * after this, which scores every level again and puts each list in that order. This writes each list in the order it was chosen in.
  */
 import { writeFileSync } from "node:fs";
 

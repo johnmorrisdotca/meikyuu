@@ -6,6 +6,28 @@ All notable changes to this project are written here. The format follows
 
 ## [Unreleased]
 
+## [3.0.0] - 2026-10-06
+
+**Level numbers name different mazes.** Every level list has the same recipes as 2.3.0, in a new order, so "Huge level 12" is another maze. A solve kept by recipe is unaffected; a solve, a kept run or a link kept by size and number is not (see `docs/LEVELS.md`, "3.0.0").
+
+### Changed
+
+- **A level's difficulty counts how much of the map its answer covers.** The score is the six terms' weighted sum, as before, multiplied by `0.5 + 0.5 * cover`, where `cover = clamp((0.5 * bbox + 0.5 * zones - 0.20) / 0.70, 0, 1)`: `bbox` is the box that holds the answer (and the trips to its keys) over the box that holds the maze, `zones` the share of the map's area, in a grid of zones (2 by 2 under 150 cells, 3 by 3 under 800, 4 by 4 above; for a solid 2 by 2 by 2 under 200 cells, else 3 by 3 by 3, over 0.75), that the answer visits at 2 cells or more. A maze whose answer stays in a corner counts for half what the same maze with an answer across the whole map does; one that covers the map keeps its score. The score is rounded once, after the factor. No level scores more than before; 861 of the 3,776 levels lose a dot (cut at 20, 40, 60 and 80), 10 lose two. The Huge cross whose answer was 134 cells of 4,736 in the middle and one arm, 76 and four dots, is 47 and three. The rule, for every package with levels, is [LEVELS-STANDARD.md](https://github.com/johnmorrisdotca/.github/blob/main/LEVELS-STANDARD.md).
+- **Every list is in the order of its score**, not of its effort: the four maze sizes, the six tall sizes, both colossal lists and the fifteen solid lists, each by the unrounded score, then the effort, then the old place. The recipes in each list are the same. Made by `pnpm levels:rescore` (`scripts/meikyuu-rescore.ts`), which scores every level again and writes the lists in order; run it after any script that makes levels.
+- `levels/legacy` answers from the new order: `now` and `nowInSize` are where a 1.0.0 maze stands now, and `nearest` is that maze where it is still a level, else the level of its size whose score is nearest (it was the level at the same place).
+- The 1.0.0 list in `legacy.data.ts` keeps its own order, with the new score beside each.
+- The lists are no longer built up to a floor: a test holds every level to `isTooEasy`'s least, with no place.
+
+### Added
+
+- `coverageOf`, `MazeCoverage`, `zonesAcross` and the constants of the measure (`COVERAGE_FLOOR`, `COVER_FROM`, `COVER_SPAN`, `ZONE_REAL`, `ZONE_VISIT`, `SOLID_ZONES_TOP`) in the main entry, and `src/coverage.ts`.
+- `MazeDifficulty.coverage` (the box, the zones, the cover and the factor) and `MazeDifficulty.base` (the six terms' sum before the factor).
+- `MazeGeometry.points`, where each cell lies (two numbers for a flat maze, three for a solid), which `difficultyOfGraph` reads for the cover. **Breaking for a caller who made their own `MazeGeometry`.**
+
+### Fixed
+
+- Nothing; the generators are unchanged and every recipe builds the maze it built.
+
 ## [2.3.0] - 2026-10-06
 
 ### Added

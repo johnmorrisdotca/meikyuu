@@ -16,6 +16,7 @@ src/
 ├── maze.ts           a maze: its recipe and its code, where each way to play puts the start, goal, doors and keys
 ├── measure.ts        how hard a maze is, counted off its passages, and the 1 to 100 rating
 ├── difficulty.ts     the 0 to 100 score of how hard a maze is to play, and the least a level must have
+├── coverage.ts       how much of the map an answer covers: its box and its zones, and the factor the score is multiplied by
 ├── tall.ts           tall (2:3) mazes: the sizes, and the dimensions that fill a container in each shape
 ├── colossal.ts       colossal mazes (about ten thousand cells): how many, how big
 ├── stones.ts         stones: the rules of laying one beside the line, taking it up, and keeping a run with its stones

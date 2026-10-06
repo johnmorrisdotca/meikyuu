@@ -58,7 +58,7 @@ playSolution(newMazeGame(maze)).solved;        // true: the game's own rules, a 
 And in a page, a level to play, by touch and mouse, with nothing else to set up:
 
 ```html
-<script type="module" src="https://cdn.jsdelivr.net/npm/@johnmorrisdotca/meikyuu@2/dist/element-define.js"></script>
+<script type="module" src="https://cdn.jsdelivr.net/npm/@johnmorrisdotca/meikyuu@3/dist/element-define.js"></script>
 <meikyuu-board level="40" board="wood" tap></meikyuu-board>
 ```
 
@@ -72,7 +72,7 @@ And in a page, a level to play, by touch and mouse, with nothing else to set up:
 
 ## Features
 
-- **A thousand mazes, then arrow puzzles and mixed ones.** 1,024 maze levels, 300 arrow levels and 100 mixed levels: four sizes of 256 mazes, each size ordered by effort so that no level is easier to draw than the one before, and each scored 0 to 100 for how hard it is to play.
+- **A thousand mazes, then arrow puzzles and mixed ones.** 1,024 maze levels, 300 arrow levels and 100 mixed levels: four sizes of 256 mazes, each size in the order of its score, 0 to 100, for how hard it is to play, which counts how much of the map the answer covers.
 - **Tall mazes for a phone held upright.** 1,536 portrait levels, two columns to three rows, in six sizes of 256 (6×9 to 20×30 cells), that lie down by themselves on a wide screen (`orientation`) without changing the maze or a line drawn on it.
 - **Colossal mazes.** Two more lists, in an entry of their own (`/levels/colossal`): 128 square mazes of about ten thousand cells (a hundred across or so, every shape) and 128 tall ones 64 across and 96 down, each a recipe that builds in about twenty milliseconds, drawn and played with the same zoom, gutters and panning as any other.
 - **Mazes over a solid.** A perfect maze over the whole surface of a cube, a globe (a football of hexagons and twelve pentagons), a tetrahedron, an octahedron or an icosahedron (`/3d`, `/3d/play`, `/3d/levels`): 960 levels, drawn in 3D on a canvas, turned by dragging, by arrows and by two fingers, with the line crossing from face to face over the edges and the solid turning by itself to keep the end of the line in view. The answer is a list of cells, the same however the solid is turned.
@@ -200,7 +200,7 @@ yarn add @johnmorrisdotca/meikyuu
 A page with no bundler loads the board as a tag from a CDN, naming the major version so that a release that changes what you use is one you choose:
 
 ```html
-<script type="module" src="https://cdn.jsdelivr.net/npm/@johnmorrisdotca/meikyuu@2/dist/element-define.js"></script>
+<script type="module" src="https://cdn.jsdelivr.net/npm/@johnmorrisdotca/meikyuu@3/dist/element-define.js"></script>
 ```
 
 Entry points, so a page loads only what it uses:
@@ -266,7 +266,7 @@ const solution = solutionOf(buildMaze(recipe));        // the one way through, c
 One tag, no bundler:
 
 ```html
-<script type="module" src="https://cdn.jsdelivr.net/npm/@johnmorrisdotca/meikyuu@2/dist/element-define.js"></script>
+<script type="module" src="https://cdn.jsdelivr.net/npm/@johnmorrisdotca/meikyuu@3/dist/element-define.js"></script>
 <meikyuu-board level="40" board="wood"></meikyuu-board>
 <script>
   document.querySelector("meikyuu-board").addEventListener("meikyuu-solve", (event) => console.log(event.detail.moves));
@@ -353,7 +353,7 @@ Save this as a file and open it: one script and one tag, and level 40, to draw t
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>A maze</title>
-<script type="module" src="https://cdn.jsdelivr.net/npm/@johnmorrisdotca/meikyuu@2/dist/element-define.js"></script>
+<script type="module" src="https://cdn.jsdelivr.net/npm/@johnmorrisdotca/meikyuu@3/dist/element-define.js"></script>
 <meikyuu-board level="40" board="wood" tap></meikyuu-board>
 ```
 
@@ -533,17 +533,17 @@ The seven algorithms (`MeikyuuAlgorithm`) each make a perfect maze, one with exa
 
 ## Levels and how difficulty is measured
 
-There are 1,024 maze levels, 300 arrow levels and 100 mixed levels, and 1,536 tall maze levels in a list of their own (below). The maze list is four sizes of 256, small, medium, large and huge, in that order; inside a size every level is at least as much to draw as the one before (the effort below), and gets harder to play (the score below). The arrow and mixed lists are one list each, ordered by their effort.
+There are 1,024 maze levels, 300 arrow levels and 100 mixed levels, and 1,536 tall maze levels in a list of their own (below). The maze list is four sizes of 256, small, medium, large and huge, in that order; inside a size every level scores at least as much as the one before (the score below, which is what a site shows as dots). The arrow and mixed lists are one list each, ordered by their effort.
 A level is a recipe, such as `square:12x9:wilson:to-goal:48213` (shape, size, algorithm, way to play, seed) or `heart:25:prim:keys-3:7`, never a drawing. A recipe rebuilds
 the same maze every time, on every browser, because every choice a generator makes comes from a seeded integer stream (mulberry32) and none from the geometry.
-The lists are made on a desk by `scripts/meikyuu-levels.ts` and `scripts/meikyuu-tall.ts` and kept as data in `src/levels/`. `docs/LEVELS.md` has the tables: how many levels there are in every size and third, how hard they are, how many more could be made, and what became of the 1.0.0 list.
+The lists are made on a desk by `scripts/meikyuu-levels.ts` and `scripts/meikyuu-tall.ts`, put in the order of their score by `scripts/meikyuu-rescore.ts`, and kept as data in `src/levels/`. `docs/LEVELS.md` has the tables: how many levels there are in every size and third, how hard they are, how many more could be made, and what became of the 1.0.0 list.
 
-- **Small and quick first, huge and slow last.** Level 1 is a 15-cell maze; level 1,024 has 7,744 cells. 256 levels are small (under 150 cells), 256 medium (under 800), 256 large (under 4,000) and 256 huge. A size is sixteen pages of sixteen levels, and a third of it (86, 85 and 85 levels) is its easy, medium and hard.
+- **Small and quick first, huge and slow last.** Level 1 is a 15-cell maze; level 1,024 has 8,911 cells. 256 levels are small (under 150 cells), 256 medium (under 800), 256 large (under 4,000) and 256 huge. A size is sixteen pages of sixteen levels, and a third of it (86, 85 and 85 levels) is its easy, medium and hard.
 - **Mixed.** The shapes and the ways to play arrive as the small list goes on (squares first, then circles, hexagons, triangles, and the cut-out shapes one after another; in and out first, then the goal, the centre and keys), and every size has all of them.
   Maze levels by shape: square 156, hex 90, circle 85, triangle 77, heart 74, leaf 74, hexagon 74, pyramid 73, diamond 72, star 67, cross 66, ring 65, moon 51; by way to play: `to-goal` 268, `centre-out` 262, `keys` 253, `enter-leave` 241.
 - **Difficulty is measured twice.** `measureMaze` counts the passages alone, in whole numbers: the cells on the way through, the places on it where the line could have gone another way, the lengths of the wrong branches that leave it, the dead ends, the `river` (the share of cells with exactly two passages), and for keys the detour to fetch them. They are added to an `effort`, an estimate in cells drawn: the way, plus the wrong turns (a person at a fork goes the wrong way half the time and walks to the end of it and back), plus two for every fork, plus the keys. `ratingOf` puts it on a scale of 1 to 100 where doubling the effort adds the same each time.
-- **And scored** (`difficultyOf`, 0 to 100): effort says how much there is to draw, which is mostly size; the score adds what makes two mazes of one size easy or tricky: the forks, the forks where *the straight guess* is wrong (at every fork take the passage that points most nearly at the goal), the cells that guess draws that it need not, the longest wrong branch and the bends. Forty per cent is the effort and sixty is the rest, each on a log scale against the biggest the lists reach. A maze whose straight guess walks to the goal is not a level: `isTooEasy` holds every one to at least 4 wasted cells, 2 traps, 3 forks, 3 wrong branches and 4 dead ends, and the easy third of a size to a floor that rises through it (`easyFloorAt`: 3 traps, 5 forks and 8 wasted cells by level 86). `docs/LEVELS.md` explains the choices and shows the score of every level.
-- **Tested on every build**: every level rebuilds from its recipe, is a perfect maze of the cells the list says, measures the effort and the score the list says, is not too easy for its place, and is solved by drawing its way with the game's own rules; and the efforts never go down along a size.
+- **And scored** (`difficultyOf`, 0 to 100): effort says how much there is to draw, which is mostly size; the score adds what makes two mazes of one size easy or tricky (the forks, the forks where *the straight guess* is wrong, the cells that guess draws that it need not, the longest wrong branch and the bends; forty per cent is the effort, each term on a log scale), then multiplies it by **how much of the map the answer covers** (`coverageOf`): a maze whose answer crosses the whole map keeps its score, and one whose answer stays in a corner counts for half. A maze whose straight guess walks to the goal is not a level (`isTooEasy`: at least 4 wasted cells, 2 traps, 3 forks, 3 wrong branches and 4 dead ends). `docs/LEVELS.md` explains the choices and shows the score of every level, and [LEVELS-STANDARD.md](https://github.com/johnmorrisdotca/.github/blob/main/LEVELS-STANDARD.md) is the rule every package of the family follows.
+- **Tested on every build**: every level rebuilds from its recipe, is a perfect maze of the cells the list says, measures the effort and the score the list says, is not too easy, and is solved by drawing its way with the game's own rules; and the scores never go down along a size.
 
 ```ts no-check
 import { levelOf, findMazeLevels, MEIKYUU_ARROW_LEVELS } from "@johnmorrisdotca/meikyuu/levels";
@@ -637,8 +637,8 @@ Every export of every entry point, with its signature and its doc comment, is in
 ## Making levels
 
 `pnpm levels` runs `scripts/meikyuu-levels.ts`, which writes `src/levels/mazes.data.ts` (about a minute and a half); `node scripts/meikyuu-tall.ts` writes `tall.data.ts` (about a minute); `node --experimental-strip-types scripts/meikyuu-colossal.ts` writes `colossal.data.ts` (about six minutes); `node scripts/meikyuu-arrows.ts` writes `arrows.data.ts` and `mixed.data.ts` (about a minute).
-All are seeded, so the same run writes the same files. A size keeps the places of the 1.0.0 list: a level that was good enough stays, a place that was too easy is given a new maze of about the same effort, a size with fewer than 256 is added to at the end, and one with more loses its end (`scripts/meikyuu-levels.ts`); the tall sizes are ramps of 256 steps of the effort (`scripts/levels-list.ts`). `node scripts/levels-facts.ts [--capacity]`, `levels-trees.ts`, `phone-fit.mjs` and `levels-charts.mjs` print and draw the tables and pictures of `docs/LEVELS.md`.
-A level once published keeps its number: a published list is only ever added to at the end, never rewritten, **except by a release that says so**: 2.0.0 gave 117 places of the maze list a new maze and cut 40 off its end (CHANGELOG.md), and `@johnmorrisdotca/meikyuu/levels/legacy` says where each 1.0.0 level went.
+All are seeded, so the same run writes the same files. `pnpm levels:rescore` (`scripts/meikyuu-rescore.ts`) runs last: it scores every level again and puts each list in the order of its score. A size kept the places of the 1.0.0 list until 3.0.0 (`scripts/meikyuu-levels.ts`); the tall sizes are ramps of 256 steps (`scripts/levels-list.ts`). `node scripts/levels-facts.ts [--capacity]`, `levels-trees.ts`, `phone-fit.mjs` and `levels-charts.mjs` print and draw the tables and pictures of `docs/LEVELS.md`.
+A level once published keeps its number: a published list is only ever added to at the end, never rewritten, **except by a release that says so**: 2.0.0 gave 117 places a new maze and cut 40 off the end, and 3.0.0 put every list in the order of its new score (CHANGELOG.md); `@johnmorrisdotca/meikyuu/levels/legacy` says where each 1.0.0 level is now.
 
 ## Theming
 
@@ -693,7 +693,7 @@ All of these are held by tests, and the ones with a name are exported.
 | Colossal levels | 256, two lists of 128: square (9,500 to 12,000 cells) and tall (64 across, 96 down, 2:3) | `MEIKYUU_COLOSSAL_LEVELS`, `MEIKYUU_COLOSSAL_TALL_LEVELS` |
 | Solid levels | 960, 64 for each of three sizes of five solids (72 to 720 cells); a recipe at most 6,000 cells | `MEIKYUU_SOLID_LEVELS`, `MEIKYUU_MOST_SOLID_CELLS` |
 | Stones | beside the line within 1 or 2 cells (default 2); a few by default (3 and one more for every hundred cells across), or no limit | `stoneLimitFor`, `MEIKYUU_STONE_REACH_MOST` |
-| The biggest maze in the lists | 8,923 cells (level 1002); the smallest is 15 (level 1) | `levelOf("maze", n).cells` |
+| The biggest maze in the lists | 8,923 cells (level 943); the smallest is 15 (level 1) | `levelOf("maze", n).cells` |
 | A maze's size words | small under 150 cells, medium under 800, large under 4,000, huge beyond | `sizeOf`, `MEIKYUU_SIZES` |
 | A recipe's size | at least 2 a side, and at most 40,000 cells laid out (counting, for a shape cut out of a square, the whole square): a little over twice the biggest level's 19,321; `parseRecipe` refuses more | `MEIKYUU_MOST_CELLS`, `layoutCells` |
 | Keys in a recipe | 10, twice the most any level uses | `MEIKYUU_MOST_KEYS` |
@@ -826,7 +826,7 @@ Please follow the [code of conduct](./CODE_OF_CONDUCT.md). A recipe that makes t
 
 See [CHANGELOG.md](./CHANGELOG.md).
 
-The latest release is 2.3.0: the solved message can be put away, with a tap, its close button or Escape, and `banner: false` leaves it out.
+The latest release is 3.0.0: a level's score counts how much of the map its answer covers, and every list is in the order of its score, so level numbers name different mazes.
 
 ## Licence
 

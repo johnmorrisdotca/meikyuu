@@ -6,6 +6,7 @@ Everything in the tables below is printed by `node scripts/levels-facts.ts [--ca
 
 - **Are any levels locked?** No. Nothing in the package locks a level: every level of every list is open to `mountMeikyuu` and to `levelOf`, and a recipe can be played whether or not it is a level. (On the site that uses it, today no level is locked either: every level is open and Start plays the first not yet solved. Suido and Tsunagi lock blocks of 16 until the block before is solved; Meikyuu does not, and its sizes are 256 = 16 blocks of 16 for a site that wants to.)
 - **Round numbers.** 256 maze levels to each of the four sizes, 1,024 in all, and 256 to each of six tall sizes, 1,536. Why 256 below.
+- **Difficulty counts the map (3.0.0).** A level's score now counts how much of the map its answer covers: a maze whose answer stays in a corner counts for half what the same maze with an answer across the whole map does. Every list is in the order of that score. Section below.
 - **Easy was too easy.** 62 of the 73 levels in the easy third of Small were too easy to be a level (28 of the 217 Small levels were solved by pointing at the goal and walking). Every level now has to be wrong-footed by the straight guess at least twice and cost it four cells, and the easy third has a floor that rises through it. Level 1 of Small is a 15-cell maze (3×5), not a 3×3.
 - **How many more could be published?** For the squares-and-shapes lists, more than anyone will play: from 100,000 random recipes 51,835 small, 48,942 medium, 19,996 large and 5,000 huge mazes (of 5,000 drawn) were distinct and not too easy, every one a perfect maze with exactly one way through. The table is below; a safe cap of 4,096 to a size (sixteen times what is published) is reached in seconds to a minute on a laptop.
 - **Vertical maps.** A whole new set: 1,536 tall levels, 2:3, six sizes (6×9 to 20×30 cells), with `orientation` to lie them down on a wide screen. 2:3 and not 1:2: the table is below.
@@ -27,18 +28,18 @@ A *third* is the band the site derives: place 1 to 86 of a size is easy, 87 to 1
 
 | Size | Band | Levels | Cells | Effort | Score | Way (cells) | Choices | Wrong turns | Dead ends | Straight guess wastes |
 | --- | --- | ---: | --- | --- | --- | ---: | ---: | ---: | ---: | ---: |
-| small | easy | 86 | 15–48 | 22–47 | 18–29 | 11.1 | 4.7 | 2.7 | 8.4 | 9.8 |
-|  | medium | 85 | 33–143 | 47–99 | 27–39 | 21.1 | 9.2 | 3.2 | 18.9 | 18.2 |
-|  | hard | 85 | 72–148 | 101–226 | 34–50 | 45.3 | 15.7 | 5.7 | 27.6 | 28.9 |
-| medium | easy | 86 | 150–361 | 95–244 | 35–53 | 46.2 | 19.2 | 5.8 | 56.7 | 56.9 |
-|  | medium | 85 | 217–760 | 246–405 | 45–61 | 78.9 | 29.9 | 11.3 | 102.3 | 127.8 |
-|  | hard | 85 | 281–798 | 409–1203 | 49–69 | 157.2 | 32.0 | 12.6 | 107.2 | 185.4 |
-| large | easy | 86 | 806–3102 | 363–811 | 53–71 | 110.3 | 53.7 | 19.4 | 353.5 | 333.8 |
-|  | medium | 85 | 836–3961 | 815–1200 | 61–77 | 187.4 | 76.3 | 28.7 | 534.5 | 681.3 |
-|  | hard | 85 | 1020–3969 | 1200–2121 | 67–82 | 366.1 | 89.0 | 34.4 | 542.8 | 913.1 |
-| huge | easy | 86 | 4096–8911 | 1094–2519 | 74–89 | 272.9 | 162.6 | 63.0 | 1802.8 | 2224.4 |
-|  | medium | 85 | 4020–8910 | 2536–3665 | 78–94 | 646.1 | 187.9 | 80.2 | 1599.1 | 2793.5 |
-|  | hard | 85 | 4386–8923 | 3668–4990 | 83–96 | 1223.2 | 183.9 | 79.6 | 1171.2 | 2512.4 |
+| small | easy | 86 | 15–139 | 22–82 | 13–25 | 11.0 | 5.0 | 2.6 | 9.7 | 9.5 |
+|  | medium | 85 | 25–143 | 33–132 | 25–34 | 21.0 | 9.0 | 3.2 | 19.2 | 17.6 |
+|  | hard | 85 | 52–148 | 78–226 | 34–50 | 45.4 | 15.6 | 5.8 | 26.1 | 29.9 |
+| medium | easy | 86 | 150–760 | 95–418 | 23–43 | 45.4 | 21.5 | 6.5 | 79.3 | 84.6 |
+|  | medium | 85 | 156–793 | 163–620 | 44–53 | 83.6 | 26.8 | 10.0 | 84.6 | 110.6 |
+|  | hard | 85 | 224–798 | 262–1203 | 53–69 | 153.4 | 32.9 | 13.2 | 102.0 | 174.6 |
+| large | easy | 86 | 816–3961 | 363–1318 | 34–55 | 115.7 | 56.2 | 20.2 | 466.4 | 482.2 |
+|  | medium | 85 | 806–3969 | 519–1929 | 56–67 | 205.1 | 70.2 | 26.3 | 462.6 | 661.7 |
+|  | hard | 85 | 836–3952 | 706–2121 | 67–82 | 342.9 | 92.6 | 35.8 | 500.5 | 782.5 |
+| huge | easy | 86 | 4096–8850 | 1094–4637 | 47–74 | 399.1 | 140.7 | 55.6 | 1583.5 | 2194.9 |
+|  | medium | 85 | 4020–8911 | 1674–4930 | 74–86 | 699.5 | 170.2 | 70.5 | 1447.1 | 2364.9 |
+|  | hard | 85 | 4386–8923 | 2544–4990 | 86–96 | 1042.2 | 223.8 | 96.8 | 1545.1 | 2970.8 |
 
 ### Shapes, ways to play and algorithms in every size
 
@@ -83,16 +84,50 @@ The site's levels page is a board of blocks of sixteen, in two rows of eight, an
 
 The straight guess is what a person does with no plan: at every fork take the passage that points most nearly at the goal, back out of dead ends, and try the next best. Each term other than reach is `ln(1 + count) / ln(1 + ceiling)`, capped at 1; the ceilings are the biggest the 1.0.0 lists reach, so the hardest maze in the lists scores in the 90s. All of it is whole numbers counted off the passages and plain arithmetic, so the same maze scores the same in every engine. Perfect mazes have no loops, so "a loop" cannot be a twist in this package; the twists are the longer wrong turn, the trap that looks like the way, and the key.
 
-**Too easy** (`isTooEasy`): a maze that has fewer than 4 cells the straight guess draws in vain, fewer than 2 traps, fewer than 3 forks on the way, fewer than 3 wrong branches or fewer than 4 dead ends. In the easy third of a size there is a floor that rises (`easyFloorAt`): at place 1 the least, at place 86 3 traps, 5 forks and 8 wasted cells.
+### How much of the map the answer covers (3.0.0)
+
+The six terms count what a person meets on the way. None of them can tell a long answer across the whole map from one of the same length in a corner and one arm, and the second is the easier to play (John, 2026-10-06: a Huge cross whose answer was 134 cells of 4,736, in the middle and one arm, read four dots of five). So the score is multiplied by a factor from 0.5 to 1 (`coverageOf`, `src/coverage.ts`):
+
+```text
+score  = base * (0.5 + 0.5 * cover)          base is the six terms' weighted sum, as before
+cover  = clamp((0.5 * bbox + 0.5 * zones - 0.20) / 0.70, 0, 1)
+```
+
+- `bbox`: the box that holds the answer (with the trips to its keys) over the box that holds the maze, along each axis, as a geometric mean (two axes for a flat maze, three for a solid).
+- `zones`: the maze is cut into a grid of zones, **2 by 2 under 150 cells, 3 by 3 under 800 and 4 by 4 above** (a solid: 2 by 2 by 2 under 200 cells, 3 by 3 by 3 above). A zone is **visited** when the answer has at least 2 cells in it. A zone holding less than a quarter of an average zone's cells is left out, so a cross is cut to its arms and a ring to its ring. The share is of the cells' area. For a solid it is divided by 0.75 (and held to 1): a shell has no inside, so even a tour of all of it touches only about three quarters of the three-dimensional zones.
+- A factor and not a seventh weighted term, because a term added gives every small maze a bonus (any answer covers a small maze): tried at weights of 0.25 to 0.40, it made 163 of 256 6×9 tall mazes read three dots where all had read two. A factor leaves a maze whose answer covers the map where it was and takes away only where the answer is small compared with the map. It is a discount, never a promotion: no level scores more than before, and the hardest Huge levels (full cover, answers of 600 to 2,100 cells) are untouched.
+- **Dots stay absolute across sizes.** A site that shows a score as dots cuts it at 20, 40, 60 and 80 (`ceil(score / 20)`, one to five), the same for every size and list, so Small never reaches four dots and Huge never shows one. The score is rounded once, then cut.
+
+Measured over all 3,776 levels of the lists with levels (1,024 square mazes, 1,536 tall, 256 colossal, 960 solids), the dots of 1, 2, 3, 4 and 5, 2.3.0 and now:
+
+| List | 2.3.0 | 3.0.0 |
+| --- | --- | --- |
+| Small | 16, 190, 50, 0, 0 | 39, 174, 43, 0, 0 |
+| Medium | 0, 9, 200, 47, 0 | 0, 55, 170, 31, 0 |
+| Large | 0, 0, 21, 225, 10 | 0, 14, 103, 135, 4 |
+| Huge | 0, 0, 0, 30, 226 | 0, 0, 17, 118, 121 |
+| Colossal, both lists | 0, 0, 0, 21, 235 | 0, 0, 16, 58, 182 |
+| Tall, six sizes | 0, 523, 889, 124, 0 | 1, 720, 705, 110, 0 |
+| Solids, 15 lists | 0, 300, 597, 63, 0 | 0, 526, 404, 30, 0 |
+| All | 16, 1,022, 1,757, 510, 471 | 40, 1,489, 1,458, 482, 307 |
+
+861 levels (23%) lose a dot, 10 lose two, none gains one. The median score of Small went from 32 to 29, Medium 53 to 48, Large 70 to 61, Huge 87 to 80. The biggest falls, each an answer of a few per cent of the cells in one part of the map: Huge `cross:90:growing:centre-out:18570` (the first Huge level of 2.3.0) 76 to 47, four dots to three, a cover of 0.25 and a factor of 0.63; `cross:92:kruskal:centre-out:28535` 75 to 47; Large `diamond:89:prim:centre-out:19128` 75 to 47; Large `leaf:99:growing:to-goal:33664` 74 to 47; Colossal `hexagon:59:kruskal:to-goal:1769128033` 86 to 58; Large `circle:31:hunt:centre-out:24939` 63 to 37. The Huge crosses by how many arms the answer works in: `cross:88:prim:enter-leave:45675` 82 to 61, `cross:120:prim:to-goal:48155` 85 to 64, `cross:97:growing:to-goal:37725` 82 to 67, `cross:118:backtracker:centre-out:1791460` (an answer of 1,383 cells in two arms) 85 to 68. The family's rule, for every package that has levels, is written once in [LEVELS-STANDARD.md](https://github.com/johnmorrisdotca/.github/blob/main/LEVELS-STANDARD.md).
+
+**Too easy** (`isTooEasy`): a maze that has fewer than 4 cells the straight guess draws in vain, fewer than 2 traps, fewer than 3 forks on the way, fewer than 3 wrong branches or fewer than 4 dead ends. Until 3.0.0 the easy third of a size also had a floor that rises (`easyFloorAt`, still exported but no longer asked of a list, which is now in the order of its score): at place 1 the least, at place 86 3 traps, 5 forks and 8 wasted cells.
 
 ### The easy third, before and after
 
 | Size | Levels | Too easy to keep | Of them, the straight guess walks straight to the goal | In the easy third |
-| --- | ---: | ---: | ---: | ---: |
-| small | 217 | 99 | 28 | 62 |
-| medium | 231 | 7 | 1 | 5 |
-| large | 285 | 0 | 0 | 0 |
-| huge | 267 | 0 | 0 | 0 |
+| Size | L1 | L5 | L10 | L20 | L40 | L60 | L86 | L128 | L171 | L214 | L256 |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| small, 1.0.0 (level at the same place in its 217) | 2 | 5 | 12 | 10 | 15 | 17 | 21 | 28 | 31 | 33 | 43 |
+| small, now | 13 | 15 | 17 | 18 | 21 | 22 | 25 | 29 | 34 | 41 | 50 |
+| medium, 1.0.0 (level at the same place in its 231) | 23 | 25 | 32 | 36 | 39 | 41 | 42 | 48 | 51 | 46 | 65 |
+| medium, now | 23 | 30 | 32 | 34 | 39 | 41 | 43 | 48 | 53 | 59 | 69 |
+| large, 1.0.0 (level at the same place in its 285) | 35 | 37 | 39 | 41 | 66 | 46 | 66 | 73 | 68 | 79 | 83 |
+| large, now | 34 | 37 | 40 | 42 | 48 | 52 | 55 | 61 | 67 | 72 | 82 |
+| huge, 1.0.0 (level at the same place in its 267) | 47 | 53 | 62 | 59 | 77 | 75 | 65 | 88 | 86 | 89 | 95 |
+| huge, now | 47 | 57 | 59 | 61 | 66 | 69 | 74 | 80 | 86 | 89 | 96 |
 
 | Size | L1 | L5 | L10 | L20 | L40 | L60 | L86 | L128 | L171 | L214 | L256 |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
@@ -111,24 +146,24 @@ The straight guess is what a person does with no plan: at every fork take the pa
 
 Small's easy third used to begin with a 3×3 and score 2 to 26 with 1.1 wrong turns on average; it now scores 18 to 29, from a 15-cell maze to a 48-cell one, with 2.7 wrong turns on average, and the floor rises through it. Medium, Large and Huge were not too easy (Medium lost 7 mazes); their tables above match 1.0.0's closely because most of their levels are the same levels.
 
-The list is still ordered by effort, as the first release promised ("no level is easier to draw than the one before"). The score rises along each size in thirds and in pages of sixteen, but one level can score a few points under the best before it (the largest dip is 16 points, in Medium); a test holds it to 18.
+The lists were ordered by effort until 3.0.0, as the first release promised ("no level is easier to draw than the one before"). Since 3.0.0 each list is in the order of the score (`scripts/meikyuu-rescore.ts`: the unrounded score, then the effort, then the old place), so a level is never scored under the one before it, and a size's levels climb the dots of a site in order. The effort still rises along a size on the whole (the score is 40% effort), but one level can cost more to draw than the one after it. Each 'now' row above is in the new order.
 
 ## What changed, and what a site must do
 
 | Size | Band | Levels | Cells | Effort | Score | Way (cells) | Choices | Wrong turns | Dead ends | Straight guess wastes |
 | --- | --- | ---: | --- | --- | --- | ---: | ---: | ---: | ---: | ---: |
-| small (217) | easy | 73 | 9–43 | 9–41 | 2–26 | 10.2 | 3.5 | 1.1 | 7.0 | 4.1 |
-|  | medium | 72 | 28–107 | 41–81 | 19–37 | 18.3 | 8.0 | 2.3 | 15.3 | 10.4 |
-|  | hard | 72 | 56–144 | 82–167 | 27–44 | 31.6 | 12.7 | 3.9 | 26.6 | 23.4 |
-| medium (231) | easy | 77 | 150–346 | 95–230 | 33–53 | 45.7 | 18.5 | 5.5 | 53.7 | 51.1 |
-|  | medium | 77 | 184–760 | 232–360 | 37–58 | 73.1 | 27.4 | 9.8 | 92.6 | 106.2 |
-|  | hard | 77 | 281–793 | 364–961 | 49–65 | 126.1 | 33.6 | 13.2 | 117.7 | 169.2 |
-| large (285) | easy | 95 | 806–3344 | 363–838 | 53–71 | 116.6 | 54.6 | 19.7 | 365.9 | 354.4 |
-|  | medium | 95 | 836–3969 | 840–1320 | 61–77 | 209.6 | 76.0 | 28.9 | 515.1 | 722.3 |
-|  | hard | 95 | 1444–3997 | 1321–4163 | 68–87 | 528.6 | 96.9 | 39.4 | 530.9 | 974.3 |
-| huge (267) | easy | 89 | 4096–8911 | 1094–2549 | 74–89 | 276.2 | 165.6 | 64.2 | 1813.8 | 2272.3 |
-|  | medium | 89 | 4020–8910 | 2581–3721 | 78–94 | 674.7 | 186.6 | 79.8 | 1563.4 | 2752.4 |
-|  | hard | 89 | 4454–8923 | 3736–5371 | 84–96 | 1297.5 | 175.3 | 76.4 | 1112.2 | 2531.8 |
+| small (217) | easy | 73 | 9–43 | 9–41 | 2–24 | 10.2 | 3.5 | 1.1 | 7.0 | 4.1 |
+|  | medium | 72 | 28–107 | 41–81 | 14–36 | 18.3 | 8.0 | 2.3 | 15.3 | 10.4 |
+|  | hard | 72 | 56–144 | 82–167 | 21–43 | 31.6 | 12.7 | 3.9 | 26.6 | 23.4 |
+| medium (231) | easy | 77 | 150–346 | 95–230 | 21–50 | 45.7 | 18.5 | 5.5 | 53.7 | 51.1 |
+|  | medium | 77 | 184–760 | 232–360 | 33–58 | 73.1 | 27.4 | 9.8 | 92.6 | 106.2 |
+|  | hard | 77 | 281–793 | 364–961 | 42–65 | 126.1 | 33.6 | 13.2 | 117.7 | 169.2 |
+| large (285) | easy | 95 | 806–3344 | 363–838 | 34–69 | 116.6 | 54.6 | 19.7 | 365.9 | 354.4 |
+|  | medium | 95 | 836–3969 | 840–1320 | 37–76 | 209.6 | 76.0 | 28.9 | 515.1 | 722.3 |
+|  | hard | 95 | 1444–3997 | 1321–4163 | 56–87 | 528.6 | 96.9 | 39.4 | 530.9 | 974.3 |
+| huge (267) | easy | 89 | 4096–8911 | 1094–2549 | 47–88 | 276.2 | 165.6 | 64.2 | 1813.8 | 2272.3 |
+|  | medium | 89 | 4020–8910 | 2581–3721 | 57–94 | 674.7 | 186.6 | 79.8 | 1563.4 | 2752.4 |
+|  | hard | 89 | 4454–8923 | 3736–5371 | 64–96 | 1297.5 | 175.3 | 76.4 | 1112.2 | 2531.8 |
 
 A size keeps its **places**. The first release's levels, by size and place (the site's "size and level number"):
 
@@ -147,6 +182,16 @@ A size keeps its **places**. The first release's levels, by size and place (the 
 4. The effort no longer rises along the whole list (Medium begins easier than Small ends).
 
 **The migration answer is data, exported as `@johnmorrisdotca/meikyuu/levels/legacy`:** `MEIKYUU_LEGACY_MAZE_LEVELS`, `legacyLevelOf(oldNumber)`, `legacyLevelOfCode(recipe)`. Each row has the recipe, `size`, `place` (the number in its size in 1.0.0), `now` and `nowInSize` (where the same maze is now, or null), and `nearest` (the level now at its place). A site with solves by recipe keeps them as they are and uses `legacyLevelOfCode` to mark the retired ones; a site with solves by place finds them in `nearest`. The demo does this for a visitor's saved progress.
+
+## 3.0.0: the score counts the map, and every list is in its order (a major release)
+
+**What a site must do.** Nothing in the package's API is removed (`MazeGeometry` gains `points`, which `difficultyOfGraph` needs; a `MazeDifficulty` gains `base` and `coverage`), but **a level's number names a different maze**: every list (the four maze sizes, the six tall sizes, the two colossal lists, the 15 solid lists) has the same 256, 128 or 64 recipes as 2.3.0, in a new order. The sets did not change, so:
+
+1. **A solve kept by recipe is still a solve of that maze**, whatever number it has now. A site that finds a level by its recipe (`levelsOf(...).find((l) => l.code === code)`) needs nothing.
+2. **A solve, a kept run or a link kept by "size and number"** now names whichever maze stands at that number. 2.3.0's list is not kept in the package (it would be 3,776 recipes again): a site that kept numbers reads its own solves' recipes. A run half drawn on a number is drawn against the new maze there, and is cleared by a site that checks its line against the maze.
+3. **The thirds** (`bandOf`: easy, medium, hard by place) follow the score, so a level's third may change; a site that filed solves under their third at the time keeps filing those.
+4. `legacyLevelOf` and `levels/legacy` now answer from the new lists: `now` and `nowInSize` are where a 1.0.0 maze stands in the new order; `nearest` is the same maze where it is still a level, else the level of its size scoring nearest.
+5. Scores moved (the table above): a site's dots are `ceil(score / 20)` of the new integer.
 
 ## How many more could be published
 
@@ -217,24 +262,24 @@ On the iPhone 15 the room is 342×560, a ratio of 0.61, so 3:5 would fit it best
 
 | Size | Band | Levels | Cells | Effort | Score | Way (cells) | Choices | Wrong turns | Dead ends | Straight guess wastes |
 | --- | --- | ---: | --- | --- | --- | ---: | ---: | ---: | ---: | ---: |
-| 6×9 | easy | 86 | 45–54 | 46–58 | 27–32 | 17.5 | 6.1 | 3.2 | 13.2 | 19.8 |
-|  | medium | 85 | 45–54 | 58–71 | 30–35 | 21.3 | 8.7 | 3.8 | 13.4 | 14.0 |
-|  | hard | 85 | 45–54 | 71–83 | 31–38 | 22.7 | 11.8 | 4.8 | 14.8 | 13.2 |
-| 8×12 | easy | 86 | 91–100 | 73–94 | 32–39 | 23.0 | 8.8 | 3.8 | 25.1 | 31.4 |
-|  | medium | 85 | 91–100 | 95–116 | 34–42 | 32.8 | 11.9 | 4.4 | 23.2 | 25.2 |
-|  | hard | 85 | 91–100 | 116–137 | 37–45 | 37.9 | 16.6 | 6.8 | 24.4 | 24.9 |
-| 10×15 | easy | 86 | 144–156 | 100–133 | 36–44 | 29.0 | 11.5 | 4.2 | 39.7 | 45.9 |
-|  | medium | 85 | 144–156 | 133–165 | 38–47 | 43.0 | 15.4 | 5.6 | 35.4 | 38.4 |
-|  | hard | 85 | 144–156 | 166–198 | 40–50 | 56.3 | 22.0 | 8.3 | 35.6 | 38.6 |
-| 12×18 | easy | 86 | 210–220 | 129–178 | 39–49 | 36.3 | 15.2 | 5.2 | 57.6 | 66.8 |
-|  | medium | 85 | 210–220 | 179–227 | 41–52 | 56.6 | 19.9 | 7.3 | 50.3 | 62.3 |
-|  | hard | 85 | 210–220 | 228–276 | 43–55 | 74.4 | 29.3 | 11.2 | 51.3 | 54.4 |
-| 16×24 | easy | 86 | 350–399 | 191–285 | 43–55 | 52.2 | 21.8 | 7.5 | 99.2 | 108.6 |
-|  | medium | 85 | 350–399 | 286–378 | 48–59 | 84.5 | 30.6 | 11.2 | 87.6 | 118.7 |
-|  | hard | 85 | 350–399 | 379–472 | 50–62 | 125.5 | 39.3 | 16.1 | 77.5 | 112.0 |
-| 20×30 | easy | 86 | 576–600 | 263–419 | 47–61 | 66.2 | 30.7 | 10.3 | 161.0 | 155.8 |
-|  | medium | 85 | 576–600 | 420–574 | 53–66 | 129.6 | 42.9 | 17.2 | 131.9 | 204.2 |
-|  | hard | 85 | 576–600 | 576–730 | 55–68 | 190.8 | 41.8 | 17.1 | 95.6 | 164.6 |
+| 6×9 | easy | 86 | 45–54 | 46–74 | 20–30 | 15.3 | 7.0 | 3.2 | 14.6 | 19.4 |
+|  | medium | 85 | 45–54 | 48–82 | 30–33 | 23.8 | 7.4 | 3.4 | 11.3 | 13.6 |
+|  | hard | 85 | 45–54 | 61–83 | 33–38 | 22.6 | 12.2 | 5.1 | 15.5 | 13.9 |
+| 8×12 | easy | 86 | 91–100 | 73–111 | 25–35 | 22.1 | 9.6 | 3.8 | 25.7 | 28.8 |
+|  | medium | 85 | 91–100 | 78–135 | 35–39 | 34.0 | 10.9 | 4.2 | 22.1 | 25.5 |
+|  | hard | 85 | 91–100 | 97–137 | 39–45 | 37.6 | 16.9 | 6.9 | 24.9 | 27.2 |
+| 10×15 | easy | 86 | 144–156 | 100–154 | 25–37 | 29.1 | 11.7 | 4.2 | 38.9 | 39.4 |
+|  | medium | 85 | 144–156 | 102–197 | 37–43 | 46.2 | 14.8 | 5.1 | 33.8 | 40.6 |
+|  | hard | 85 | 144–156 | 133–198 | 43–50 | 53.0 | 22.4 | 8.9 | 38.1 | 43.1 |
+| 12×18 | easy | 86 | 210–220 | 129–224 | 28–40 | 34.9 | 16.0 | 5.1 | 58.0 | 59.8 |
+|  | medium | 85 | 210–220 | 142–274 | 40–47 | 66.1 | 17.2 | 6.1 | 44.2 | 59.6 |
+|  | hard | 85 | 210–220 | 190–276 | 47–55 | 66.4 | 31.1 | 12.5 | 57.0 | 64.2 |
+| 16×24 | easy | 86 | 350–399 | 191–378 | 30–48 | 53.2 | 21.6 | 7.2 | 96.2 | 105.7 |
+|  | medium | 85 | 350–399 | 230–465 | 48–55 | 90.5 | 26.0 | 8.9 | 79.4 | 108.2 |
+|  | hard | 85 | 350–399 | 300–472 | 55–62 | 118.4 | 44.1 | 18.6 | 88.8 | 125.5 |
+| 20×30 | easy | 86 | 576–600 | 263–519 | 34–54 | 69.2 | 29.4 | 9.7 | 154.0 | 149.7 |
+|  | medium | 85 | 576–600 | 345–729 | 54–61 | 153.7 | 30.3 | 11.5 | 100.7 | 173.4 |
+|  | hard | 85 | 576–600 | 463–730 | 61–67 | 163.8 | 55.9 | 23.4 | 133.9 | 201.5 |
 
 A size has about as many cells in every shape (a hexagon or triangle maze has smaller cells, so the same number of them fills the same box with bigger cells), and the squares are the whole numbers 6×9, 8×12, 10×15, 12×18, 16×24 and 20×30. In a 342-px box, 6, 8, 10 and 12 across are cells of 57, 43, 34 and 28 px; 16 and 20 across are 21 and 17 px and want zoom on a phone, which is what the touch design is for. Every level has the floor of the end of the easy third from its first place (the smallest has 45 cells, so it can be asked). Shapes are balanced through every third; the ways to play are balanced too, except the hard third of the largest size, where the keys' detours put most of the high efforts.
 
@@ -300,6 +345,7 @@ One thing found and not explained: **WebKit on Linux** (software painting, Playw
 node scripts/meikyuu-levels.ts       # the square lists, from the 1.0.0 list (about two minutes)
 node scripts/meikyuu-tall.ts         # the tall lists (about a minute)
 node --experimental-strip-types scripts/meikyuu-colossal.ts   # the colossal lists (about six minutes)
+pnpm levels:rescore                  # last: score every level again and put every list in the order of its score (ten seconds)
 node scripts/levels-facts.ts --capacity > facts.md    # the tables (about two minutes more)
 node scripts/levels-trees.ts         # spanning trees
 node scripts/phone-fit.mjs           # the phone table

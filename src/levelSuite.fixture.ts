@@ -11,7 +11,7 @@ import { TALL_RATIO } from "./tall.ts";
 
 /**
  * What every maze level must be, checked for the levels `from` to `to` (from 1): its recipe is its code, it builds, it is a perfect
- * maze of the cells the table says, it measures the effort and the score the table says, it is not too easy, and a line drawn along its
+ * maze of the cells the table says, it measures the effort and the score the table says, it is not too easy (`isTooEasy`'s least, whatever its place: since 3.0.0 a list is in the order of the score, not built up to a floor), and a line drawn along its
  * way (by the game's own rules, a cell at a time, picking up its keys) solves it. The lists are split across several test files so that
  * they run side by side.
  */
@@ -27,7 +27,7 @@ export function checkMazeLevels(from: number, to: number, list: "square" | "tall
       expect(measureMaze(maze).effort, where).toBe(level.effort);
       const difficulty = difficultyOf(maze);
       expect(difficulty.score, where).toBe(level.score);
-      expect(isTooEasy(difficulty, level.inSize), `${where} is too easy for its place`).toBe(false);
+      expect(isTooEasy(difficulty), `${where} is too easy`).toBe(false);
       expect(difficulty.straight, `${where}: the straight guess solves it`).toBe(false);
       const game = playSolution(newMazeGame(maze));
       expect(game.solved, where).toBe(true);

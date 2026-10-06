@@ -19,6 +19,9 @@
  * everybody plays, and this is how it was made, kept so it can be made again. Nothing here runs in a browser. A level once published keeps its
  * number: change this and the numbers move, so a published list is only ever added to at the end (a new file, a new version), never
  * rewritten, except by a release that says so (CHANGELOG.md, 2.0.0).
+ *
+ * Since 3.0.0 the lists are in the order of the score that counts how much of the map the answer covers: run `pnpm levels:rescore` (scripts/meikyuu-rescore.ts)
+ * after this, which scores every level again and puts each list in that order. This writes each list in the order it was chosen in.
  */
 import { writeFileSync } from "node:fs";
 

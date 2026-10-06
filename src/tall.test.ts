@@ -52,10 +52,10 @@ describe("tall mazes", () => {
     expect(tallLevelsOfSize(7)).toEqual([]);
   });
 
-  it("climb inside every size by the effort, never easier to draw than the one before, and the score rises with it", () => {
+  it("climb inside every size by the score, never scoring under the one before, and the score rises by thirds", () => {
     for (const { size } of MEIKYUU_TALL_SIZES) {
       const levels = tallLevelsOfSize(size);
-      for (let i = 1; i < levels.length; i += 1) expect(levels[i]!.effort, `size ${size} level ${i + 1}`).toBeGreaterThanOrEqual(levels[i - 1]!.effort);
+      for (let i = 1; i < levels.length; i += 1) expect(levels[i]!.score, `size ${size} level ${i + 1}`).toBeGreaterThanOrEqual(levels[i - 1]!.score);
       const mean = (from: number, to: number): number => levels.slice(from, to).reduce((a, level) => a + level.score, 0) / (to - from);
       expect(mean(0, 86), `size ${size}`).toBeLessThan(mean(86, 171));
       expect(mean(86, 171), `size ${size}`).toBeLessThan(mean(171, 256));

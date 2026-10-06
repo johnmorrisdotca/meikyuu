@@ -162,10 +162,11 @@ test.describe("the solids", () => {
     const q1 = after.q;
     await page.locator(`${at("solid-board")} [data-action="turn-right"]`).click();
     await expect.poll(() => call(page, "return s.view().q;")).not.toEqual(q1);
-    // Face me brings the start to face the viewer.
+    // Face me brings the start to face the viewer: squarely when the start is in the middle of a side, and, where it is at an edge or a corner, to face the side it is on
+    // and its neighbours' together (45 degrees, 0.707, at an edge of a cube; 0.577 at a corner), so that the line's end is seen with what is round it.
     const start = await call(page, "return s.maze().start;");
     await page.locator(`${at("solid-board")} [data-action="face-me"]`).click();
-    await expect.poll(() => call(page, "return s.place(argument).facing;", start)).toBeGreaterThan(0.999);
+    await expect.poll(() => call(page, "return s.place(argument).facing;", start)).toBeGreaterThan(0.57);
   });
 
   test("a point of the picture is on the cell the picture shows there, at any turn", async ({ page }) => {
