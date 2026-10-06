@@ -76,21 +76,3 @@ The Release workflow (`.github/workflows/release.yml`) checks and builds the
 package, attaches the tarball to a GitHub release and publishes it to npm by
 trusted publishing, with provenance and no token. A version already on npm is
 not published again.
-
-## Particular to Meikyuu
-
-Bug reports and ideas go in the [issues](https://github.com/johnmorrisdotca/meikyuu/issues).
-
-### Commands and rules
-
-```sh
-pnpm check          # lint, types and tests: every maze level rebuilt, proved perfect and solved again
-pnpm test:package   # pack it as npm does, install it in an empty project, import every entry
-pnpm test:demo      # build the demo and play it in a real browser, at a phone's width and a desk's
-pnpm docs:make      # rewrite docs/strings-ja.md after changing a word of the board
-```
-
-A change to a generator, to the seeded stream or to the measure changes mazes, so it fails the level tests: a level published
-keeps its number, and a recipe must rebuild the same maze for ever. Levels are only ever added to the end of a list (a new
-version), made by `scripts/meikyuu-levels.ts` and `scripts/meikyuu-tall.ts`, never edited by hand. The one exception is a release
-that says so in the changelog and keeps the way from the old numbers to the new (`docs/LEVELS.md`, 2.0.0). A new shape or algorithm is welcome as an addition, with a test that its mazes are perfect.
