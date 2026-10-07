@@ -830,7 +830,7 @@ Please follow the [code of conduct](./CODE_OF_CONDUCT.md). A recipe that makes t
 
 See [CHANGELOG.md](./CHANGELOG.md).
 
-The latest release is 3.1.0: 18 solids (a d3 to a d30, a box, a cross, a ring, a torus, a star, a heart), five sizes to the colossal, 5,760 levels.
+The latest release is 3.1.1: 18 solids (a d3 to a d30, a box, a cross, a ring, a torus, a star, a heart), five sizes to the colossal, 5,760 levels, zoomed to six.
 
 ## Licence
 

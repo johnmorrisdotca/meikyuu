@@ -6,6 +6,12 @@ All notable changes to this project are written here. The format follows
 
 ## [Unreleased]
 
+## [3.1.1] - 2026-10-06
+
+### Fixed
+
+- A solid zooms in to six times, not three (`SOLID_ZOOM_MOST`). A cell of a colossal solid is about six pixels across with the whole solid in the box, so it takes a zoom of four to be a finger wide, and 3.1.0, where a board stopped at three, could not be played on a phone as it said. The pinch, the wheel, the `+` button and `view({ zoom })` all reach six; a solid that was already played zoomed in is unchanged.
+
 ## [3.1.0] - 2026-10-06
 
 ### Added

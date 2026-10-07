@@ -26,9 +26,9 @@ import { quatAxisAngle, quatBetween, quatMatrix, quatMul, quatNormalize, quatTur
 export const SOLID_EYE = 6;
 /** The share of the box the solid's outline fills at most. */
 export const SOLID_FILL = 0.94;
-/** How far in and out the picture can be zoomed, as a multiple of the fitted size. */
+/** How far in and out the picture can be zoomed, as a multiple of the fitted size: in to six, so that a cell of a colossal solid (about six pixels across when the whole solid is in the box) is a finger wide (about 24) at four and has room beyond. */
 export const SOLID_ZOOM_LEAST = 0.6;
-export const SOLID_ZOOM_MOST = 3;
+export const SOLID_ZOOM_MOST = 6;
 
 /** The least a globe's cell faces the viewer to be drawn, and to be touched. */
 const ROUND_LIMB = 0.2;

@@ -422,6 +422,8 @@ test.describe("the solids", () => {
     for (const [kind, size, level] of [["cube", "colossal", 40], ["icosahedron", "colossal", 40], ["dodecahedron", "colossal", 40], ["torus", "colossal", 40], ["heart", "colossal", 40], ["cross", "colossal", 40]]) {
       await openSolid(page, kind, size, level);
       await call(page, "s.view({ zoom: 4 });");
+      // Zoomed in four times, which the board allows (to six): a colossal cell is a finger wide at four.
+      expect(await call(page, "return s.view().zoom;"), kind).toBe(4);
       await client.send("Emulation.setCPUThrottlingRate", { rate: 4 });
       const result = await boxOf(page).evaluate(async (box) => {
         const rect = box.getBoundingClientRect();
