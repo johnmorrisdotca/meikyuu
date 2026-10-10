@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><meta name="color-scheme" content="light dark"><title>Meikyuu · puzzle</title>
+<style>html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden}body{display:flex;align-items:center;justify-content:center;padding:8px;box-sizing:border-box}</style></head><body><script type="module">
+import "../dist/element-define.js";
+import { MEIKYUU_KINDS, levelCount } from "../dist/levels.js";
+import { MEIKYUU_BOARD_NAMES, MEIKYUU_TRAIL_NAMES } from "../dist/boards.js";
+import { puzzleOf } from "../dist/mount.js";
+import { embedDay } from "../dist/embed-day.js";
+const query=new URLSearchParams(location.search.length>1?location.search:location.hash.slice(1));const board=document.createElement("meikyuu-board");
+const kind=MEIKYUU_KINDS.includes(query.get("kind"))?query.get("kind"):"maze";board.setAttribute("kind",kind);
+const level=Number(query.get("level"));board.setAttribute("level",String(Number.isInteger(level)&&level>=1&&level<=levelCount(kind)?level:1));
+board.setAttribute("size",["small","medium","large"].includes(query.get("size"))?query.get("size"):"medium");
+try{if(embedDay(query.get("daily"))!==null)board.setAttribute("daily",query.get("daily"));}catch{}
+for(const[name,values]of Object.entries({theme:["auto","light","dark"],lang:["en","ja"],board:MEIKYUU_BOARD_NAMES,trail:MEIKYUU_TRAIL_NAMES,orientation:["auto","portrait","landscape"],fit:["both","width","height"]}))if(values.includes(query.get(name)))board.setAttribute(name,query.get(name));
+for(const name of["tap","hints","banner","sound","controls","zoom","pan","edge-pan","turn-button","stones"]){const value=query.get(name)?.trim().toLowerCase();if(value!==undefined&&["","on","true","1","off","false","no","0"].includes(value))board.setAttribute(name,value);}
+for(const[name,min,max]of[["width",200,2000],["gutter",0,100],["reserve",0,500],["stone-limit",0,1000],["stone-reach",1,2]]){const value=Number(query.get(name));if(query.has(name)&&Number.isFinite(value)&&value>=min&&value<=max)board.setAttribute(name,String(value));}
+if(query.get("stone-limit")==="none")board.setAttribute("stone-limit","none");
+const ratio=query.get("ratio");if(["square","maze"].includes(ratio))board.setAttribute("ratio",ratio);else if(/^(?:\d+(?:\.\d+)?|\d+\/\d+)$/.test(ratio??"")){const[a,b="1"]=ratio.split("/");const value=Number(a)/Number(b);if(Number.isFinite(value)&&value>=.5&&value<=2)board.setAttribute("ratio",ratio);}
+const recipe=query.get("recipe");if(recipe&&recipe.length<=1000&&puzzleOf({kind,recipe})!==null)board.setAttribute("recipe",recipe);
+if(query.has("label")&&query.get("label").length<=200)board.setAttribute("label",query.get("label"));if(query.get("lang")==="ja")document.documentElement.lang="ja";
+for(const type of["meikyuu-load","meikyuu-error","meikyuu-move","meikyuu-solve","meikyuu-key","meikyuu-unlock","meikyuu-bump","meikyuu-lose","meikyuu-stones"])board.addEventListener(type,event=>{if(parent!==window)parent.postMessage({type:event.type,detail:JSON.parse(JSON.stringify(event.detail))},"*");});document.body.append(board);
+</script></body></html>

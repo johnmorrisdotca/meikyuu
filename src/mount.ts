@@ -350,7 +350,7 @@ export function mountMeikyuu(host: HTMLElement, options: MeikyuuMountOptions = {
   const tell = (name: string, callback?: (detail: MeikyuuEventDetail) => void): void => {
     const info = detail();
     callback?.(info);
-    host.dispatchEvent(new CustomEvent(name, { detail: info, bubbles: true }));
+    host.dispatchEvent(new CustomEvent(name, { detail: JSON.parse(JSON.stringify(info)), bubbles: true, composed: true }));
   };
   const surfaceNow = (): MazeSurface | ArrowSurface | null => (viewing === "maze" ? mazeSurface : arrowSurface);
 

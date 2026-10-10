@@ -53,6 +53,7 @@ src/
 ├── playStyle.ts      the style of a playable board: its box, buttons, words and tabs
 ├── banner.ts         the message over a finished board and how it is put away: a click, its close button, Escape
 ├── sound.ts          the sounds, made in the browser
+├── embed-day.ts       shared UTC date parsing and deterministic date seeds
 ├── element.ts        the "/element" entry: the <meikyuu-board> class
 ├── element-define.ts the "/element/define" entry: defines the tag on the page
 ├── version.ts        the package's version
