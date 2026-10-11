@@ -9,8 +9,6 @@ All notable changes to this project are written here. The format follows
 - Add a shared embed builder and validated, storage-free iframe for fixed and UTC daily maze, arrow and mixed levels.
 - Reflect display and play attributes without replacing methods; preserve host drawing options and emit composed, JSON-safe native events.
 
-
-
 ### Added
 
 - Share a package-independent embed builder for option controls, preview adapters, code tabs and shareable links.
@@ -18,6 +16,8 @@ All notable changes to this project are written here. The format follows
 ### Changed
 
 - Group the package family by kind, alphabetize each group, and include the geography packages and REST in Pieces in the shared footer and README.
+
+- Update the shared family description for addresses in all seven supported countries, including France and Germany.
 
 ## [3.1.1] - 2026-10-06
 

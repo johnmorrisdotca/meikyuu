@@ -238,7 +238,17 @@ function create<K extends keyof HTMLElementTagNameMap>(document: Document, tag: 
 /** How near the way a key press points a neighbour has to be, as a cosine, to be the one stepped to. */
 const KEY_REACH = 0.5;
 
-/** Draw a puzzle into `host` and play it. Returns the handle that drives it, or null for a level or recipe that is none. */
+/** Draw a puzzle into `host` and play it. Returns the handle that drives it, or null for a level or recipe that is none.
+ * @param host - The HTMLElement that owns the native interface.
+ * @param options - Native settings and callbacks for this mounted interface.
+ * @returns The native mounted handle, or null for unsupported settings.
+ * @example
+ * ```ts
+ * import { mountMeikyuu } from "@johnmorrisdotca/meikyuu/play";
+ * const show = (host: HTMLElement, options: Parameters<typeof mountMeikyuu>[1]) => mountMeikyuu(host, options);
+ * console.log(typeof show); // function
+ * ```
+ */
 export function mountMeikyuu(host: HTMLElement, options: MeikyuuMountOptions = {}): MeikyuuMount | null {
   const first = puzzleOf(options);
   if (first === null) return null;

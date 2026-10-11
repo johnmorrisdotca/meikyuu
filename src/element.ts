@@ -53,11 +53,31 @@ function ratioOf(value: string | null): "square" | "maze" | number | undefined {
 const numberOf = (value: string | null): number | undefined => (value === null || value.trim() === "" || !Number.isFinite(Number(value)) ? undefined : Number(value));
 const oneOf = <T extends string>(value: string | null, allowed: readonly T[]): T | undefined => (allowed.includes(value as T) ? (value as T) : undefined);
 
-/** The real mounted-board options, checked by TypeScript and the embed builder. */
+/** The real mounted-board options, checked by TypeScript and the embed builder.
+ * @example
+ * ```ts
+ * import { MEIKYUU_EMBED_OPTION_KEYS } from "@johnmorrisdotca/meikyuu/element";
+ * console.log(typeof MEIKYUU_EMBED_OPTION_KEYS); // object
+ * ```
+ */
 export const MEIKYUU_EMBED_OPTION_KEYS = Object.keys({ kind: true, level: true, recipe: true, tap: true, hints: true, banner: true, controls: true, zoom: true, ratio: true, orientation: true, gutter: true, reserve: true, fit: true, edgePan: true, pan: true, turnButton: true, sound: true, stones: true, language: true, board: true, trail: true, wall: true, line: true, onMove: true, onSolve: true, onKey: true, onUnlock: true, onBump: true, onLose: true, onStones: true } satisfies Record<keyof MeikyuuMountOptions, boolean>);
-/** Host callbacks; the same actions emit native events. */
+/** Host callbacks; the same actions emit native events.
+ * @example
+ * ```ts
+ * import type { MeikyuuElementOptions } from "@johnmorrisdotca/meikyuu/element";
+ * const options: MeikyuuElementOptions = {};
+ * console.log(Object.keys(options).length); // 0
+ * ```
+ */
 export type MeikyuuElementOptions = Pick<MeikyuuMountOptions, "onMove" | "onSolve" | "onKey" | "onUnlock" | "onBump" | "onLose" | "onStones" | "wall" | "line" | "board" | "trail" | "recipe">;
 
+/** Native custom element with reflected setup and presentation.
+ * @example
+ * ```ts
+ * import { MeikyuuBoard } from "@johnmorrisdotca/meikyuu/element";
+ * console.log(MeikyuuBoard.observedAttributes.includes("lang")); // true
+ * ```
+ */
 export class MeikyuuBoard extends ElementBase {
   static observedAttributes = ["kind", "level", "recipe", "board", "trail", "tap", "hints", "banner", "sound", "controls", "zoom", "lang", "ratio", "orientation", "gutter", "reserve", "fit", "pan", "edge-pan", "turn-button", "stones", "stone-limit", "stone-reach", "size", "daily", "theme", "width", "label"];
 
@@ -296,7 +316,16 @@ export class MeikyuuBoard extends ElementBase {
 // Keep fit() callable while a framework can assign its attribute.
 const fitMethod = MeikyuuBoard.prototype.fit;
 Object.defineProperty(MeikyuuBoard.prototype, "fit", { configurable: true, get() { return fitMethod; }, set(this: Element, value: unknown) { if (value === null || value === undefined) this.removeAttribute("fit"); else this.setAttribute("fit", String(value)); } });
-/** Register a standard or custom tag without replacing a definition. Safe without a browser. */
+/** Register a standard or custom tag without replacing a definition. Safe without a browser.
+ * @param tag - The custom tag name; omitted to use the package default.
+ * @returns Nothing; existing definitions and server imports remain safe.
+ * @example
+ * ```ts
+ * import { defineBoard } from "@johnmorrisdotca/meikyuu/element";
+ * defineBoard();
+ * console.log(typeof defineBoard); // function
+ * ```
+ */
 export function defineBoard(tag = "meikyuu-board"): void {
   if (typeof customElements === "undefined" || customElements.get(tag) !== undefined) return;
   customElements.define(tag, tag === "meikyuu-board" ? MeikyuuBoard : class extends MeikyuuBoard {});
