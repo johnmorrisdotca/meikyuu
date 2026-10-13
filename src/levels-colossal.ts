@@ -7,8 +7,8 @@ import { TALL_RATIO } from "./tall.ts";
 /**
  * THE COLOSSAL LEVELS: the biggest mazes of the lists, about ten thousand cells, in two lists of 128. The square ones are a hundred cells
  * across or so in every shape and every way to play (9,500 to 12,000 cells); the tall ones are 64 cells across and 96 down for a square one, and
- * hexagons and triangles that fill the same container two to three, for a phone held upright. Each list is in order of the effort its
- * levels measure, so none is easier to draw than the one before, with the score `difficultyOf` gives beside it.
+ * hexagons and triangles that fill the same container two to three, for a phone held upright. Each list is in order of the geometry-aware score
+ * `difficultyOf` gives, with measured effort retained alongside it.
  *
  * A level is a recipe, such as `square:100x100:backtracker:to-goal:48213`, and a recipe is the whole of it: the list is a few kilobytes, and the maze is
  * made from its seed where it is played (about twenty milliseconds in a browser for ten thousand cells), never stored. So nothing here is
@@ -16,6 +16,15 @@ import { TALL_RATIO } from "./tall.ts";
  *
  * It is an entry of its own (`@johnmorrisdotca/meikyuu/levels/colossal`), so a page that plays only the other lists does not carry it.
  * Play one with `mountMeikyuu(host, { recipe: level.code, ratio: level.ratio })`; a square list's `ratio` is `square`.
+ *
+ * @example
+ * ```ts
+ * import type { MeikyuuColossalLevel } from "@johnmorrisdotca/meikyuu/levels/colossal";
+ * import { colossalLevelOf } from "@johnmorrisdotca/meikyuu/levels/colossal";
+ *
+ * const value: MeikyuuColossalLevel = colossalLevelOf(1)!;
+ * console.log(value);
+ * ```
  */
 export type MeikyuuColossalLevel = {
   readonly kind: "maze";
@@ -48,23 +57,67 @@ function listOf(rows: readonly (readonly [string, number, number, number])[], li
   });
 }
 
-/** The 128 square colossal levels. */
+/** The 128 square colossal levels.
+ *
+ * @example
+ * ```ts
+ * import { MEIKYUU_COLOSSAL_LEVELS } from "@johnmorrisdotca/meikyuu/levels/colossal";
+ * console.log(MEIKYUU_COLOSSAL_LEVELS.length);
+ * ```
+ */
 export const MEIKYUU_COLOSSAL_LEVELS: readonly MeikyuuColossalLevel[] = listOf(MEIKYUU_COLOSSAL_ROWS, "colossal", "square");
 
-/** The 128 tall colossal levels: 64 across and 96 down, two to three. */
+/** The 128 tall colossal levels: 64 across and 96 down, two to three.
+ *
+ * @example
+ * ```ts
+ * import { MEIKYUU_COLOSSAL_TALL_LEVELS } from "@johnmorrisdotca/meikyuu/levels/colossal";
+ * console.log(MEIKYUU_COLOSSAL_TALL_LEVELS.length);
+ * ```
+ */
 export const MEIKYUU_COLOSSAL_TALL_LEVELS: readonly MeikyuuColossalLevel[] = listOf(MEIKYUU_COLOSSAL_TALL_ROWS, "colossal-tall", TALL_RATIO);
 
-/** Square colossal level `n` (from 1), or null when there is none. */
+/** Square colossal level `n` (from 1), or null when there is none.
+ *
+ * @param n - The level number, random bound or surface subdivision specified by the signature.
+ * @returns Square colossal level `n` (from 1), or null when there is none.
+ * @example
+ * ```ts
+ * import { colossalLevelOf } from "@johnmorrisdotca/meikyuu/levels/colossal";
+ *
+ * console.log(colossalLevelOf(1)?.code);
+ * ```
+ */
 export function colossalLevelOf(n: number): MeikyuuColossalLevel | null {
   return Number.isInteger(n) ? MEIKYUU_COLOSSAL_LEVELS[n - 1] ?? null : null;
 }
 
-/** Tall colossal level `n` (from 1), or null when there is none. */
+/** Tall colossal level `n` (from 1), or null when there is none.
+ *
+ * @param n - The level number, random bound or surface subdivision specified by the signature.
+ * @returns Tall colossal level `n` (from 1), or null when there is none.
+ * @example
+ * ```ts
+ * import { colossalTallLevelOf } from "@johnmorrisdotca/meikyuu/levels/colossal";
+ *
+ * console.log(colossalTallLevelOf(1)?.code);
+ * ```
+ */
 export function colossalTallLevelOf(n: number): MeikyuuColossalLevel | null {
   return Number.isInteger(n) ? MEIKYUU_COLOSSAL_TALL_LEVELS[n - 1] ?? null : null;
 }
 
-/** The colossal levels of a list that pass a filter, by shape and way to play, each when given. */
+/** The colossal levels of a list that pass a filter, by shape and way to play, each when given.
+ *
+ * @param filter - Optional native shape, mode, size or collection filters.
+ * @returns The colossal levels of a list that pass a filter, by shape and way to play, each when given.
+ * @example
+ * ```ts
+ * import { findColossalLevels } from "@johnmorrisdotca/meikyuu/levels/colossal";
+ *
+ * console.log(findColossalLevels({shape:"square"}).length);
+ * ```
+ */
 export function findColossalLevels(filter: { list?: MeikyuuColossalLevel["list"]; shape?: MazeRecipe["shape"]; mode?: MazeRecipe["mode"] } = {}): MeikyuuColossalLevel[] {
   const every = filter.list === "colossal" ? MEIKYUU_COLOSSAL_LEVELS : filter.list === "colossal-tall" ? MEIKYUU_COLOSSAL_TALL_LEVELS : [...MEIKYUU_COLOSSAL_LEVELS, ...MEIKYUU_COLOSSAL_TALL_LEVELS];
   return every.filter((level) => (filter.shape === undefined || level.recipe.shape === filter.shape) && (filter.mode === undefined || level.recipe.mode === filter.mode));

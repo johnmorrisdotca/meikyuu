@@ -4,10 +4,38 @@
  * recordings, so there is nothing to fetch and nothing to credit. Nothing is made until the first sound is
  * asked for, a browser with no audio, or one that has not been touched yet, is silent without an error, and
  * a sound that comes too soon after the last of its kind is dropped.
+ *
+ * @example
+ * ```ts
+ * import { MEIKYUU_SOUND_KINDS } from "@johnmorrisdotca/meikyuu/play";
+ * console.log(MEIKYUU_SOUND_KINDS);
+ * ```
  */
 export const MEIKYUU_SOUND_KINDS = ["step", "back", "key", "bump", "fly", "unlock", "solve", "lose", "tap", "stone"] as const;
+/** One native synthesized board sound.
+ *
+ * @example
+ * ```ts
+ * import type { MeikyuuSoundKind } from "@johnmorrisdotca/meikyuu/play";
+ *
+ * const value: MeikyuuSoundKind = "step";
+ * console.log(value);
+ * ```
+ */
 export type MeikyuuSoundKind = (typeof MEIKYUU_SOUND_KINDS)[number];
 
+/** Native synthesized sound playback and cleanup methods.
+ *
+ * @example
+ * ```ts no-run
+ * import type { MeikyuuSounds } from "@johnmorrisdotca/meikyuu/play";
+ * import { createMeikyuuSounds } from "@johnmorrisdotca/meikyuu/play";
+ *
+ * const sounds: MeikyuuSounds = createMeikyuuSounds();
+ * console.log(typeof sounds.play);
+ * sounds.destroy();
+ * ```
+ */
 export type MeikyuuSounds = {
   play(kind: MeikyuuSoundKind): void;
   destroy(): void;
@@ -27,6 +55,18 @@ const SOUNDS: Record<MeikyuuSoundKind, { notes: number[]; each: number; wave: Os
   stone: { notes: [330, 247], each: 0.05, wave: "sine", gain: 0.07, gap: 0.08 },
 };
 
+/** Create the optional synthesized native sound player; sound playback is requested by host actions.
+ *
+ * @returns Create the optional synthesized native sound player; sound playback is requested by host actions.
+ * @example
+ * ```ts no-run
+ * import { createMeikyuuSounds } from "@johnmorrisdotca/meikyuu/play";
+ *
+ * const sounds = createMeikyuuSounds();
+ * console.log(typeof sounds.play);
+ * sounds.destroy();
+ * ```
+ */
 export function createMeikyuuSounds(): MeikyuuSounds {
   let context: AudioContext | null = null;
   const lastAt = new Map<MeikyuuSoundKind, number>();

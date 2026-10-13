@@ -19,11 +19,38 @@ import { distanceSquared, dot, length, sub, type Vec3 } from "./vec.ts";
  * A recipe is `cube:6:prim:48213`: the solid, the cut, the algorithm and the seed. It rebuilds the same maze in every browser and every Node.
  */
 
-/** The algorithms that make a maze over a solid: all but Eller's, which needs rows. */
+/** The algorithms that make a maze over a solid: all but Eller's, which needs rows.
+ *
+ * @example
+ * ```ts
+ * import { SOLID_ALGORITHMS } from "@johnmorrisdotca/meikyuu/3d";
+ * console.log(SOLID_ALGORITHMS);
+ * ```
+ */
 export const SOLID_ALGORITHMS = MEIKYUU_ALGORITHMS.filter((algorithm): algorithm is Exclude<MeikyuuAlgorithm, "eller"> => algorithm !== "eller");
+/** A maze-carving algorithm supported on a surface graph.
+ *
+ * @example
+ * ```ts
+ * import type { SolidAlgorithm } from "@johnmorrisdotca/meikyuu/3d";
+ *
+ * const value: SolidAlgorithm = "backtracker";
+ * console.log(value);
+ * ```
+ */
 export type SolidAlgorithm = (typeof SOLID_ALGORITHMS)[number];
 
-/** Everything that makes a maze over a solid. */
+/** Everything that makes a maze over a solid.
+ *
+ * @example
+ * ```ts
+ * import type { SolidRecipe } from "@johnmorrisdotca/meikyuu/3d";
+ *
+ * const solidRecipe: SolidRecipe = {kind:"cube",n:2,algorithm:"backtracker",seed:42};
+ * const value: SolidRecipe = solidRecipe;
+ * console.log(value);
+ * ```
+ */
 export type SolidRecipe = {
   readonly kind: SolidKind;
   /** The cut: cells along an edge of a face, or the frequency of the globe (see `SolidGrid`). */
@@ -32,7 +59,19 @@ export type SolidRecipe = {
   readonly seed: number;
 };
 
-/** A maze over a solid: what a flat maze has that is not flat. It is a `MazeCore`, so the game, the stones, the steps and the measure play it as they play any maze. */
+/** A maze over a solid: what a flat maze has that is not flat. It is a `MazeCore`, so the game, the stones, the steps and the measure play it as they play any maze.
+ *
+ * @example
+ * ```ts
+ * import type { SolidMaze, SolidRecipe } from "@johnmorrisdotca/meikyuu/3d";
+ * import { buildSolidMaze } from "@johnmorrisdotca/meikyuu/3d";
+ *
+ * const solidRecipe: SolidRecipe = {kind:"cube",n:2,algorithm:"backtracker",seed:42};
+ * const solid = buildSolidMaze(solidRecipe);
+ * const value: SolidMaze = solid;
+ * console.log(value);
+ * ```
+ */
 export type SolidMaze = MazeCore & {
   readonly recipe: SolidRecipe;
   readonly grid: SolidGrid;
@@ -43,12 +82,36 @@ export type SolidMaze = MazeCore & {
   readonly keys: readonly number[];
 };
 
-/** A recipe as one short word, such as `cube:6:prim:48213`, and the other way (`parseSolidRecipe`). */
+/** A recipe as one short word, such as `cube:6:prim:48213`, and the other way (`parseSolidRecipe`).
+ *
+ * @param recipe - The complete reproducible native recipe.
+ * @returns A recipe as one short word, such as `cube:6:prim:48213`, and the other way (`parseSolidRecipe`).
+ * @example
+ * ```ts
+ * import type { SolidRecipe } from "@johnmorrisdotca/meikyuu/3d";
+ * import { solidRecipeCode } from "@johnmorrisdotca/meikyuu/3d";
+ *
+ * const solidRecipe: SolidRecipe = {kind:"cube",n:2,algorithm:"backtracker",seed:42};
+ * console.log(solidRecipeCode(solidRecipe));
+ * ```
+ */
 export function solidRecipeCode(recipe: SolidRecipe): string {
   return `${recipe.kind}:${recipe.n}:${recipe.algorithm}:${recipe.seed}`;
 }
 
-/** A recipe from its code, or null when it is not one, or names a solid of more than `MEIKYUU_MOST_SOLID_CELLS` cells. */
+/** A recipe from its code, or null when it is not one, or names a solid of more than `MEIKYUU_MOST_SOLID_CELLS` cells.
+ *
+ * @param code - The native encoded recipe or saved run.
+ * @returns A recipe from its code, or null when it is not one, or names a solid of more than `MEIKYUU_MOST_SOLID_CELLS` cells.
+ * @example
+ * ```ts
+ * import type { SolidRecipe } from "@johnmorrisdotca/meikyuu/3d";
+ * import { parseSolidRecipe, solidRecipeCode } from "@johnmorrisdotca/meikyuu/3d";
+ *
+ * const solidRecipe: SolidRecipe = {kind:"cube",n:2,algorithm:"backtracker",seed:42};
+ * console.log(parseSolidRecipe(solidRecipeCode(solidRecipe)));
+ * ```
+ */
 export function parseSolidRecipe(code: string): SolidRecipe | null {
   const parts = code.split(":");
   if (parts.length !== 4) return null;
@@ -64,7 +127,18 @@ export function parseSolidRecipe(code: string): SolidRecipe | null {
 
 const GRIDS = new Map<string, SolidGrid>();
 
-/** The grid of a solid cut `n` ways, kept: a grid is never changed, and a script that makes thousands of mazes of one size builds it once. */
+/** The grid of a solid cut `n` ways, kept: a grid is never changed, and a script that makes thousands of mazes of one size builds it once.
+ *
+ * @param kind - The native puzzle family or surface shape specified by this signature.
+ * @param n - The level number, random bound or surface subdivision specified by the signature.
+ * @returns The grid of a solid cut `n` ways, kept: a grid is never changed, and a script that makes thousands of mazes of one size builds it once.
+ * @example
+ * ```ts
+ * import { cachedSolidGrid } from "@johnmorrisdotca/meikyuu/3d";
+ *
+ * console.log(cachedSolidGrid("cube",2).cells);
+ * ```
+ */
 export function cachedSolidGrid(kind: SolidKind, n: number): SolidGrid {
   const key = `${kind}:${n}`;
   let grid = GRIDS.get(key);
@@ -81,7 +155,24 @@ const FAR_SHARE = 0.3;
 /** How deep along the passages, as a share of the deepest of those, the goal is. */
 const DEEP_SHARE = 0.7;
 
-/** Make the maze a recipe names. */
+/** Make the maze a recipe names.
+ *
+ * @param recipe - The complete reproducible native recipe.
+ * @returns Make the maze a recipe names.
+ * @example
+ * ```ts
+ * import type { MazeRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { buildMaze } from "@johnmorrisdotca/meikyuu";
+ * import type { SolidRecipe } from "@johnmorrisdotca/meikyuu/3d";
+ * import { buildSolidMaze } from "@johnmorrisdotca/meikyuu/3d";
+ *
+ * const recipe: MazeRecipe = {shape:"square",w:5,h:5,algorithm:"backtracker",mode:"to-goal",seed:42};
+ * const maze = buildMaze(recipe);
+ * const grid = maze.grid;
+ * const solidRecipe: SolidRecipe = {kind:"cube",n:2,algorithm:"backtracker",seed:42};
+ * console.log(buildSolidMaze(solidRecipe).grid.cells);
+ * ```
+ */
 export function buildSolidMaze(recipe: SolidRecipe): SolidMaze {
   const grid = cachedSolidGrid(recipe.kind, recipe.n);
   const random = seededRandom(recipe.seed);
@@ -101,7 +192,20 @@ export function buildSolidMaze(recipe: SolidRecipe): SolidMaze {
   return { recipe, grid, links, start, goal, keys: [] };
 }
 
-/** How a maze over a solid lies in space, for the measure: squared distance through space to the goal, and the bend of the line in three dimensions. */
+/** How a maze over a solid lies in space, for the measure: squared distance through space to the goal, and the bend of the line in three dimensions.
+ *
+ * @param maze - The valid flat/surface maze or required maze-core fields.
+ * @returns How a maze over a solid lies in space, for the measure: squared distance through space to the goal, and the bend of the line in three dimensions.
+ * @example
+ * ```ts
+ * import type { SolidRecipe } from "@johnmorrisdotca/meikyuu/3d";
+ * import { buildSolidMaze, solidGeometry } from "@johnmorrisdotca/meikyuu/3d";
+ *
+ * const solidRecipe: SolidRecipe = {kind:"cube",n:2,algorithm:"backtracker",seed:42};
+ * const solid = buildSolidMaze(solidRecipe);
+ * console.log(solidGeometry(solid).distanceToGoal(solid.start));
+ * ```
+ */
 export function solidGeometry(maze: SolidMaze): MazeGeometry {
   const { centres } = maze.grid;
   const goal = centres[maze.goal]!;
@@ -117,17 +221,57 @@ export function solidGeometry(maze: SolidMaze): MazeGeometry {
   };
 }
 
-/** How hard a maze over a solid is to play, from 0 to 100, on the very scale flat mazes are scored on (`difficultyOf`). */
+/** How hard a maze over a solid is to play, from 0 to 100, on the very scale flat mazes are scored on (`difficultyOf`).
+ *
+ * @param maze - The valid flat/surface maze or required maze-core fields.
+ * @returns How hard a maze over a solid is to play, from 0 to 100, on the very scale flat mazes are scored on (`difficultyOf`).
+ * @example
+ * ```ts
+ * import type { SolidRecipe } from "@johnmorrisdotca/meikyuu/3d";
+ * import { buildSolidMaze, solidDifficultyOf } from "@johnmorrisdotca/meikyuu/3d";
+ *
+ * const solidRecipe: SolidRecipe = {kind:"cube",n:2,algorithm:"backtracker",seed:42};
+ * const solid = buildSolidMaze(solidRecipe);
+ * console.log(solidDifficultyOf(solid).score);
+ * ```
+ */
 export function solidDifficultyOf(maze: SolidMaze): MazeDifficulty {
   return difficultyOfGraph(maze, solidGeometry(maze));
 }
 
-/** The one way from the start to the goal, cell by cell. */
+/** The one way from the start to the goal, cell by cell.
+ *
+ * @param maze - The valid flat/surface maze or required maze-core fields.
+ * @returns The one way from the start to the goal, cell by cell.
+ * @example
+ * ```ts
+ * import type { SolidRecipe } from "@johnmorrisdotca/meikyuu/3d";
+ * import { buildSolidMaze, solidSolutionOf } from "@johnmorrisdotca/meikyuu/3d";
+ *
+ * const solidRecipe: SolidRecipe = {kind:"cube",n:2,algorithm:"backtracker",seed:42};
+ * const solid = buildSolidMaze(solidRecipe);
+ * console.log(solidSolutionOf(solid));
+ * ```
+ */
 export function solidSolutionOf(maze: SolidMaze): number[] {
   return solutionOf(maze);
 }
 
-/** Whether a list of cells is the answer: it starts at the start, ends at the goal, steps from each cell to one joined to it by a passage, and never visits a cell twice. It takes time in proportion to the line, never to the solid. */
+/** Whether a list of cells is the answer: it starts at the start, ends at the goal, steps from each cell to one joined to it by a passage, and never visits a cell twice. It takes time in proportion to the line, never to the solid.
+ *
+ * @param maze - The valid flat/surface maze or required maze-core fields.
+ * @param cells - A cell-index path or total count specified by this signature.
+ * @returns Whether a list of cells is the answer: it starts at the start, ends at the goal, steps from each cell to one joined to it by a passage, and never visits a cell twice. It takes time in proportion to the line, never to the solid.
+ * @example
+ * ```ts
+ * import type { SolidRecipe } from "@johnmorrisdotca/meikyuu/3d";
+ * import { buildSolidMaze, checkSolidAnswer, solidSolutionOf } from "@johnmorrisdotca/meikyuu/3d";
+ *
+ * const solidRecipe: SolidRecipe = {kind:"cube",n:2,algorithm:"backtracker",seed:42};
+ * const solid = buildSolidMaze(solidRecipe);
+ * console.log(checkSolidAnswer(solid,solidSolutionOf(solid)));
+ * ```
+ */
 export function checkSolidAnswer(maze: SolidMaze, cells: readonly number[]): boolean {
   if (cells.length < 2 || cells[0] !== maze.start || cells[cells.length - 1] !== maze.goal) return false;
   const seen = new Uint8Array(maze.grid.cells);
@@ -140,7 +284,20 @@ export function checkSolidAnswer(maze: SolidMaze, cells: readonly number[]): boo
   return true;
 }
 
-/** The answer as steps (the format a kept run uses, `lineToSteps`), for a maze: its whole solution. */
+/** The answer as steps (the format a kept run uses, `lineToSteps`), for a maze: its whole solution.
+ *
+ * @param maze - The valid flat/surface maze or required maze-core fields.
+ * @returns The answer as steps (the format a kept run uses, `lineToSteps`), for a maze: its whole solution.
+ * @example
+ * ```ts
+ * import type { SolidRecipe } from "@johnmorrisdotca/meikyuu/3d";
+ * import { buildSolidMaze, solidAnswerSteps } from "@johnmorrisdotca/meikyuu/3d";
+ *
+ * const solidRecipe: SolidRecipe = {kind:"cube",n:2,algorithm:"backtracker",seed:42};
+ * const solid = buildSolidMaze(solidRecipe);
+ * console.log(solidAnswerSteps(solid));
+ * ```
+ */
 export function solidAnswerSteps(maze: SolidMaze): string {
   return lineToSteps(maze, solidSolutionOf(maze)) ?? "";
 }

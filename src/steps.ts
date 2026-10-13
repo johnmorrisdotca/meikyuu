@@ -9,7 +9,22 @@ import type { MazeCore } from "./maze.ts";
  */
 const STEP = /^[0-9a-z]*$/;
 
-/** A line, cell by cell from the start, as its steps. Null if it is not a run of neighbours. */
+/** A line, cell by cell from the start, as its steps. Null if it is not a run of neighbours.
+ *
+ * @param maze - The valid flat/surface maze or required maze-core fields.
+ * @param cells - A cell-index path or total count specified by this signature.
+ * @returns A line, cell by cell from the start, as its steps. null if it is not a run of neighbours.
+ * @example
+ * ```ts
+ * import type { MazeRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { buildMaze, lineToSteps, solutionOf } from "@johnmorrisdotca/meikyuu";
+ *
+ * const recipe: MazeRecipe = {shape:"square",w:5,h:5,algorithm:"backtracker",mode:"to-goal",seed:42};
+ * const maze = buildMaze(recipe);
+ * const route = solutionOf(maze);
+ * console.log(lineToSteps(maze,route));
+ * ```
+ */
 export function lineToSteps(maze: MazeCore, cells: readonly number[]): string | null {
   let out = "";
   for (let at = 1; at < cells.length; at += 1) {
@@ -20,7 +35,22 @@ export function lineToSteps(maze: MazeCore, cells: readonly number[]): string | 
   return out;
 }
 
-/** The cells steps walk from the maze's start, or null if any step goes where a line cannot: into a wall, off the maze, or back onto the line. */
+/** The cells steps walk from the maze's start, or null if any step goes where a line cannot: into a wall, off the maze, or back onto the line.
+ *
+ * @param maze - The valid flat/surface maze or required maze-core fields.
+ * @param steps - The encoded native directional steps.
+ * @returns The cells steps walk from the maze's start, or null if any step goes where a line cannot: into a wall, off the maze, or back onto the line.
+ * @example
+ * ```ts
+ * import type { MazeRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { buildMaze, lineToSteps, solutionOf, stepsToLine } from "@johnmorrisdotca/meikyuu";
+ *
+ * const recipe: MazeRecipe = {shape:"square",w:5,h:5,algorithm:"backtracker",mode:"to-goal",seed:42};
+ * const maze = buildMaze(recipe);
+ * const route = solutionOf(maze);
+ * console.log(stepsToLine(maze,lineToSteps(maze,route)!));
+ * ```
+ */
 export function stepsToLine(maze: MazeCore, steps: string): number[] | null {
   if (!STEP.test(steps)) return null;
   const cells = [maze.start];

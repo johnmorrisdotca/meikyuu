@@ -5,11 +5,34 @@ import { SOLID_KINDS, solidCells, type SolidKind } from "./solidGrid.ts";
  * it is (under a hundred, about three hundred, and six to seven hundred), and so that the one kind of solid is not the easy one: a cube cut
  * 4, 7 and 10 ways has 96, 294 and 600 cells, a globe at frequency 3, 5 and 8 has 92, 252 and 642, an octahedron cut 3, 6 and 9 has 72, 288 and 648.
  * More than seven hundred cells is not offered: the solid is looked at from outside, one side at a time, and a cell on a phone's screen needs to be a finger wide.
+ *
+ * @example
+ * ```ts
+ * import { SOLID_SIZE_NAMES } from "@johnmorrisdotca/meikyuu/3d";
+ * console.log(SOLID_SIZE_NAMES);
+ * ```
  */
 export const SOLID_SIZE_NAMES = ["small", "medium", "large", "huge", "colossal"] as const;
+/** A named small, medium, large, huge or colossal surface-maze collection.
+ *
+ * @example
+ * ```ts
+ * import type { SolidSize } from "@johnmorrisdotca/meikyuu/3d";
+ *
+ * const value: SolidSize = "small";
+ * console.log(value);
+ * ```
+ */
 export type SolidSize = (typeof SOLID_SIZE_NAMES)[number];
 
-/** How many ways each solid is cut, for each size: small, medium, large, huge and colossal. */
+/** How many ways each solid is cut, for each size: small, medium, large, huge and colossal.
+ *
+ * @example
+ * ```ts
+ * import { SOLID_CUTS } from "@johnmorrisdotca/meikyuu/3d";
+ * console.log(SOLID_CUTS);
+ * ```
+ */
 export const SOLID_CUTS: Record<SolidKind, readonly [number, number, number, number, number]> = {
   cube: [4, 7, 10, 15, 27],
   sphere: [3, 5, 8, 11, 21],
@@ -31,15 +54,44 @@ export const SOLID_CUTS: Record<SolidKind, readonly [number, number, number, num
   heart: [2, 4, 6, 8, 14],
 };
 
-/** How many levels each size of each solid has: eight pages of eight. */
+/** How many levels each size of each solid has: eight pages of eight.
+ *
+ * @example
+ * ```ts
+ * import { MEIKYUU_SOLID_PER_LIST } from "@johnmorrisdotca/meikyuu/3d";
+ * console.log(MEIKYUU_SOLID_PER_LIST);
+ * ```
+ */
 export const MEIKYUU_SOLID_PER_LIST = 64;
 
-/** The cut of a solid at a size. */
+/** The cut of a solid at a size.
+ *
+ * @param kind - The native puzzle family or surface shape specified by this signature.
+ * @param size - The named level size, or numeric tall width specified by this signature.
+ * @returns The cut of a solid at a size.
+ * @example
+ * ```ts
+ * import { solidCutOf } from "@johnmorrisdotca/meikyuu/3d";
+ *
+ * console.log(solidCutOf("cube","small"));
+ * ```
+ */
 export function solidCutOf(kind: SolidKind, size: SolidSize): number {
   return SOLID_CUTS[kind][SOLID_SIZE_NAMES.indexOf(size)]!;
 }
 
-/** How many cells a solid has at a size. */
+/** How many cells a solid has at a size.
+ *
+ * @param kind - The native puzzle family or surface shape specified by this signature.
+ * @param size - The named level size, or numeric tall width specified by this signature.
+ * @returns How many cells a solid has at a size.
+ * @example
+ * ```ts
+ * import { solidCellsOf } from "@johnmorrisdotca/meikyuu/3d";
+ *
+ * console.log(solidCellsOf("cube","small"));
+ * ```
+ */
 export function solidCellsOf(kind: SolidKind, size: SolidSize): number {
   return solidCells(kind, solidCutOf(kind, size));
 }

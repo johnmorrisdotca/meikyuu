@@ -4,6 +4,15 @@ import type { MeikyuuShape } from "./grid.ts";
  * THE OUTLINES cut out of a square raster: a function from a point of the square (both
  * numbers from -1 to 1, y down) to whether that point is inside the shape. A maze takes
  * the cells whose middles are inside, and the biggest piece of them that touch.
+ *
+ * @example
+ * ```ts
+ * import type { Mask } from "@johnmorrisdotca/meikyuu";
+ * import { maskOf } from "@johnmorrisdotca/meikyuu";
+ *
+ * const value: Mask = maskOf("heart");
+ * console.log(value);
+ * ```
  */
 export type Mask = (u: number, v: number) => boolean;
 
@@ -52,7 +61,17 @@ const MASKS: Partial<Record<MeikyuuShape, Mask>> = {
   moon: (u, v) => Math.hypot(u, v) <= 1 && Math.hypot(u - 0.45, v + 0.1) > 0.78,
 };
 
-/** The outline a raster shape is cut with. */
+/** The outline a raster shape is cut with.
+ *
+ * @param shape - The supported native flat-grid geometry or cut-out shape.
+ * @returns The outline a raster shape is cut with.
+ * @example
+ * ```ts
+ * import { maskOf } from "@johnmorrisdotca/meikyuu";
+ *
+ * console.log(maskOf("heart")(0.5,0.5));
+ * ```
+ */
 export function maskOf(shape: MeikyuuShape): Mask {
   const mask = MASKS[shape];
   if (mask === undefined) throw new Error(`${shape} is not cut out of a square raster`);

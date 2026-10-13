@@ -12,18 +12,74 @@ import { below, seededRandom, shuffled, type Random } from "./random.ts";
  * blocks another, so any order that taps only free arrows clears the board.
  */
 
-/** Which way an arrow's head points: up, right, down, left. */
+/** Which way an arrow's head points: up, right, down, left.
+ *
+ * @example
+ * ```ts
+ * import type { ArrowDirection } from "@johnmorrisdotca/meikyuu";
+ *
+ * const value: ArrowDirection = 0;
+ * console.log(value);
+ * ```
+ */
 export type ArrowDirection = 0 | 1 | 2 | 3;
+/** The up, right, down and left row/column increments of arrow directions.
+ *
+ * @example
+ * ```ts
+ * import { ARROW_STEPS } from "@johnmorrisdotca/meikyuu";
+ * console.log(ARROW_STEPS);
+ * ```
+ */
 export const ARROW_STEPS: readonly (readonly [number, number])[] = [[0, -1], [1, 0], [0, 1], [-1, 0]];
 
-/** One arrow: its cells from tail to head (indexes into the board, row by row), and the way its head points. */
+/** One arrow: its cells from tail to head (indexes into the board, row by row), and the way its head points.
+ *
+ * @example
+ * ```ts
+ * import type { Arrow, ArrowRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { makeArrows } from "@johnmorrisdotca/meikyuu";
+ *
+ * const arrowRecipe: ArrowRecipe = {shape:"square",w:5,h:5,longest:3,seed:42};
+ * const arrows = makeArrows(arrowRecipe);
+ * const value: Arrow = arrows.arrows[0];
+ * console.log(value);
+ * ```
+ */
 export type Arrow = { readonly cells: readonly number[]; readonly dir: ArrowDirection };
 
-/** The pictures an arrow board can be: the whole square, or one of the shapes cut from it. */
+/** The pictures an arrow board can be: the whole square, or one of the shapes cut from it.
+ *
+ * @example
+ * ```ts
+ * import { ARROW_SHAPES } from "@johnmorrisdotca/meikyuu";
+ * console.log(ARROW_SHAPES);
+ * ```
+ */
 export const ARROW_SHAPES = ["square", "heart", "leaf", "star", "ring", "diamond", "cross", "moon"] as const;
+/** One of the supported flat arrow-board masks.
+ *
+ * @example
+ * ```ts
+ * import type { ArrowShape } from "@johnmorrisdotca/meikyuu";
+ *
+ * const value: ArrowShape = "square";
+ * console.log(value);
+ * ```
+ */
 export type ArrowShape = (typeof ARROW_SHAPES)[number];
 
-/** Everything that makes an arrow puzzle. */
+/** Everything that makes an arrow puzzle.
+ *
+ * @example
+ * ```ts
+ * import type { ArrowRecipe } from "@johnmorrisdotca/meikyuu";
+ *
+ * const arrowRecipe: ArrowRecipe = {shape:"square",w:5,h:5,longest:3,seed:42};
+ * const value: ArrowRecipe = arrowRecipe;
+ * console.log(value);
+ * ```
+ */
 export type ArrowRecipe = {
   readonly shape: ArrowShape;
   /** Columns and rows of the board: the same for every shape but `square`. */
@@ -36,6 +92,19 @@ export type ArrowRecipe = {
   readonly locks?: number;
 };
 
+/** The native arrow recipe, shape mask, arrow paths and locked flags.
+ *
+ * @example
+ * ```ts
+ * import type { ArrowBoard, ArrowRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { makeArrows } from "@johnmorrisdotca/meikyuu";
+ *
+ * const arrowRecipe: ArrowRecipe = {shape:"square",w:5,h:5,longest:3,seed:42};
+ * const arrows = makeArrows(arrowRecipe);
+ * const value: ArrowBoard = arrows;
+ * console.log(value);
+ * ```
+ */
 export type ArrowBoard = {
   readonly recipe: ArrowRecipe;
   readonly w: number;
@@ -47,16 +116,47 @@ export type ArrowBoard = {
   readonly locked: readonly boolean[];
 };
 
-/** A recipe as a short word, such as `heart:15:6:77` or `square:9x9:5:123:2` (the last number: how many are locked), and back. */
+/** A recipe as a short word, such as `heart:15:6:77` or `square:9x9:5:123:2` (the last number: how many are locked), and back.
+ *
+ * @param recipe - The complete reproducible native recipe.
+ * @returns A recipe as a short word, such as `heart:15:6:77` or `square:9x9:5:123:2` (the last number: how many are locked), and back.
+ * @example
+ * ```ts
+ * import type { ArrowRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { arrowRecipeCode } from "@johnmorrisdotca/meikyuu";
+ *
+ * const arrowRecipe: ArrowRecipe = {shape:"square",w:5,h:5,longest:3,seed:42};
+ * console.log(arrowRecipeCode(arrowRecipe));
+ * ```
+ */
 export function arrowRecipeCode(recipe: ArrowRecipe): string {
   const size = recipe.shape === "square" ? `${recipe.w}x${recipe.h}` : `${recipe.w}`;
   return `${recipe.shape}:${size}:${recipe.longest}:${recipe.seed}${recipe.locks === undefined || recipe.locks === 0 ? "" : `:${recipe.locks}`}`;
 }
 
-/** The most cells an arrow board may have: a little over twice the biggest level's (1,849). */
+/** The most cells an arrow board may have: a little over twice the biggest level's (1,849).
+ *
+ * @example
+ * ```ts
+ * import { MEIKYUU_MOST_ARROW_CELLS } from "@johnmorrisdotca/meikyuu";
+ * console.log(MEIKYUU_MOST_ARROW_CELLS);
+ * ```
+ */
 export const MEIKYUU_MOST_ARROW_CELLS = 4_000;
 
-/** A recipe's arrow board from its code, or null when it is not one, or names a board bigger than `MEIKYUU_MOST_ARROW_CELLS`. */
+/** A recipe's arrow board from its code, or null when it is not one, or names a board bigger than `MEIKYUU_MOST_ARROW_CELLS`.
+ *
+ * @param code - The native encoded recipe or saved run.
+ * @returns A recipe's arrow board from its code, or null when it is not one, or names a board bigger than `MEIKYUU_MOST_ARROW_CELLS`.
+ * @example
+ * ```ts
+ * import type { ArrowRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { arrowRecipeCode, parseArrowRecipe } from "@johnmorrisdotca/meikyuu";
+ *
+ * const arrowRecipe: ArrowRecipe = {shape:"square",w:5,h:5,longest:3,seed:42};
+ * console.log(parseArrowRecipe(arrowRecipeCode(arrowRecipe)));
+ * ```
+ */
 export function parseArrowRecipe(code: string): ArrowRecipe | null {
   const parts = code.split(":");
   if (parts.length < 4 || parts.length > 5) return null;
@@ -76,7 +176,21 @@ function pictureOf(shape: ArrowShape, w: number, h: number): boolean[] {
   return Array.from({ length: w * h }, (_, cell) => inside((((cell % w) + 0.5) / w) * 2 - 1, ((Math.floor(cell / w) + 0.5) / h) * 2 - 1));
 }
 
-/** The cells in front of an arrow's head, out to the edge of the board, nearest first. */
+/** The cells in front of an arrow's head, out to the edge of the board, nearest first.
+ *
+ * @param board - The native arrow board or named maze appearance specified by this signature.
+ * @param arrow - One native arrow path and direction.
+ * @returns The cells in front of an arrow's head, out to the edge of the board, nearest first.
+ * @example
+ * ```ts
+ * import type { ArrowRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { makeArrows, rayOf } from "@johnmorrisdotca/meikyuu";
+ *
+ * const arrowRecipe: ArrowRecipe = {shape:"square",w:5,h:5,longest:3,seed:42};
+ * const arrows = makeArrows(arrowRecipe);
+ * console.log(rayOf(arrows,arrows.arrows[0]));
+ * ```
+ */
 export function rayOf(board: Pick<ArrowBoard, "w" | "h">, arrow: Arrow): number[] {
   const head = arrow.cells[arrow.cells.length - 1]!;
   const [dx, dy] = ARROW_STEPS[arrow.dir]!;
@@ -118,7 +232,20 @@ function grow(w: number, h: number, free: (cell: number) => boolean, first: numb
   return cells;
 }
 
-/** The arrows of a recipe, in the order they were added: the last one added is free from the start. */
+/** The arrows of a recipe, in the order they were added: the last one added is free from the start.
+ *
+ * @param recipe - The complete reproducible native recipe.
+ * @returns The arrows of a recipe, in the order they were added: the last one added is free from the start.
+ * @example
+ * ```ts
+ * import type { ArrowRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { makeArrows } from "@johnmorrisdotca/meikyuu";
+ *
+ * const arrowRecipe: ArrowRecipe = {shape:"square",w:5,h:5,longest:3,seed:42};
+ * const arrows = makeArrows(arrowRecipe);
+ * console.log(makeArrows(arrowRecipe).arrows.length);
+ * ```
+ */
 export function makeArrows(recipe: ArrowRecipe): ArrowBoard {
   const { w, h } = recipe;
   const random = seededRandom(recipe.seed);
@@ -171,7 +298,20 @@ export function makeArrows(recipe: ArrowRecipe): ArrowBoard {
   return { ...board, locked: lockedFor(board, recipe.locks ?? 0, random) };
 }
 
-/** Which arrows block others: for each arrow, the arrows whose cells lie on its way out. */
+/** Which arrows block others: for each arrow, the arrows whose cells lie on its way out.
+ *
+ * @param board - The native arrow board or named maze appearance specified by this signature.
+ * @returns Which arrows block others: for each arrow, the arrows whose cells lie on its way out.
+ * @example
+ * ```ts
+ * import type { ArrowRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { blockersOf, makeArrows } from "@johnmorrisdotca/meikyuu";
+ *
+ * const arrowRecipe: ArrowRecipe = {shape:"square",w:5,h:5,longest:3,seed:42};
+ * const arrows = makeArrows(arrowRecipe);
+ * console.log(blockersOf(arrows));
+ * ```
+ */
 export function blockersOf(board: Pick<ArrowBoard, "w" | "h" | "arrows">): number[][] {
   const known = BLOCKERS.get(board);
   if (known !== undefined) return known;
@@ -201,7 +341,20 @@ function lockedFor(board: ArrowBoard, count: number, random: Random): boolean[] 
   return locked;
 }
 
-/** The order the arrows come off in if every free one is taken each round, as rounds: the length of this is how many times the board has to be looked at again. */
+/** The order the arrows come off in if every free one is taken each round, as rounds: the length of this is how many times the board has to be looked at again.
+ *
+ * @param board - The native arrow board or named maze appearance specified by this signature.
+ * @returns The solvable dependency rounds, or null when the arrows form an unremovable cycle.
+ * @example
+ * ```ts
+ * import type { ArrowRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { makeArrows, peelRounds } from "@johnmorrisdotca/meikyuu";
+ *
+ * const arrowRecipe: ArrowRecipe = {shape:"square",w:5,h:5,longest:3,seed:42};
+ * const arrows = makeArrows(arrowRecipe);
+ * console.log(peelRounds(arrows));
+ * ```
+ */
 export function peelRounds(board: Pick<ArrowBoard, "w" | "h" | "arrows">): number[][] | null {
   const blockers = blockersOf(board);
   const present = new Set(board.arrows.map((_, id) => id));
@@ -215,9 +368,35 @@ export function peelRounds(board: Pick<ArrowBoard, "w" | "h" | "arrows">): numbe
   return rounds;
 }
 
-/** How hard an arrow puzzle is: the arrows to clear, the rounds of unblocking they take, and how many are blocked at the start. */
+/** How hard an arrow puzzle is: the arrows to clear, the rounds of unblocking they take, and how many are blocked at the start.
+ *
+ * @example
+ * ```ts
+ * import type { ArrowMeasure, ArrowRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { makeArrows, measureArrows } from "@johnmorrisdotca/meikyuu";
+ *
+ * const arrowRecipe: ArrowRecipe = {shape:"square",w:5,h:5,longest:3,seed:42};
+ * const arrows = makeArrows(arrowRecipe);
+ * const value: ArrowMeasure = measureArrows(arrows);
+ * console.log(value);
+ * ```
+ */
 export type ArrowMeasure = { arrows: number; cells: number; rounds: number; free: number; blocked: number; longest: number; effort: number };
 
+/** Measure the arrow count, cells, dependency rounds and native clearing effort.
+ *
+ * @param board - The native arrow board or named maze appearance specified by this signature.
+ * @returns Measure the arrow count, cells, dependency rounds and native clearing effort.
+ * @example
+ * ```ts
+ * import type { ArrowRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { makeArrows, measureArrows } from "@johnmorrisdotca/meikyuu";
+ *
+ * const arrowRecipe: ArrowRecipe = {shape:"square",w:5,h:5,longest:3,seed:42};
+ * const arrows = makeArrows(arrowRecipe);
+ * console.log(measureArrows(arrows));
+ * ```
+ */
 export function measureArrows(board: ArrowBoard): ArrowMeasure {
   const rounds = peelRounds(board);
   if (rounds === null) throw new Error("the arrows cannot all be cleared");

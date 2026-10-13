@@ -27,13 +27,66 @@ import { mean, unit, type Vec3 } from "./vec.ts";
  * order is part of the format: a line kept as steps (`lineToSteps`) is the position of each cell among its predecessor's neighbours, so it is the
  * same line for ever and on every device. Everything that decides the graph is integer arithmetic (a corner is found by whole-number weights, never
  * by a rounded coordinate), so the same solid is the same graph in every browser and every Node.
+ *
+ * @example
+ * ```ts
+ * import { SOLID_KINDS } from "@johnmorrisdotca/meikyuu/3d";
+ * console.log(SOLID_KINDS);
+ * ```
  */
 export const SOLID_KINDS = ["cube", "sphere", "tetrahedron", "octahedron", "icosahedron", ...SOLID_SHAPE_KINDS] as const;
+/** A supported polyhedron, die or shaped surface for a maze.
+ *
+ * @example
+ * ```ts
+ * import type { SolidKind } from "@johnmorrisdotca/meikyuu/3d";
+ *
+ * const value: SolidKind = "cube";
+ * console.log(value);
+ * ```
+ */
 export type SolidKind = "cube" | "sphere" | "tetrahedron" | "octahedron" | "icosahedron" | SolidShapeKind;
 
-/** The edge between two cells: its two corners (indices into `vertices`) and the two cells it lies between. */
+/** The edge between two cells: its two corners (indices into `vertices`) and the two cells it lies between.
+ *
+ * @example
+ * ```ts
+ * import type { MazeRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { buildMaze } from "@johnmorrisdotca/meikyuu";
+ * import type { SolidEdge, SolidRecipe } from "@johnmorrisdotca/meikyuu/3d";
+ * import { buildSolidMaze } from "@johnmorrisdotca/meikyuu/3d";
+ *
+ * const recipe: MazeRecipe = {shape:"square",w:5,h:5,algorithm:"backtracker",mode:"to-goal",seed:42};
+ * const maze = buildMaze(recipe);
+ * const grid = maze.grid;
+ * const solidRecipe: SolidRecipe = {kind:"cube",n:2,algorithm:"backtracker",seed:42};
+ * const solid = buildSolidMaze(solidRecipe);
+ * const solidGrid = solid.grid;
+ * const value: SolidEdge = solidGrid.edges[0];
+ * console.log(value);
+ * ```
+ */
 export type SolidEdge = { readonly a: number; readonly b: number; readonly left: number; readonly right: number };
 
+/** A surface cell graph, neighbouring faces, vertices, projected centres and shape geometry.
+ *
+ * @example
+ * ```ts
+ * import type { MazeRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { buildMaze } from "@johnmorrisdotca/meikyuu";
+ * import type { SolidGrid, SolidRecipe } from "@johnmorrisdotca/meikyuu/3d";
+ * import { buildSolidMaze } from "@johnmorrisdotca/meikyuu/3d";
+ *
+ * const recipe: MazeRecipe = {shape:"square",w:5,h:5,algorithm:"backtracker",mode:"to-goal",seed:42};
+ * const maze = buildMaze(recipe);
+ * const grid = maze.grid;
+ * const solidRecipe: SolidRecipe = {kind:"cube",n:2,algorithm:"backtracker",seed:42};
+ * const solid = buildSolidMaze(solidRecipe);
+ * const solidGrid = solid.grid;
+ * const value: SolidGrid = solidGrid;
+ * console.log(value);
+ * ```
+ */
 export type SolidGrid = {
   readonly kind: SolidKind;
   /** The cut: cells along an edge of a face (`cube`, and the triangle solids), or the frequency of the globe (`sphere`). */
@@ -71,10 +124,28 @@ export type SolidGrid = {
   readonly upright: boolean;
 };
 
-/** The most cells a solid may have in a recipe: a little over twice the biggest level. */
+/** The most cells a solid may have in a recipe: a little over twice the biggest level.
+ *
+ * @example
+ * ```ts
+ * import { MEIKYUU_MOST_SOLID_CELLS } from "@johnmorrisdotca/meikyuu/3d";
+ * console.log(MEIKYUU_MOST_SOLID_CELLS);
+ * ```
+ */
 export const MEIKYUU_MOST_SOLID_CELLS = 10000;
 
-/** How many cells a solid cut `n` ways has. */
+/** How many cells a solid cut `n` ways has.
+ *
+ * @param kind - The native puzzle family or surface shape specified by this signature.
+ * @param n - The level number, random bound or surface subdivision specified by the signature.
+ * @returns How many cells a solid cut `n` ways has.
+ * @example
+ * ```ts
+ * import { solidCells } from "@johnmorrisdotca/meikyuu/3d";
+ *
+ * console.log(solidCells("cube",2));
+ * ```
+ */
 export function solidCells(kind: SolidKind, n: number): number {
   switch (kind) {
     case "cube":
@@ -164,12 +235,34 @@ function sphereParts(n: number): Parts {
   return { kind: "sphere", n, vertices: corners, loops, faceOf: loops.map(() => -1), hull: [], round: true, centre: (polygon) => unit(mean(polygon)) };
 }
 
-/** Whether a solid can be cut `n` ways: a whole number of at least 2, or 1 where the solid has already sixty cells uncut (the dodecahedron's five to a face). */
+/** Whether a solid can be cut `n` ways: a whole number of at least 2, or 1 where the solid has already sixty cells uncut (the dodecahedron's five to a face).
+ *
+ * @param kind - The native puzzle family or surface shape specified by this signature.
+ * @param n - The level number, random bound or surface subdivision specified by the signature.
+ * @returns Whether a solid can be cut `n` ways: a whole number of at least 2, or 1 where the solid has already sixty cells uncut (the dodecahedron's five to a face).
+ * @example
+ * ```ts
+ * import { isSolidCut } from "@johnmorrisdotca/meikyuu/3d";
+ *
+ * console.log(isSolidCut("cube",2));
+ * ```
+ */
 export function isSolidCut(kind: SolidKind, n: number): boolean {
   return Number.isInteger(n) && (n >= 2 || (n === 1 && solidCells(kind, 1) >= 60));
 }
 
-/** The surface of a solid cut `n` ways (`n` at least 2, or 1 for a solid with sixty cells at that): its cells, which are beside which, and where each lies. */
+/** The surface of a solid cut `n` ways (`n` at least 2, or 1 for a solid with sixty cells at that): its cells, which are beside which, and where each lies.
+ *
+ * @param kind - The native puzzle family or surface shape specified by this signature.
+ * @param n - The level number, random bound or surface subdivision specified by the signature.
+ * @returns The surface of a solid cut `n` ways (`n` at least 2, or 1 for a solid with sixty cells at that): its cells, which are beside which, and where each lies.
+ * @example
+ * ```ts
+ * import { solidGridOf } from "@johnmorrisdotca/meikyuu/3d";
+ *
+ * console.log(solidGridOf("cube",2).cells);
+ * ```
+ */
 export function solidGridOf(kind: SolidKind, n: number): SolidGrid {
   if (!isSolidCut(kind, n)) throw new Error(`a ${kind} is cut into at least 2 a side, not ${n}`);
   switch (kind) {

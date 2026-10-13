@@ -5,9 +5,25 @@
  *
  * `{name}` in a line is a value filled in; a line `foo` that has a `fooOne` beside it is said as
  * `fooOne` when its `{n}` is 1.
+ *
+ * @example
+ * ```ts
+ * import type { MeikyuuLanguage } from "@johnmorrisdotca/meikyuu/draw";
+ *
+ * const value: MeikyuuLanguage = "ja";
+ * console.log(value);
+ * ```
  */
 export type MeikyuuLanguage = "en" | "ja";
 
+/** Native English and Japanese labels, announcements and interpolation templates.
+ *
+ * @example
+ * ```ts
+ * import { MEIKYUU_STRINGS } from "@johnmorrisdotca/meikyuu/draw";
+ * console.log(Object.keys(MEIKYUU_STRINGS.en));
+ * ```
+ */
 export const MEIKYUU_STRINGS: Record<MeikyuuLanguage, Record<string, string>> = {
   en: {
     mazeLabel: "{shape} maze of {n} cells. {play}",
@@ -247,12 +263,34 @@ export const MEIKYUU_STRINGS: Record<MeikyuuLanguage, Record<string, string>> = 
   },
 };
 
-/** The language a `lang` attribute asks for: Japanese for any `ja`, English for everything else. */
+/** The language a `lang` attribute asks for: Japanese for any `ja`, English for everything else.
+ *
+ * @param tag - An optional language tag, such as ja-JP.
+ * @returns The language a `lang` attribute asks for: Japanese for any `ja`, English for everything else.
+ * @example
+ * ```ts
+ * import { meikyuuLanguageOf } from "@johnmorrisdotca/meikyuu/draw";
+ *
+ * console.log(meikyuuLanguageOf("ja-JP"));
+ * ```
+ */
 export function meikyuuLanguageOf(tag: string | null | undefined): MeikyuuLanguage {
   return String(tag ?? "").toLowerCase().startsWith("ja") ? "ja" : "en";
 }
 
-/** A line in a language, with its `{name}` values filled in, and its `One` form when `n` is 1. */
+/** A line in a language, with its `{name}` values filled in, and its `One` form when `n` is 1.
+ *
+ * @param language - The native English or Japanese display language.
+ * @param key - The localized native label identifier.
+ * @param values - Replacement text or numbers for brace-delimited placeholders.
+ * @returns A line in a language, with its `{name}` values filled in, and its `One` form when `n` is 1.
+ * @example
+ * ```ts
+ * import { meikyuuSay } from "@johnmorrisdotca/meikyuu/draw";
+ *
+ * console.log(meikyuuSay("en","undo"));
+ * ```
+ */
 export function meikyuuSay(language: MeikyuuLanguage, key: string, values: Record<string, string | number> = {}): string {
   const table = MEIKYUU_STRINGS[language];
   const one = values["n"] === 1 && `${key}One` in table ? `${key}One` : key;

@@ -15,16 +15,56 @@ import { below, shuffled, type Random } from "./random.ts";
  * - `eller`: one row at a time. Squares only: it needs rows.
  *
  * They return each cell's open neighbours. Nothing here reads a cell's position.
+ *
+ * @example
+ * ```ts
+ * import { MEIKYUU_ALGORITHMS } from "@johnmorrisdotca/meikyuu";
+ * console.log(MEIKYUU_ALGORITHMS);
+ * ```
  */
 export const MEIKYUU_ALGORITHMS = ["backtracker", "hunt", "growing", "prim", "kruskal", "wilson", "eller"] as const;
+/** One of the seven native maze-carving algorithms.
+ *
+ * @example
+ * ```ts
+ * import type { MeikyuuAlgorithm } from "@johnmorrisdotca/meikyuu";
+ *
+ * const value: MeikyuuAlgorithm = "backtracker";
+ * console.log(value);
+ * ```
+ */
 export type MeikyuuAlgorithm = (typeof MEIKYUU_ALGORITHMS)[number];
 
-/** Each cell's open neighbours. */
+/** Each cell's open neighbours.
+ *
+ * @example
+ * ```ts
+ * import type { Links, MazeRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { buildMaze } from "@johnmorrisdotca/meikyuu";
+ *
+ * const recipe: MazeRecipe = {shape:"square",w:5,h:5,algorithm:"backtracker",mode:"to-goal",seed:42};
+ * const maze = buildMaze(recipe);
+ * const value: Links = maze.links;
+ * console.log(value);
+ * ```
+ */
 export type Links = number[][];
 
 /**
  * What a generator reads of a grid: how many cells there are and which are beside which. A `Grid` is one, and so is the surface of a solid
  * (`@johnmorrisdotca/meikyuu/3d`); `shape`, `w` and `h` are only for Eller's algorithm, which needs rows and so makes square mazes.
+ *
+ * @example
+ * ```ts
+ * import type { CellGraph, MazeRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { buildMaze } from "@johnmorrisdotca/meikyuu";
+ *
+ * const recipe: MazeRecipe = {shape:"square",w:5,h:5,algorithm:"backtracker",mode:"to-goal",seed:42};
+ * const maze = buildMaze(recipe);
+ * const grid = maze.grid;
+ * const value: CellGraph = grid;
+ * console.log(value);
+ * ```
  */
 export type CellGraph = Pick<Grid, "cells" | "neighbours" | "w" | "h"> & { readonly shape: string };
 
@@ -220,7 +260,23 @@ function eller(grid: CellGraph, random: Random): Links {
   return links;
 }
 
-/** The open neighbours of every cell, for a perfect maze of the grid made by this algorithm from this stream. */
+/** The open neighbours of every cell, for a perfect maze of the grid made by this algorithm from this stream.
+ *
+ * @param grid - The valid native flat or surface cell graph.
+ * @param algorithm - The native maze-carving algorithm.
+ * @param random - A random source returning values in [0,1).
+ * @returns The open neighbours of every cell, for a perfect maze of the grid made by this algorithm from this stream.
+ * @example
+ * ```ts
+ * import type { MazeRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { buildMaze, carveMaze, seededRandom } from "@johnmorrisdotca/meikyuu";
+ *
+ * const recipe: MazeRecipe = {shape:"square",w:5,h:5,algorithm:"backtracker",mode:"to-goal",seed:42};
+ * const maze = buildMaze(recipe);
+ * const grid = maze.grid;
+ * console.log(carveMaze(grid,"backtracker",seededRandom(42)).length);
+ * ```
+ */
 export function carveMaze(grid: CellGraph, algorithm: MeikyuuAlgorithm, random: Random): Links {
   switch (algorithm) {
     case "backtracker":

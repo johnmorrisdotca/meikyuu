@@ -8,16 +8,40 @@ import { hexGrid, triangleGrid } from "./shapes.ts";
  * levels come in, and the dimensions that make each of the three shapes with rows fill the same container.
  */
 
-/** The ratio of a tall container, width over height: two to three. */
+/** The ratio of a tall container, width over height: two to three.
+ *
+ * @example
+ * ```ts
+ * import { TALL_RATIO } from "@johnmorrisdotca/meikyuu/levels/tall";
+ * console.log(TALL_RATIO);
+ * ```
+ */
 export const TALL_RATIO = 2 / 3;
 
-/** How many cells across each size of the tall levels is. */
+/** How many cells across each size of the tall levels is.
+ *
+ * @example
+ * ```ts
+ * import { TALL_WIDTHS } from "@johnmorrisdotca/meikyuu/levels/tall";
+ * console.log(TALL_WIDTHS);
+ * ```
+ */
 export const TALL_WIDTHS = [6, 8, 10, 12, 16, 20] as const;
 
 /**
  * The columns and rows of a maze of `shape` for the size `width` (a square maze of that size is `width` by one and a half times that): as near 2:3 as
  * its cells allow, and with about as many cells as that square maze has (`width` times one and a half `width`), so that the sizes are as big to
  * draw whatever the shape is. A hexagon or a triangle has smaller cells, so the same number of them fills the same container with bigger cells.
+ *
+ * @param shape - The supported native flat-grid geometry or cut-out shape.
+ * @param width - The native width in cells or pixels specified by this signature.
+ * @returns The columns and rows of a maze of `shape` for the size `width` (a square maze of that size is `width` by one and a half times that): as near 2:3 as its cells allow, and with about as many cells as that square maze has (`width` times one and a half `width`), so that the sizes are as big to draw whatever the shape is. A hexagon or a triangle has smaller cells, so the same number of them fills the same container with bigger cells.
+ * @example
+ * ```ts
+ * import { TALL_WIDTHS, tallDimensions } from "@johnmorrisdotca/meikyuu/levels/tall";
+ *
+ * console.log(tallDimensions("square",TALL_WIDTHS[0]));
+ * ```
  */
 export function tallDimensions(shape: MeikyuuShape, width: number): [number, number] {
   if (shape === "square") return [width, Math.round(width * 1.5)];
@@ -51,5 +75,12 @@ function shapeFactor(shape: MeikyuuShape): { height: (rows: number) => number; p
     : { height: (rows) => (rows * Math.sqrt(3)) / 2, perColumn: 2, offset: 1 };
 }
 
-/** The shapes that are made tall. */
+/** The shapes that are made tall.
+ *
+ * @example
+ * ```ts
+ * import { TALL_SHAPES } from "@johnmorrisdotca/meikyuu/levels/tall";
+ * console.log(TALL_SHAPES);
+ * ```
+ */
 export const TALL_SHAPES = ["square", "hex", "triangle"] as const satisfies readonly MeikyuuShape[];

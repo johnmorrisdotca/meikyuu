@@ -29,6 +29,18 @@ import { quatAxisAngle, quatMul, quatNormalize, quatSlerp, type Quat } from "./v
  *
  * It paints on a canvas (the solid is redrawn whole at each turn, in a few dozen strokes), so it needs a page, and nothing it draws can be selected.
  * The handle is also on the host, as `host.meikyuuSolid`.
+ *
+ * @example
+ * ```ts
+ * import type { MazeRecipe } from "@johnmorrisdotca/meikyuu";
+ * import type { SolidRecipe } from "@johnmorrisdotca/meikyuu/3d";
+ * import type { SolidMountOptions } from "@johnmorrisdotca/meikyuu/3d/play";
+ *
+ * const recipe: MazeRecipe = {shape:"square",w:5,h:5,algorithm:"backtracker",mode:"to-goal",seed:42};
+ * const solidRecipe: SolidRecipe = {kind:"cube",n:2,algorithm:"backtracker",seed:42};
+ * const value: SolidMountOptions = {recipe:solidRecipe,language:"en"};
+ * console.log(value);
+ * ```
  */
 
 export type SolidMountOptions = MazeLook & {
@@ -66,7 +78,21 @@ export type SolidMountOptions = MazeLook & {
   onStones?: (detail: SolidEventDetail) => void;
 };
 
-/** What every event tells of the board. */
+/** What every event tells of the board.
+ *
+ * @example
+ * ```ts
+ * import type { SolidRecipe } from "@johnmorrisdotca/meikyuu/3d";
+ * import { buildSolidMaze } from "@johnmorrisdotca/meikyuu/3d";
+ * import type { SolidEventDetail } from "@johnmorrisdotca/meikyuu/3d/play";
+ * import { stonesLeft } from "@johnmorrisdotca/meikyuu";
+ *
+ * const solidRecipe: SolidRecipe = {kind:"cube",n:2,algorithm:"backtracker",seed:42};
+ * const solid = buildSolidMaze(solidRecipe);
+ * const value: SolidEventDetail = {kind:"solid",solid:"cube",moves:0,cells:0,solved:false,stones:0,stonesLeft:null};
+ * console.log(value);
+ * ```
+ */
 export type SolidEventDetail = {
   kind: "solid";
   solid: SolidRecipe["kind"];
@@ -77,9 +103,39 @@ export type SolidEventDetail = {
   stonesLeft: number | null;
 };
 
-/** Where a cell is on the picture, in pixels from the top left of the box. */
+/** Where a cell is on the picture, in pixels from the top left of the box.
+ *
+ * @example
+ * ```ts
+ * import type { SolidCellPlace } from "@johnmorrisdotca/meikyuu/3d/play";
+ *
+ * const value: SolidCellPlace = {x:320,y:240,visible:true,facing:1,room:100};
+ * console.log(value);
+ * ```
+ */
 export type SolidCellPlace = { x: number; y: number; visible: boolean; facing: number; room: number };
 
+/** The mounted surface maze, game, rotation/zoom controls, native progress and cleanup handle.
+ *
+ * @example
+ * ```ts no-run
+ * import type { MazeRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { buildMaze } from "@johnmorrisdotca/meikyuu";
+ * import type { SolidRecipe } from "@johnmorrisdotca/meikyuu/3d";
+ * import type { SolidMount } from "@johnmorrisdotca/meikyuu/3d/play";
+ * import { mountSolid } from "@johnmorrisdotca/meikyuu/3d/play";
+ *
+ * const recipe: MazeRecipe = {shape:"square",w:5,h:5,algorithm:"backtracker",mode:"to-goal",seed:42};
+ * const maze = buildMaze(recipe);
+ * const grid = maze.grid;
+ * const solidRecipe: SolidRecipe = {kind:"cube",n:2,algorithm:"backtracker",seed:42};
+ * const host = document.createElement("div");
+ * document.body.append(host);
+ * const player: SolidMount | null = mountSolid(host,{recipe:solidRecipe});
+ * console.log(player?.maze().grid.cells);
+ * player?.destroy();
+ * ```
+ */
 export type SolidMount = {
   readonly host: HTMLElement;
   recipe: () => SolidRecipe;
@@ -141,7 +197,19 @@ function create<K extends keyof HTMLElementTagNameMap>(document: Document, tag: 
   return element;
 }
 
-/** Put the style of the solid in the page once, beside the board's. */
+/** Put the style of the solid in the page once, beside the board's.
+ *
+ * @param host - The DOM host receiving the native player or styles.
+ * @returns Nothing; native surface-view styles are installed for the host.
+ * @example
+ * ```ts no-run
+ * import { ensureSolidStyle } from "@johnmorrisdotca/meikyuu/3d/play";
+ *
+ * const host = document.createElement("div");
+ * ensureSolidStyle(host);
+ * console.log(host.tagName);
+ * ```
+ */
 export function ensureSolidStyle(host: Element): void {
   ensureMeikyuuPlayStyle(host);
   const root = host.getRootNode();
@@ -157,7 +225,29 @@ function recipeOf(recipe: string | SolidRecipe): SolidRecipe | null {
   return typeof recipe === "string" ? parseSolidRecipe(recipe) : recipe;
 }
 
-/** Draw a maze over a solid into `host` and play it. Returns the handle that drives it, or null for a recipe that is none. */
+/** Draw a maze over a solid into `host` and play it. Returns the handle that drives it, or null for a recipe that is none.
+ *
+ * @param host - The DOM host receiving the native player or styles.
+ * @param options - Native display/mount choices, or the point tuple specified by this signature.
+ * @returns The native surface player, or null for invalid recipe or a view that cannot be mounted.
+ * @example
+ * ```ts no-run
+ * import type { MazeRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { buildMaze } from "@johnmorrisdotca/meikyuu";
+ * import type { SolidRecipe } from "@johnmorrisdotca/meikyuu/3d";
+ * import { mountSolid } from "@johnmorrisdotca/meikyuu/3d/play";
+ *
+ * const recipe: MazeRecipe = {shape:"square",w:5,h:5,algorithm:"backtracker",mode:"to-goal",seed:42};
+ * const maze = buildMaze(recipe);
+ * const grid = maze.grid;
+ * const solidRecipe: SolidRecipe = {kind:"cube",n:2,algorithm:"backtracker",seed:42};
+ * const host = document.createElement("div");
+ * document.body.append(host);
+ * const player = mountSolid(host,{recipe:solidRecipe});
+ * console.log(player?.maze().grid.cells);
+ * player?.destroy();
+ * ```
+ */
 export function mountSolid(host: HTMLElement, options: SolidMountOptions): SolidMount | null {
   const first = recipeOf(options.recipe);
   if (first === null) return null;

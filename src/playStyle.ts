@@ -9,6 +9,12 @@ import { MEIKYUU_STYLE } from "./style.ts";
  * Nothing moves when something is chosen: the board is one steady box (square unless the page asks for another `ratio`), always with some
  * page beside it, the lines of words keep the room
  * their longest wording takes, and the buttons are one size. Nothing the player touches can be selected.
+ *
+ * @example
+ * ```ts
+ * import { MEIKYUU_PLAY_STYLE } from "@johnmorrisdotca/meikyuu/play";
+ * console.log(MEIKYUU_PLAY_STYLE.length);
+ * ```
  */
 export const MEIKYUU_PLAY_STYLE = `${MEIKYUU_STYLE}
 .meikyuu-play {

@@ -22,18 +22,67 @@ import { quatAxisAngle, quatBetween, quatMatrix, quatMul, quatNormalize, quatTur
  * tested against the cell's polygon in three dimensions.
  */
 
-/** How far the eye is from the middle of the solid, in times its reach. */
+/** How far the eye is from the middle of the solid, in times its reach.
+ *
+ * @example
+ * ```ts
+ * import { SOLID_EYE } from "@johnmorrisdotca/meikyuu/3d";
+ * console.log(SOLID_EYE);
+ * ```
+ */
 export const SOLID_EYE = 6;
-/** The share of the box the solid's outline fills at most. */
+/** The share of the box the solid's outline fills at most.
+ *
+ * @example
+ * ```ts
+ * import { SOLID_FILL } from "@johnmorrisdotca/meikyuu/3d";
+ * console.log(SOLID_FILL);
+ * ```
+ */
 export const SOLID_FILL = 0.94;
-/** How far in and out the picture can be zoomed, as a multiple of the fitted size: in to six, so that a cell of a colossal solid (about six pixels across when the whole solid is in the box) is a finger wide (about 24) at four and has room beyond. */
+/** How far in and out the picture can be zoomed, as a multiple of the fitted size: in to six, so that a cell of a colossal solid (about six pixels across when the whole solid is in the box) is a finger wide (about 24) at four and has room beyond.
+ *
+ * @example
+ * ```ts
+ * import { SOLID_ZOOM_LEAST } from "@johnmorrisdotca/meikyuu/3d";
+ * console.log(SOLID_ZOOM_LEAST);
+ * ```
+ */
 export const SOLID_ZOOM_LEAST = 0.6;
+/** The maximum native surface-view zoom factor.
+ *
+ * @example
+ * ```ts
+ * import { SOLID_ZOOM_MOST } from "@johnmorrisdotca/meikyuu/3d";
+ * console.log(SOLID_ZOOM_MOST);
+ * ```
+ */
 export const SOLID_ZOOM_MOST = 6;
 
 /** The least a globe's cell faces the viewer to be drawn, and to be touched. */
 const ROUND_LIMB = 0.2;
 
-/** Where a solid is, as a picture of a given size: the turn, the zoom, and every corner and cell as it lands. */
+/** Where a solid is, as a picture of a given size: the turn, the zoom, and every corner and cell as it lands.
+ *
+ * @example
+ * ```ts
+ * import type { MazeRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { buildMaze } from "@johnmorrisdotca/meikyuu";
+ * import type { Quat, SolidFrame, SolidRecipe } from "@johnmorrisdotca/meikyuu/3d";
+ * import { buildSolidMaze, createFrame, projectFrame } from "@johnmorrisdotca/meikyuu/3d";
+ *
+ * const recipe: MazeRecipe = {shape:"square",w:5,h:5,algorithm:"backtracker",mode:"to-goal",seed:42};
+ * const maze = buildMaze(recipe);
+ * const grid = maze.grid;
+ * const solidRecipe: SolidRecipe = {kind:"cube",n:2,algorithm:"backtracker",seed:42};
+ * const solid = buildSolidMaze(solidRecipe);
+ * const solidGrid = solid.grid;
+ * const q: Quat = [0,0,0,1];
+ * const frame = projectFrame(createFrame(solidGrid),solidGrid,q,1,640,480);
+ * const value: SolidFrame = frame;
+ * console.log(value);
+ * ```
+ */
 export type SolidFrame = {
   width: number;
   height: number;
@@ -71,7 +120,26 @@ export type SolidFrame = {
   cellPixels: number;
 };
 
-/** Room for a frame of a solid. */
+/** Room for a frame of a solid.
+ *
+ * @param grid - The valid native flat or surface cell graph.
+ * @returns Room for a frame of a solid.
+ * @example
+ * ```ts
+ * import type { MazeRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { buildMaze } from "@johnmorrisdotca/meikyuu";
+ * import type { SolidRecipe } from "@johnmorrisdotca/meikyuu/3d";
+ * import { buildSolidMaze, createFrame } from "@johnmorrisdotca/meikyuu/3d";
+ *
+ * const recipe: MazeRecipe = {shape:"square",w:5,h:5,algorithm:"backtracker",mode:"to-goal",seed:42};
+ * const maze = buildMaze(recipe);
+ * const grid = maze.grid;
+ * const solidRecipe: SolidRecipe = {kind:"cube",n:2,algorithm:"backtracker",seed:42};
+ * const solid = buildSolidMaze(solidRecipe);
+ * const solidGrid = solid.grid;
+ * console.log(createFrame(solidGrid).count);
+ * ```
+ */
 export function createFrame(grid: SolidGrid): SolidFrame {
   const vertices = grid.vertices.length;
   const cells = grid.cells;
@@ -119,7 +187,33 @@ function reachOf(grid: SolidGrid, m: readonly number[], eye: number): number {
   return most;
 }
 
-/** Put the solid, turned by `q` and zoomed, on a picture `width` by `height`: fills every array of the frame. */
+/** Put the solid, turned by `q` and zoomed, on a picture `width` by `height`: fills every array of the frame.
+ *
+ * @param frame - The current projected surface-view arrays and dimensions.
+ * @param grid - The valid native flat or surface cell graph.
+ * @param q - The current normalized rotation quaternion.
+ * @param zoom - The positive surface-view zoom multiplier.
+ * @param width - The native width in cells or pixels specified by this signature.
+ * @param height - The native height in cells or pixels specified by this signature.
+ * @returns Put the solid, turned by `q` and zoomed, on a picture `width` by `height`: fills every array of the frame.
+ * @example
+ * ```ts
+ * import type { MazeRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { buildMaze } from "@johnmorrisdotca/meikyuu";
+ * import type { Quat, SolidRecipe } from "@johnmorrisdotca/meikyuu/3d";
+ * import { buildSolidMaze, createFrame, projectFrame } from "@johnmorrisdotca/meikyuu/3d";
+ *
+ * const recipe: MazeRecipe = {shape:"square",w:5,h:5,algorithm:"backtracker",mode:"to-goal",seed:42};
+ * const maze = buildMaze(recipe);
+ * const grid = maze.grid;
+ * const solidRecipe: SolidRecipe = {kind:"cube",n:2,algorithm:"backtracker",seed:42};
+ * const solid = buildSolidMaze(solidRecipe);
+ * const solidGrid = solid.grid;
+ * const q: Quat = [0,0,0,1];
+ * const frame = projectFrame(createFrame(solidGrid),solidGrid,q,1,640,480);
+ * console.log(projectFrame(frame,solidGrid,q,1,640,480).cellPixels);
+ * ```
+ */
 export function projectFrame(frame: SolidFrame, grid: SolidGrid, q: Quat, zoom: number, width: number, height: number): SolidFrame {
   const m = quatMatrix(q);
   const eye = frame.eye;
@@ -232,6 +326,29 @@ function depthAt(frame: SolidFrame, grid: SolidGrid, cell: number, x: number, y:
  * The cell the point `(x, y)` of the picture is on, or -1 for none. The point is on a cell when it is inside the outline the cell is drawn with;
  * a point on the line between two cells is on the lower numbered. Where outlines overlap (they do not on a convex solid, but a flattened globe's might at the very
  * edge, and a star, a cross or a heart has parts in front of parts) the cell nearest the viewer at that point wins.
+ *
+ * @param frame - The current projected surface-view arrays and dimensions.
+ * @param grid - The valid native flat or surface cell graph.
+ * @param x - The horizontal viewport coordinate.
+ * @param y - The vertical viewport coordinate.
+ * @returns The cell the point `(x, y)` of the picture is on, or -1 for none. The point is on a cell when it is inside the outline the cell is drawn with; a point on the line between two cells is on the lower numbered. Where outlines overlap (they do not on a convex solid, but a flattened globe's might at the very edge, and a star, a cross or a heart has parts in front of parts) the cell nearest the viewer at that point wins.
+ * @example
+ * ```ts
+ * import type { MazeRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { buildMaze } from "@johnmorrisdotca/meikyuu";
+ * import type { Quat, SolidRecipe } from "@johnmorrisdotca/meikyuu/3d";
+ * import { buildSolidMaze, createFrame, pickCell, projectFrame } from "@johnmorrisdotca/meikyuu/3d";
+ *
+ * const recipe: MazeRecipe = {shape:"square",w:5,h:5,algorithm:"backtracker",mode:"to-goal",seed:42};
+ * const maze = buildMaze(recipe);
+ * const grid = maze.grid;
+ * const solidRecipe: SolidRecipe = {kind:"cube",n:2,algorithm:"backtracker",seed:42};
+ * const solid = buildSolidMaze(solidRecipe);
+ * const solidGrid = solid.grid;
+ * const q: Quat = [0,0,0,1];
+ * const frame = projectFrame(createFrame(solidGrid),solidGrid,q,1,640,480);
+ * console.log(pickCell(frame,solidGrid,320,240));
+ * ```
  */
 export function pickCell(frame: SolidFrame, grid: SolidGrid, x: number, y: number): number {
   let found = -1;
@@ -281,7 +398,31 @@ export function cellSeen(frame: SolidFrame, grid: SolidGrid, cell: number): bool
   return known === 1;
 }
 
-/** The cells a straight drag from one point to another crosses, in order, by sampling it finely enough that no cell the drag passes through is missed. */
+/** The cells a straight drag from one point to another crosses, in order, by sampling it finely enough that no cell the drag passes through is missed.
+ *
+ * @param frame - The current projected surface-view arrays and dimensions.
+ * @param grid - The valid native flat or surface cell graph.
+ * @param from - The start cell or pointer point specified by the signature.
+ * @param to - The destination pointer point specified by the signature.
+ * @returns The cells a straight drag from one point to another crosses, in order, by sampling it finely enough that no cell the drag passes through is missed.
+ * @example
+ * ```ts
+ * import type { MazeRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { buildMaze } from "@johnmorrisdotca/meikyuu";
+ * import type { Quat, SolidRecipe } from "@johnmorrisdotca/meikyuu/3d";
+ * import { buildSolidMaze, cellsAlongDrag, createFrame, projectFrame } from "@johnmorrisdotca/meikyuu/3d";
+ *
+ * const recipe: MazeRecipe = {shape:"square",w:5,h:5,algorithm:"backtracker",mode:"to-goal",seed:42};
+ * const maze = buildMaze(recipe);
+ * const grid = maze.grid;
+ * const solidRecipe: SolidRecipe = {kind:"cube",n:2,algorithm:"backtracker",seed:42};
+ * const solid = buildSolidMaze(solidRecipe);
+ * const solidGrid = solid.grid;
+ * const q: Quat = [0,0,0,1];
+ * const frame = projectFrame(createFrame(solidGrid),solidGrid,q,1,640,480);
+ * console.log(cellsAlongDrag(frame,solidGrid,[320,240],[330,240]));
+ * ```
+ */
 export function cellsAlongDrag(frame: SolidFrame, grid: SolidGrid, from: readonly [number, number], to: readonly [number, number]): number[] {
   const out: number[] = [];
   const length = Math.hypot(to[0] - from[0], to[1] - from[1]);
@@ -295,7 +436,30 @@ export function cellsAlongDrag(frame: SolidFrame, grid: SolidGrid, from: readonl
   return out;
 }
 
-/** The point of the trackball a point of the picture is on, for turning by a drag: the unit sphere seen from the front, and, outside it, the rim. */
+/** The point of the trackball a point of the picture is on, for turning by a drag: the unit sphere seen from the front, and, outside it, the rim.
+ *
+ * @param frame - The current projected surface-view arrays and dimensions.
+ * @param x - The horizontal viewport coordinate.
+ * @param y - The vertical viewport coordinate.
+ * @returns The point of the trackball a point of the picture is on, for turning by a drag: the unit sphere seen from the front, and, outside it, the rim.
+ * @example
+ * ```ts
+ * import type { MazeRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { buildMaze } from "@johnmorrisdotca/meikyuu";
+ * import type { Quat, SolidRecipe } from "@johnmorrisdotca/meikyuu/3d";
+ * import { buildSolidMaze, createFrame, projectFrame, trackballPoint } from "@johnmorrisdotca/meikyuu/3d";
+ *
+ * const recipe: MazeRecipe = {shape:"square",w:5,h:5,algorithm:"backtracker",mode:"to-goal",seed:42};
+ * const maze = buildMaze(recipe);
+ * const grid = maze.grid;
+ * const solidRecipe: SolidRecipe = {kind:"cube",n:2,algorithm:"backtracker",seed:42};
+ * const solid = buildSolidMaze(solidRecipe);
+ * const solidGrid = solid.grid;
+ * const q: Quat = [0,0,0,1];
+ * const frame = projectFrame(createFrame(solidGrid),solidGrid,q,1,640,480);
+ * console.log(trackballPoint(frame,320,240));
+ * ```
+ */
 export function trackballPoint(frame: SolidFrame, x: number, y: number): Vec3 {
   const radius = (Math.min(frame.width, frame.height) / 2) * SOLID_FILL;
   const px = (x - frame.width / 2) / radius;
@@ -306,12 +470,50 @@ export function trackballPoint(frame: SolidFrame, x: number, y: number): Vec3 {
   return [px / l, py / l, 0];
 }
 
-/** The turn a drag from one point to another makes: the point of the solid under the first is carried to under the second. */
+/** The turn a drag from one point to another makes: the point of the solid under the first is carried to under the second.
+ *
+ * @param frame - The current projected surface-view arrays and dimensions.
+ * @param q - The current normalized rotation quaternion.
+ * @param from - The start cell or pointer point specified by the signature.
+ * @param to - The destination pointer point specified by the signature.
+ * @returns The turn a drag from one point to another makes: the point of the solid under the first is carried to under the second.
+ * @example
+ * ```ts
+ * import type { MazeRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { buildMaze } from "@johnmorrisdotca/meikyuu";
+ * import type { Quat, SolidRecipe } from "@johnmorrisdotca/meikyuu/3d";
+ * import { buildSolidMaze, createFrame, dragTurn, projectFrame } from "@johnmorrisdotca/meikyuu/3d";
+ *
+ * const recipe: MazeRecipe = {shape:"square",w:5,h:5,algorithm:"backtracker",mode:"to-goal",seed:42};
+ * const maze = buildMaze(recipe);
+ * const grid = maze.grid;
+ * const solidRecipe: SolidRecipe = {kind:"cube",n:2,algorithm:"backtracker",seed:42};
+ * const solid = buildSolidMaze(solidRecipe);
+ * const solidGrid = solid.grid;
+ * const q: Quat = [0,0,0,1];
+ * const frame = projectFrame(createFrame(solidGrid),solidGrid,q,1,640,480);
+ * console.log(dragTurn(frame,q,[320,240],[330,240]));
+ * ```
+ */
 export function dragTurn(frame: SolidFrame, q: Quat, from: readonly [number, number], to: readonly [number, number]): Quat {
   return quatNormalize(quatMul(quatBetween(trackballPoint(frame, from[0], from[1]), trackballPoint(frame, to[0], to[1])), q));
 }
 
-/** A turn about the viewer's own axes: `right` radians about the vertical (the solid's near side moves right) and `down` about the horizontal. */
+/** A turn about the viewer's own axes: `right` radians about the vertical (the solid's near side moves right) and `down` about the horizontal.
+ *
+ * @param q - The current normalized rotation quaternion.
+ * @param right - The horizontal view rotation in radians.
+ * @param down - The vertical view rotation in radians.
+ * @returns A turn about the viewer's own axes: `right` radians about the vertical (the solid's near side moves right) and `down` about the horizontal.
+ * @example
+ * ```ts
+ * import type { Quat } from "@johnmorrisdotca/meikyuu/3d";
+ * import { stepTurn } from "@johnmorrisdotca/meikyuu/3d";
+ *
+ * const q: Quat = [0,0,0,1];
+ * console.log(stepTurn(q,0.1,0));
+ * ```
+ */
 export function stepTurn(q: Quat, right: number, down: number): Quat {
   const about = quatMul(quatAxisAngle([1, 0, 0], -down), quatAxisAngle([0, 1, 0], right));
   return quatNormalize(quatMul(about, q));
@@ -338,7 +540,30 @@ function facingOf(grid: SolidGrid, cell: number, around: boolean): Vec3 {
   return l < 1e-9 ? own : [sum[0] / l, sum[1] / l, sum[2] / l];
 }
 
-/** The turn that brings the cell round to face the viewer (see `facingOf` for `around`), by the shortest way, and then rolls it so that a side of the cell lies level (the cell's own first side, to the nearest of the turns that put one of its sides level). */
+/** The turn that brings the cell round to face the viewer (see `facingOf` for `around`), by the shortest way, and then rolls it so that a side of the cell lies level (the cell's own first side, to the nearest of the turns that put one of its sides level).
+ *
+ * @param grid - The valid native flat or surface cell graph.
+ * @param q - The current normalized rotation quaternion.
+ * @param cell - A zero-based native cell index.
+ * @param around - Whether to turn about the cell’s own surface normal.
+ * @returns The turn that brings the cell round to face the viewer (see `facingOf` for `around`), by the shortest way, and then rolls it so that a side of the cell lies level (the cell's own first side, to the nearest of the turns that put one of its sides level).
+ * @example
+ * ```ts
+ * import type { MazeRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { buildMaze } from "@johnmorrisdotca/meikyuu";
+ * import type { Quat, SolidRecipe } from "@johnmorrisdotca/meikyuu/3d";
+ * import { buildSolidMaze, faceCellTurn } from "@johnmorrisdotca/meikyuu/3d";
+ *
+ * const recipe: MazeRecipe = {shape:"square",w:5,h:5,algorithm:"backtracker",mode:"to-goal",seed:42};
+ * const maze = buildMaze(recipe);
+ * const grid = maze.grid;
+ * const solidRecipe: SolidRecipe = {kind:"cube",n:2,algorithm:"backtracker",seed:42};
+ * const solid = buildSolidMaze(solidRecipe);
+ * const solidGrid = solid.grid;
+ * const q: Quat = [0,0,0,1];
+ * console.log(faceCellTurn(solidGrid,q,solid.start));
+ * ```
+ */
 export function faceCellTurn(grid: SolidGrid, q: Quat, cell: number, around = false): Quat {
   const toward = quatNormalize(quatMul(quatBetween(quatTurn(q, facingOf(grid, cell, around)), [0, 0, 1]), q));
   // Where the cell's first side then points on the picture, and the nearest roll that makes it level.
@@ -355,6 +580,25 @@ export function faceCellTurn(grid: SolidGrid, q: Quat, cell: number, around = fa
  * A view of the solid to begin with: the cell faces the viewer, then the solid is tipped a little so that its depth shows and its neighbours
  * on the near side can be seen. A shape with a way up (a heart, a star) is turned about its vertical axis only, so that it is seen upright, with the cell on the near side;
  * and a solid with parts that hide parts is given a view in which the cell is not hidden, the first of a few tried.
+ *
+ * @param grid - The valid native flat or surface cell graph.
+ * @param cell - A zero-based native cell index.
+ * @returns A view of the solid to begin with: the cell faces the viewer, then the solid is tipped a little so that its depth shows and its neighbours on the near side can be seen. A shape with a way up (a heart, a star) is turned about its vertical axis only, so that it is seen upright, with the cell on the near side; and a solid with parts that hide parts is given a view in which the cell is not hidden, the first of a few tried.
+ * @example
+ * ```ts
+ * import type { MazeRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { buildMaze } from "@johnmorrisdotca/meikyuu";
+ * import type { SolidRecipe } from "@johnmorrisdotca/meikyuu/3d";
+ * import { buildSolidMaze, openingTurn } from "@johnmorrisdotca/meikyuu/3d";
+ *
+ * const recipe: MazeRecipe = {shape:"square",w:5,h:5,algorithm:"backtracker",mode:"to-goal",seed:42};
+ * const maze = buildMaze(recipe);
+ * const grid = maze.grid;
+ * const solidRecipe: SolidRecipe = {kind:"cube",n:2,algorithm:"backtracker",seed:42};
+ * const solid = buildSolidMaze(solidRecipe);
+ * const solidGrid = solid.grid;
+ * console.log(openingTurn(solidGrid,solid.start));
+ * ```
  */
 export function openingTurn(grid: SolidGrid, cell: number): Quat {
   const faced = faceCellTurn(grid, [0, 0, 0, 1], cell);
@@ -385,13 +629,68 @@ export function openingTurn(grid: SolidGrid, cell: number): Quat {
  * cell is hidden however squarely the head faces you. Then it turns the solid so that the head and the cells it leads to, taken together, face
  * the viewer, which puts the edge between them at the front, where both are seen at a slant. It turns gently, up to `EDGE_RATE` radians a second and
  * slower the less the need, and stops when neither trouble is left. It answers the new turn, or null when there is nothing to do.
+ *
+ * @example
+ * ```ts
+ * import { EDGE_SAFE } from "@johnmorrisdotca/meikyuu/3d";
+ * console.log(EDGE_SAFE);
+ * ```
  */
 export const EDGE_SAFE = 0.62;
+/** The normalized threshold used for a full native edge turn.
+ *
+ * @example
+ * ```ts
+ * import { EDGE_FULL } from "@johnmorrisdotca/meikyuu/3d";
+ * console.log(EDGE_FULL);
+ * ```
+ */
 export const EDGE_FULL = 0.25;
+/** The normalized neighbouring-cell edge-turn threshold.
+ *
+ * @example
+ * ```ts
+ * import { EDGE_NEIGHBOUR } from "@johnmorrisdotca/meikyuu/3d";
+ * console.log(EDGE_NEIGHBOUR);
+ * ```
+ */
 export const EDGE_NEIGHBOUR = 0.5;
-/** The fastest the solid turns by itself, in radians a second. */
+/** The fastest the solid turns by itself, in radians a second.
+ *
+ * @example
+ * ```ts
+ * import { EDGE_RATE } from "@johnmorrisdotca/meikyuu/3d";
+ * console.log(EDGE_RATE);
+ * ```
+ */
 export const EDGE_RATE = 1.6;
 
+/** Compute a view rotation that follows a surface path near an edge, or null when no turn is needed.
+ *
+ * @param grid - The valid native flat or surface cell graph.
+ * @param links - Passage neighbour lists, one per cell.
+ * @param q - The current normalized rotation quaternion.
+ * @param cell - A zero-based native cell index.
+ * @param seconds - Elapsed seconds for this view update.
+ * @param hidden - Optional predicate identifying cells hidden by the host.
+ * @returns Compute a view rotation that follows a surface path near an edge, or null when no turn is needed.
+ * @example
+ * ```ts
+ * import type { MazeRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { buildMaze } from "@johnmorrisdotca/meikyuu";
+ * import type { Quat, SolidRecipe } from "@johnmorrisdotca/meikyuu/3d";
+ * import { buildSolidMaze, edgeTurn } from "@johnmorrisdotca/meikyuu/3d";
+ *
+ * const recipe: MazeRecipe = {shape:"square",w:5,h:5,algorithm:"backtracker",mode:"to-goal",seed:42};
+ * const maze = buildMaze(recipe);
+ * const grid = maze.grid;
+ * const solidRecipe: SolidRecipe = {kind:"cube",n:2,algorithm:"backtracker",seed:42};
+ * const solid = buildSolidMaze(solidRecipe);
+ * const solidGrid = solid.grid;
+ * const q: Quat = [0,0,0,1];
+ * console.log(edgeTurn(solidGrid,solid.links,q,solid.start,0.1));
+ * ```
+ */
 export function edgeTurn(grid: SolidGrid, links: readonly (readonly number[])[], q: Quat, cell: number, seconds: number, hidden?: (cell: number) => boolean): Quat | null {
   const n = quatTurn(q, grid.normals[cell]!);
   let urgency = n[2] >= EDGE_SAFE ? 0 : Math.min(1, (EDGE_SAFE - n[2]) / (EDGE_SAFE - EDGE_FULL));

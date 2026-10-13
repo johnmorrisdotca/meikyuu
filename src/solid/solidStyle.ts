@@ -1,6 +1,12 @@
 /**
  * THE STYLE a playable solid wears beside the board's own (`MEIKYUU_PLAY_STYLE`): the canvas fills the box, the box is grabbed rather than drawn
  * on, and the turn pad sits in a row. It makes no custom properties of its own: the colours are the drawing's (`--mk-paper`, `--mk-wall`, ...).
+ *
+ * @example
+ * ```ts
+ * import { SOLID_PLAY_STYLE } from "@johnmorrisdotca/meikyuu/3d/play";
+ * console.log(SOLID_PLAY_STYLE.length);
+ * ```
  */
 export const SOLID_PLAY_STYLE = `
 .meikyuu-solid .mk-box { cursor: grab; }

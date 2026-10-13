@@ -48,21 +48,64 @@ import type { FitMode } from "./viewport.ts";
  * `drawArrows`'s, and each is usable alone. Nothing it draws can be selected, and its box stays one steady shape whatever is in it.
  */
 
-/** The page left beside the box, in pixels: the least, and the most the zoom-out widens it to. */
+/** The page left beside the box, in pixels: the least, and the most the zoom-out widens it to.
+ *
+ * @example
+ * ```ts
+ * import { MEIKYUU_GUTTER } from "@johnmorrisdotca/meikyuu/play";
+ * console.log(MEIKYUU_GUTTER);
+ * ```
+ */
 export const MEIKYUU_GUTTER = 24;
+/** The maximum native viewport gutter in pixels.
+ *
+ * @example
+ * ```ts
+ * import { MEIKYUU_GUTTER_MAX } from "@johnmorrisdotca/meikyuu/play";
+ * console.log(MEIKYUU_GUTTER_MAX);
+ * ```
+ */
 export const MEIKYUU_GUTTER_MAX = 72;
 /** How much one press of Zoom out widens the gutters, and one press of Zoom in narrows them. */
 const MEIKYUU_GUTTER_STEP = 24;
-/** What a window is assumed to hold besides the box, in pixels: the page's header, and the board's buttons and lines of words. */
+/** What a window is assumed to hold besides the box, in pixels: the page's header, and the board's buttons and lines of words.
+ *
+ * @example
+ * ```ts
+ * import { MEIKYUU_RESERVE } from "@johnmorrisdotca/meikyuu/play";
+ * console.log(MEIKYUU_RESERVE);
+ * ```
+ */
 export const MEIKYUU_RESERVE = 200;
 
-/** What is being played. */
+/** What is being played.
+ *
+ * @example
+ * ```ts
+ * import type { MazeRecipe } from "@johnmorrisdotca/meikyuu";
+ * import type { MeikyuuPuzzle } from "@johnmorrisdotca/meikyuu/play";
+ *
+ * const recipe: MazeRecipe = {shape:"square",w:5,h:5,algorithm:"backtracker",mode:"to-goal",seed:42};
+ * const value: MeikyuuPuzzle = {kind:"maze",recipe};
+ * console.log(value);
+ * ```
+ */
 export type MeikyuuPuzzle =
   | { kind: "maze"; recipe: MazeRecipe; level?: number }
   | { kind: "arrows"; recipe: ArrowRecipe; level?: number }
   | { kind: "mixed"; recipe: MixedRecipe; level?: number };
 
-/** What every event tells of the board. */
+/** What every event tells of the board.
+ *
+ * @example
+ * ```ts
+ * import type { MeikyuuEventDetail } from "@johnmorrisdotca/meikyuu/play";
+ * import { arrowsLeft, stonesLeft } from "@johnmorrisdotca/meikyuu";
+ *
+ * const value: MeikyuuEventDetail = {kind:"maze",level:null,moves:0,cells:0,keys:0,keysOf:0,hearts:null,arrowsLeft:null,solved:false,orientation:"landscape",turned:false,stones:0,stonesLeft:null};
+ * console.log(value);
+ * ```
+ */
 export type MeikyuuEventDetail = {
   kind: MeikyuuKind;
   /** The level's number in its list, when it is one of the package's. */
@@ -87,6 +130,18 @@ export type MeikyuuEventDetail = {
   stonesLeft: number | null;
 };
 
+/** Native puzzle/level/recipe, display, controls, sound, stones and event callbacks for a flat player.
+ *
+ * @example
+ * ```ts
+ * import type { MazeRecipe } from "@johnmorrisdotca/meikyuu";
+ * import type { MeikyuuMountOptions } from "@johnmorrisdotca/meikyuu/play";
+ *
+ * const recipe: MazeRecipe = {shape:"square",w:5,h:5,algorithm:"backtracker",mode:"to-goal",seed:42};
+ * const value: MeikyuuMountOptions = {kind:"maze",recipe,language:"en"};
+ * console.log(value);
+ * ```
+ */
 export type MeikyuuMountOptions = MazeLook & {
   /** Which list the level is from. Default `maze`. */
   kind?: MeikyuuKind;
@@ -146,6 +201,22 @@ export type MeikyuuMountOptions = MazeLook & {
   onStones?: (detail: MeikyuuEventDetail) => void;
 };
 
+/** The mounted flat maze, arrow or mixed board, its game/actions, view and cleanup handle.
+ *
+ * @example
+ * ```ts no-run
+ * import type { MazeRecipe } from "@johnmorrisdotca/meikyuu";
+ * import type { MeikyuuMount } from "@johnmorrisdotca/meikyuu/play";
+ * import { mountMeikyuu } from "@johnmorrisdotca/meikyuu/play";
+ *
+ * const recipe: MazeRecipe = {shape:"square",w:5,h:5,algorithm:"backtracker",mode:"to-goal",seed:42};
+ * const host = document.createElement("div");
+ * document.body.append(host);
+ * const player: MeikyuuMount | null = mountMeikyuu(host,{kind:"maze",recipe});
+ * console.log(player?.kind());
+ * player?.destroy();
+ * ```
+ */
 export type MeikyuuMount = {
   readonly host: HTMLElement;
   kind: () => MeikyuuKind;
@@ -195,7 +266,19 @@ export type MeikyuuMount = {
   destroy: () => void;
 };
 
-/** Put the style in the page once: in the document's head, or in the shadow root the host is in. */
+/** Put the style in the page once: in the document's head, or in the shadow root the host is in.
+ *
+ * @param host - The DOM host receiving the native player or styles.
+ * @returns Nothing; native scoped styles are installed for the host.
+ * @example
+ * ```ts no-run
+ * import { ensureMeikyuuPlayStyle } from "@johnmorrisdotca/meikyuu/play";
+ *
+ * const host = document.createElement("div");
+ * ensureMeikyuuPlayStyle(host);
+ * console.log(host.tagName);
+ * ```
+ */
 export function ensureMeikyuuPlayStyle(host: Element): void {
   const root = host.getRootNode();
   const target: ParentNode = typeof ShadowRoot !== "undefined" && root instanceof ShadowRoot ? root : host.ownerDocument.head;
@@ -206,7 +289,19 @@ export function ensureMeikyuuPlayStyle(host: Element): void {
   target.append(style);
 }
 
-/** The puzzle a set of options names: a level of the package's lists, or a recipe given, or null. */
+/** The puzzle a set of options names: a level of the package's lists, or a recipe given, or null.
+ *
+ * @param options - Native display/mount choices, or the point tuple specified by this signature.
+ * @returns The puzzle a set of options names: a level of the package's lists, or a recipe given, or null.
+ * @example
+ * ```ts
+ * import type { MazeRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { puzzleOf } from "@johnmorrisdotca/meikyuu/play";
+ *
+ * const recipe: MazeRecipe = {shape:"square",w:5,h:5,algorithm:"backtracker",mode:"to-goal",seed:42};
+ * console.log(puzzleOf({kind:"maze",recipe})?.kind);
+ * ```
+ */
 export function puzzleOf(options: { kind?: MeikyuuKind; level?: number; recipe?: MeikyuuMountOptions["recipe"] }): MeikyuuPuzzle | null {
   const { recipe } = options;
   if (recipe !== undefined) {

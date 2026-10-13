@@ -6,6 +6,15 @@ import { SOLID_SIZE_NAMES, type SolidSize } from "./solidSizes.ts";
 /**
  * A LEVEL OF A SOLID, AND HOW A FILE OF ROWS BECOMES THE LISTS: the shape every level entry of the solids shares (`3d/levels`, `3d/levels/dice`, `3d/levels/shapes`, `3d/levels/all`), so that each file of
  * recipes is turned into levels by the same code, and a page that shows one solid loads the file of that solid and no other.
+ *
+ * @example
+ * ```ts
+ * import type { MeikyuuSolidLevel } from "@johnmorrisdotca/meikyuu/3d/levels";
+ * import { solidLevelOf } from "@johnmorrisdotca/meikyuu/3d/levels";
+ *
+ * const value: MeikyuuSolidLevel = solidLevelOf("cube","small",1)!;
+ * console.log(value);
+ * ```
  */
 export type MeikyuuSolidLevel = {
   readonly kind: SolidKind;

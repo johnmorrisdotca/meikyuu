@@ -21,6 +21,14 @@ import type { MazeCore } from "./maze.ts";
  * take changed, Restart takes them all up, and `encodeRun` and `decodeRun` keep a run with its stones as one short text.
  *
  * These are pure functions like the rest of the game: each takes a game and returns a new one, or the same one when nothing changed.
+ *
+ * @example
+ * ```ts
+ * import type { StoneRules } from "@johnmorrisdotca/meikyuu";
+ *
+ * const value: StoneRules = {limit:5,reach:1};
+ * console.log(value);
+ * ```
  */
 export type StoneRules = {
   /** How many stones may be down at once, or null for as many as the player likes. */
@@ -29,18 +37,55 @@ export type StoneRules = {
   readonly reach: 1 | 2;
 };
 
-/** What the `stones` option of `mountMeikyuu` takes: `true` for the defaults, or any of the rules (`limit: null` for no limit). */
+/** What the `stones` option of `mountMeikyuu` takes: `true` for the defaults, or any of the rules (`limit: null` for no limit).
+ *
+ * @example
+ * ```ts
+ * import type { StoneOption } from "@johnmorrisdotca/meikyuu";
+ *
+ * const value: StoneOption = {limit:5,reach:1};
+ * console.log(value);
+ * ```
+ */
 export type StoneOption = boolean | { readonly limit?: number | null; readonly reach?: number };
 
-/** The farthest a stone may be from the line: two cells. */
+/** The farthest a stone may be from the line: two cells.
+ *
+ * @example
+ * ```ts
+ * import { MEIKYUU_STONE_REACH_MOST } from "@johnmorrisdotca/meikyuu";
+ * console.log(MEIKYUU_STONE_REACH_MOST);
+ * ```
+ */
 export const MEIKYUU_STONE_REACH_MOST = 2;
 
-/** How many stones a maze of `cells` cells gets by default: three, and one more for every hundred cells across (so four for a small maze, nine for a huge one, thirteen for a colossal one). */
+/** How many stones a maze of `cells` cells gets by default: three, and one more for every hundred cells across (so four for a small maze, nine for a huge one, thirteen for a colossal one).
+ *
+ * @param cells - A cell-index path or total count specified by this signature.
+ * @returns How many stones a maze of `cells` cells gets by default: three, and one more for every hundred cells across (so four for a small maze, nine for a huge one, thirteen for a colossal one).
+ * @example
+ * ```ts
+ * import { stoneLimitFor } from "@johnmorrisdotca/meikyuu";
+ *
+ * console.log(stoneLimitFor(25));
+ * ```
+ */
 export function stoneLimitFor(cells: number): number {
   return 3 + Math.floor(Math.sqrt(Math.max(0, cells)) / 10);
 }
 
-/** The rules an option means for a maze of `cells` cells, or null when the option is no stones. */
+/** The rules an option means for a maze of `cells` cells, or null when the option is no stones.
+ *
+ * @param option - The host’s stone setting, or undefined for off.
+ * @param cells - A cell-index path or total count specified by this signature.
+ * @returns The validated native limit/reach, or null when stones are disabled.
+ * @example
+ * ```ts
+ * import { stoneRulesOf } from "@johnmorrisdotca/meikyuu";
+ *
+ * console.log(stoneRulesOf(true,25));
+ * ```
+ */
 export function stoneRulesOf(option: StoneOption | undefined, cells: number): StoneRules | null {
   if (option === undefined || option === false) return null;
   const given = option === true ? {} : option;
@@ -49,16 +94,54 @@ export function stoneRulesOf(option: StoneOption | undefined, cells: number): St
   return { limit, reach };
 }
 
-/** Why a stone cannot be laid on a cell, or `ok`. */
+/** Why a stone cannot be laid on a cell, or `ok`.
+ *
+ * @example
+ * ```ts
+ * import type { StoneVerdict } from "@johnmorrisdotca/meikyuu";
+ *
+ * const value: StoneVerdict = "ok";
+ * console.log(value);
+ * ```
+ */
 export type StoneVerdict = "ok" | "off" | "solved" | "drawing" | "no-line" | "no-cell" | "on-line" | "has-stone" | "end" | "limit" | "far";
 
-/** How many stones can still be laid: null for no limit, and nought for a game with none. */
+/** How many stones can still be laid: null for no limit, and nought for a game with none.
+ *
+ * @param game - The current immutable native game state.
+ * @returns The remaining stone allowance, or null for an unlimited allowance.
+ * @example
+ * ```ts
+ * import type { MazeRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { buildMaze, newMazeGame, stonesLeft } from "@johnmorrisdotca/meikyuu";
+ *
+ * const recipe: MazeRecipe = {shape:"square",w:5,h:5,algorithm:"backtracker",mode:"to-goal",seed:42};
+ * const maze = buildMaze(recipe);
+ * const stoneGame = newMazeGame(maze,{limit:5,reach:1});
+ * console.log(stonesLeft(stoneGame));
+ * ```
+ */
 export function stonesLeft(game: MazeGame<MazeCore>): number | null {
   if (game.rules === null) return 0;
   return game.rules.limit === null ? null : Math.max(0, game.rules.limit - game.stones.length);
 }
 
-/** Whether a cell has a stone on it. */
+/** Whether a cell has a stone on it.
+ *
+ * @param game - The current immutable native game state.
+ * @param cell - A zero-based native cell index.
+ * @returns Whether a cell has a stone on it.
+ * @example
+ * ```ts
+ * import type { MazeRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { buildMaze, hasStone, newMazeGame } from "@johnmorrisdotca/meikyuu";
+ *
+ * const recipe: MazeRecipe = {shape:"square",w:5,h:5,algorithm:"backtracker",mode:"to-goal",seed:42};
+ * const maze = buildMaze(recipe);
+ * const stoneGame = newMazeGame(maze,{limit:5,reach:1});
+ * console.log(hasStone(stoneGame,maze.goal));
+ * ```
+ */
 export function hasStone(game: MazeGame<MazeCore>, cell: number): boolean {
   return game.stones.includes(cell);
 }
@@ -83,7 +166,22 @@ function nearLine(game: MazeGame<MazeCore>, cell: number, reach: number): boolea
   return false;
 }
 
-/** Whether a stone may be laid on a cell now, and if not, why not. A stone already there is `has-stone`: ask `takeStone` for it. */
+/** Whether a stone may be laid on a cell now, and if not, why not. A stone already there is `has-stone`: ask `takeStone` for it.
+ *
+ * @param game - The current immutable native game state.
+ * @param cell - A zero-based native cell index.
+ * @returns Whether a stone may be laid on a cell now, and if not, why not. A stone already there is `has-stone`: ask `takeStone` for it.
+ * @example
+ * ```ts
+ * import type { MazeRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { buildMaze, canLayStone, newMazeGame } from "@johnmorrisdotca/meikyuu";
+ *
+ * const recipe: MazeRecipe = {shape:"square",w:5,h:5,algorithm:"backtracker",mode:"to-goal",seed:42};
+ * const maze = buildMaze(recipe);
+ * const stoneGame = newMazeGame(maze,{limit:5,reach:1});
+ * console.log(canLayStone(stoneGame,maze.goal));
+ * ```
+ */
 export function canLayStone(game: MazeGame<MazeCore>, cell: number): StoneVerdict {
   if (game.rules === null) return "off";
   if (!Number.isInteger(cell) || cell < 0 || cell >= game.maze.grid.cells) return "no-cell";
@@ -98,32 +196,106 @@ export function canLayStone(game: MazeGame<MazeCore>, cell: number): StoneVerdic
   return nearLine(game, cell, game.rules.reach) ? "ok" : "far";
 }
 
-/** The game with a stone laid on the cell; the same game when it may not be (`canLayStone`). Undo takes it up again. */
+/** The game with a stone laid on the cell; the same game when it may not be (`canLayStone`). Undo takes it up again.
+ *
+ * @param game - The current immutable native game state.
+ * @param cell - A zero-based native cell index.
+ * @returns The game with a stone laid on the cell; the same game when it may not be (`canLayStone`). Undo takes it up again.
+ * @example
+ * ```ts
+ * import type { MazeRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { buildMaze, layStone, newMazeGame } from "@johnmorrisdotca/meikyuu";
+ *
+ * const recipe: MazeRecipe = {shape:"square",w:5,h:5,algorithm:"backtracker",mode:"to-goal",seed:42};
+ * const maze = buildMaze(recipe);
+ * const stoneGame = newMazeGame(maze,{limit:5,reach:1});
+ * console.log(layStone(stoneGame,maze.goal).stones);
+ * ```
+ */
 export function layStone<M extends MazeCore>(game: MazeGame<M>, cell: number): MazeGame<M> {
   if (canLayStone(game, cell) !== "ok") return game;
   return { ...game, stones: [...game.stones, cell], undo: [...game.undo, { path: game.path, collected: game.collected, solved: game.solved, stones: game.stones }] };
 }
 
-/** The game with the stone on the cell taken up (and given back); the same game when there is none. Undo lays it again. */
+/** The game with the stone on the cell taken up (and given back); the same game when there is none. Undo lays it again.
+ *
+ * @param game - The current immutable native game state.
+ * @param cell - A zero-based native cell index.
+ * @returns The game with the stone on the cell taken up (and given back); the same game when there is none. Undo lays it again.
+ * @example
+ * ```ts
+ * import type { MazeRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { buildMaze, newMazeGame, takeStone } from "@johnmorrisdotca/meikyuu";
+ *
+ * const recipe: MazeRecipe = {shape:"square",w:5,h:5,algorithm:"backtracker",mode:"to-goal",seed:42};
+ * const maze = buildMaze(recipe);
+ * const stoneGame = newMazeGame(maze,{limit:5,reach:1});
+ * console.log(takeStone(stoneGame,maze.goal).stones);
+ * ```
+ */
 export function takeStone<M extends MazeCore>(game: MazeGame<M>, cell: number): MazeGame<M> {
   if (game.rules === null || game.drawing || !hasStone(game, cell)) return game;
   return { ...game, stones: game.stones.filter((each) => each !== cell), undo: [...game.undo, { path: game.path, collected: game.collected, solved: game.solved, stones: game.stones }] };
 }
 
-/** A tap on a cell: a stone there is taken up, and otherwise one is laid. `how` says which, or that it was refused and why. */
+/** A tap on a cell: a stone there is taken up, and otherwise one is laid. `how` says which, or that it was refused and why.
+ *
+ * @param game - The current immutable native game state.
+ * @param cell - A zero-based native cell index.
+ * @returns A tap on a cell: a stone there is taken up, and otherwise one is laid. `how` says which, or that it was refused and why.
+ * @example
+ * ```ts
+ * import type { MazeRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { buildMaze, newMazeGame, toggleStone } from "@johnmorrisdotca/meikyuu";
+ *
+ * const recipe: MazeRecipe = {shape:"square",w:5,h:5,algorithm:"backtracker",mode:"to-goal",seed:42};
+ * const maze = buildMaze(recipe);
+ * const stoneGame = newMazeGame(maze,{limit:5,reach:1});
+ * console.log(toggleStone(stoneGame,maze.goal).how);
+ * ```
+ */
 export function toggleStone<M extends MazeCore>(game: MazeGame<M>, cell: number): { game: MazeGame<M>; how: "laid" | "taken" | "refused"; why: StoneVerdict } {
   if (hasStone(game, cell) && game.rules !== null && !game.drawing) return { game: takeStone(game, cell), how: "taken", why: "ok" };
   const why = canLayStone(game, cell);
   return why === "ok" ? { game: layStone(game, cell), how: "laid", why } : { game, how: "refused", why };
 }
 
-/** Every stone taken up, in one step Undo can put back. The same game when there are none. */
+/** Every stone taken up, in one step Undo can put back. The same game when there are none.
+ *
+ * @param game - The current immutable native game state.
+ * @returns Every stone taken up, in one step Undo can put back. The same game when there are none.
+ * @example
+ * ```ts
+ * import type { MazeRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { buildMaze, clearStones, newMazeGame } from "@johnmorrisdotca/meikyuu";
+ *
+ * const recipe: MazeRecipe = {shape:"square",w:5,h:5,algorithm:"backtracker",mode:"to-goal",seed:42};
+ * const maze = buildMaze(recipe);
+ * const stoneGame = newMazeGame(maze,{limit:5,reach:1});
+ * console.log(clearStones(stoneGame).stones);
+ * ```
+ */
 export function clearStones<M extends MazeCore>(game: MazeGame<M>): MazeGame<M> {
   if (game.stones.length === 0 || game.drawing) return game;
   return { ...game, stones: [], undo: [...game.undo, { path: game.path, collected: game.collected, solved: game.solved, stones: game.stones }] };
 }
 
-/** The same game under other rules (the limit or the reach changed, or stones turned on or off): the stones down stay down, and none is ever taken off by a lower limit, only no more laid. */
+/** The same game under other rules (the limit or the reach changed, or stones turned on or off): the stones down stay down, and none is ever taken off by a lower limit, only no more laid.
+ *
+ * @param game - The current immutable native game state.
+ * @param rules - Native stone limit/reach, or null when disabled.
+ * @returns The same game under other rules (the limit or the reach changed, or stones turned on or off): the stones down stay down, and none is ever taken off by a lower limit, only no more laid.
+ * @example
+ * ```ts
+ * import type { MazeRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { buildMaze, newMazeGame, withStoneRules } from "@johnmorrisdotca/meikyuu";
+ *
+ * const recipe: MazeRecipe = {shape:"square",w:5,h:5,algorithm:"backtracker",mode:"to-goal",seed:42};
+ * const maze = buildMaze(recipe);
+ * const game = newMazeGame(maze);
+ * console.log(withStoneRules(game,{limit:5,reach:1}).rules);
+ * ```
+ */
 export function withStoneRules<M extends MazeCore>(game: MazeGame<M>, rules: StoneRules | null): MazeGame<M> {
   const same = game.rules === rules || (game.rules !== null && rules !== null && game.rules.limit === rules.limit && game.rules.reach === rules.reach);
   return same ? game : { ...game, rules, stones: rules === null ? [] : game.stones };
@@ -133,6 +305,19 @@ export function withStoneRules<M extends MazeCore>(game: MazeGame<M>, rules: Sto
  * A run kept as one short text: the line as its steps (`lineToSteps`), and, if any stones are down, a `~` and their cells in base 36 joined by dots,
  * such as `0231~1a.2f`. The same text is the same run on every device and however the board is turned. A run has no history, so it comes back
  * with one Undo, which takes the whole of it back to a maze with nothing drawn (what a player who left a half-drawn maze and came back expects: it can be cleared).
+ *
+ * @param game - The current immutable native game state.
+ * @returns A run kept as one short text: the line as its steps (`lineToSteps`), and, if any stones are down, a `~` and their cells in base 36 joined by dots, such as `0231~1a.2f`. The same text is the same run on every device and however the board is turned. A run has no history, so it comes back with one Undo, which takes the whole of it back to a maze with nothing drawn (what a player who left a half-drawn maze and came back expects: it can be cleared).
+ * @example
+ * ```ts
+ * import type { MazeRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { buildMaze, encodeRun, newMazeGame } from "@johnmorrisdotca/meikyuu";
+ *
+ * const recipe: MazeRecipe = {shape:"square",w:5,h:5,algorithm:"backtracker",mode:"to-goal",seed:42};
+ * const maze = buildMaze(recipe);
+ * const game = newMazeGame(maze);
+ * console.log(encodeRun(game));
+ * ```
  */
 export function encodeRun(game: MazeGame<MazeCore>): string {
   const steps = lineToSteps(game.maze, game.path) ?? "";
@@ -146,6 +331,21 @@ const CELL = /^[0-9a-z]+$/;
  * on a cell the line is on, on the start or the goal, on no cell at all or twice, or any stones when `rules` is null. The limit is not asked of a run (it only stops
  * more being laid, as a lower limit takes no stone off): a run kept under one limit comes back under another. An empty text is a game
  * with nothing drawn.
+ *
+ * @param maze - The valid flat/surface maze or required maze-core fields.
+ * @param code - The native encoded recipe or saved run.
+ * @param rules - Native stone limit/reach, or null when disabled.
+ * @returns The game a run text says, for `maze` under `rules`, or null when it is not a run of that maze: a step into a wall or back onto the line, a stone on a cell the line is on, on the start or the goal, on no cell at all or twice, or any stones when `rules` is null. The limit is not asked of a run (it only stops more being laid, as a lower limit takes no stone off): a run kept under one limit comes back under another. An empty text is a game with nothing drawn.
+ * @example
+ * ```ts
+ * import type { MazeRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { buildMaze, decodeRun, encodeRun, newMazeGame } from "@johnmorrisdotca/meikyuu";
+ *
+ * const recipe: MazeRecipe = {shape:"square",w:5,h:5,algorithm:"backtracker",mode:"to-goal",seed:42};
+ * const maze = buildMaze(recipe);
+ * const game = newMazeGame(maze);
+ * console.log(decodeRun(maze,encodeRun(game),null)?.path);
+ * ```
  */
 export function decodeRun<M extends MazeCore>(maze: M, code: string, rules: StoneRules | null): MazeGame<M> | null {
   const [steps = "", stoneText] = code.split("~") as [string | undefined, string | undefined];

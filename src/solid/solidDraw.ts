@@ -13,6 +13,14 @@ import type { Quat } from "./vec.ts";
  * that stand, and, if asked, the line, the stones and the way through. Pure text with no page needed, so a server can make a picture, and the colours
  * are the drawing's custom properties (`--mk-paper`, `--mk-wall`, ...), so a board, a line colour and the page's light or dark change it as they change
  * a flat maze. The shade of a cell is a mix of the paper's colour and black (`color-mix`), so it follows the paper.
+ *
+ * @example
+ * ```ts
+ * import type { DrawSolidOptions } from "@johnmorrisdotca/meikyuu/3d";
+ *
+ * const value: DrawSolidOptions = {label:"Cube maze",size:300};
+ * console.log(value);
+ * ```
  */
 export type DrawSolidOptions = MazeLook & {
   /** How the solid is turned, as a quaternion `[x, y, z, w]`. Default: the start facing you, tipped a little. */
@@ -34,6 +42,21 @@ export type DrawSolidOptions = MazeLook & {
 
 const SHADES = 14;
 
+/** Render a surface maze and optional trail/stones as native SVG text.
+ *
+ * @param maze - The valid flat/surface maze or required maze-core fields.
+ * @param options - Native display/mount choices, or the point tuple specified by this signature.
+ * @returns Render a surface maze and optional trail/stones as native SVG text.
+ * @example
+ * ```ts
+ * import type { SolidRecipe } from "@johnmorrisdotca/meikyuu/3d";
+ * import { buildSolidMaze, drawSolid } from "@johnmorrisdotca/meikyuu/3d";
+ *
+ * const solidRecipe: SolidRecipe = {kind:"cube",n:2,algorithm:"backtracker",seed:42};
+ * const solid = buildSolidMaze(solidRecipe);
+ * console.log(drawSolid(solid,{size:300,label:"Cube maze"}).startsWith("<svg"));
+ * ```
+ */
 export function drawSolid(maze: SolidMaze, options: DrawSolidOptions = {}): string {
   const { grid } = maze;
   const size = options.size ?? 320;

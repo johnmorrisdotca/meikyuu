@@ -18,6 +18,19 @@
  * and 1), and `factor` is `0.5 + 0.5 * cover`: the difficulty is multiplied by it. A maze whose answer covers the map keeps its score; one whose answer stays
  * in a corner counts for half. It is a factor and not a seventh term, because a term added would give every small maze a bonus (a small maze is covered by any
  * answer) and a factor leaves them alone. docs/LEVELS.md explains the choices and the numbers.
+ *
+ * @example
+ * ```ts
+ * import type { MazeCoverage, MazeRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { buildMaze, coverageOf, solutionOf } from "@johnmorrisdotca/meikyuu";
+ *
+ * const recipe: MazeRecipe = {shape:"square",w:5,h:5,algorithm:"backtracker",mode:"to-goal",seed:42};
+ * const maze = buildMaze(recipe);
+ * const grid = maze.grid;
+ * const route = solutionOf(maze);
+ * const value: MazeCoverage = coverageOf(grid.centres,route);
+ * console.log(value);
+ * ```
  */
 export type MazeCoverage = {
   /** The answer's box over the maze's, from 0 to 1. */
@@ -30,19 +43,73 @@ export type MazeCoverage = {
   factor: number;
 };
 
-/** The cells of the answer a zone must hold to be visited. */
+/** The cells of the answer a zone must hold to be visited.
+ *
+ * @example
+ * ```ts
+ * import { ZONE_VISIT } from "@johnmorrisdotca/meikyuu";
+ * console.log(ZONE_VISIT);
+ * ```
+ */
 export const ZONE_VISIT = 2;
-/** A zone with less than this share of an average zone's cells is not a zone (a cross's corners, a ring's hole). */
+/** A zone with less than this share of an average zone's cells is not a zone (a cross's corners, a ring's hole).
+ *
+ * @example
+ * ```ts
+ * import { ZONE_REAL } from "@johnmorrisdotca/meikyuu";
+ * console.log(ZONE_REAL);
+ * ```
+ */
 export const ZONE_REAL = 0.25;
-/** Where `cover` begins to rise and how far it rises: `(mean - COVER_FROM) / COVER_SPAN`. */
+/** Where `cover` begins to rise and how far it rises: `(mean - COVER_FROM) / COVER_SPAN`.
+ *
+ * @example
+ * ```ts
+ * import { COVER_FROM } from "@johnmorrisdotca/meikyuu";
+ * console.log(COVER_FROM);
+ * ```
+ */
 export const COVER_FROM = 0.2;
+/** The native coverage span used by the geometry-aware score.
+ *
+ * @example
+ * ```ts
+ * import { COVER_SPAN } from "@johnmorrisdotca/meikyuu";
+ * console.log(COVER_SPAN);
+ * ```
+ */
 export const COVER_SPAN = 0.7;
-/** What the score is multiplied by at no cover at all. */
+/** What the score is multiplied by at no cover at all.
+ *
+ * @example
+ * ```ts
+ * import { COVERAGE_FLOOR } from "@johnmorrisdotca/meikyuu";
+ * console.log(COVERAGE_FLOOR);
+ * ```
+ */
 export const COVERAGE_FLOOR = 0.5;
-/** How much of a solid's zones even a whole tour touches. */
+/** How much of a solid's zones even a whole tour touches.
+ *
+ * @example
+ * ```ts
+ * import { SOLID_ZONES_TOP } from "@johnmorrisdotca/meikyuu";
+ * console.log(SOLID_ZONES_TOP);
+ * ```
+ */
 export const SOLID_ZONES_TOP = 0.75;
 
-/** How many zones along each axis a map of `cells` is cut into: a flat map by 2, 3 or 4, a solid by 2 or 3. */
+/** How many zones along each axis a map of `cells` is cut into: a flat map by 2, 3 or 4, a solid by 2 or 3.
+ *
+ * @param cells - A cell-index path or total count specified by this signature.
+ * @param dimensions - The number of coordinate dimensions.
+ * @returns How many zones along each axis a map of `cells` is cut into: a flat map by 2, 3 or 4, a solid by 2 or 3.
+ * @example
+ * ```ts
+ * import { zonesAcross } from "@johnmorrisdotca/meikyuu";
+ *
+ * console.log(zonesAcross(25,2));
+ * ```
+ */
 export function zonesAcross(cells: number, dimensions: number): number {
   if (dimensions >= 3) return cells < 200 ? 2 : 3;
   return cells < 150 ? 2 : cells < 800 ? 3 : 4;
@@ -51,6 +118,21 @@ export function zonesAcross(cells: number, dimensions: number): number {
 /**
  * How much of a map an answer covers. `points` is where each cell lies (two numbers for a flat maze, three for a solid); `route` is the cells the
  * answer draws, the way to the goal and the way to each key. Pure.
+ *
+ * @param points - Logical cell-centre coordinates.
+ * @param route - The cell-index route whose coverage is measured.
+ * @returns How much of a map an answer covers. `points` is where each cell lies (two numbers for a flat maze, three for a solid); `route` is the cells the answer draws, the way to the goal and the way to each key. Pure.
+ * @example
+ * ```ts
+ * import type { MazeRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { buildMaze, coverageOf, solutionOf } from "@johnmorrisdotca/meikyuu";
+ *
+ * const recipe: MazeRecipe = {shape:"square",w:5,h:5,algorithm:"backtracker",mode:"to-goal",seed:42};
+ * const maze = buildMaze(recipe);
+ * const grid = maze.grid;
+ * const route = solutionOf(maze);
+ * console.log(coverageOf(grid.centres,route));
+ * ```
  */
 export function coverageOf(points: readonly (readonly number[])[], route: readonly number[]): MazeCoverage {
   const cells = points.length;

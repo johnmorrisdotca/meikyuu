@@ -14,6 +14,18 @@ import type { StoneRules } from "./stones.ts";
  * A finger is a stroke: `pressMaze` begins one (on the start, on the line's end, or on any cell of
  * the line, which cuts it back there), `dragMaze` follows it into each cell, `liftMaze` ends it and
  * is what Undo undoes. A tap, where the page offers it, is `tapMaze`.
+ *
+ * @example
+ * ```ts
+ * import type { MazeGame, MazeRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { buildMaze, newMazeGame } from "@johnmorrisdotca/meikyuu";
+ *
+ * const recipe: MazeRecipe = {shape:"square",w:5,h:5,algorithm:"backtracker",mode:"to-goal",seed:42};
+ * const maze = buildMaze(recipe);
+ * const game = newMazeGame(maze);
+ * const value: MazeGame = game;
+ * console.log(value);
+ * ```
  */
 export type MazeGame<M extends MazeCore = Maze> = {
   readonly maze: M;
@@ -34,12 +46,40 @@ export type MazeGame<M extends MazeCore = Maze> = {
   readonly undo: readonly { readonly path: readonly number[]; readonly collected: readonly number[]; readonly solved: boolean; readonly stones: readonly number[] }[];
 };
 
-/** A game of the maze, with nothing drawn, and, if given, the rules of its stones (stones.ts). */
+/** A game of the maze, with nothing drawn, and, if given, the rules of its stones (stones.ts).
+ *
+ * @param maze - The valid flat/surface maze or required maze-core fields.
+ * @param rules - Native stone limit/reach, or null when disabled.
+ * @returns A game of the maze, with nothing drawn, and, if given, the rules of its stones (stones.ts).
+ * @example
+ * ```ts
+ * import type { MazeRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { buildMaze, newMazeGame } from "@johnmorrisdotca/meikyuu";
+ *
+ * const recipe: MazeRecipe = {shape:"square",w:5,h:5,algorithm:"backtracker",mode:"to-goal",seed:42};
+ * const maze = buildMaze(recipe);
+ * console.log(newMazeGame(maze).path);
+ * ```
+ */
 export function newMazeGame<M extends MazeCore>(maze: M, rules: StoneRules | null = null): MazeGame<M> {
   return { maze, path: [], collected: [], solved: false, drawing: false, strokes: 0, undo: [], stones: [], rules };
 }
 
-/** The end of the line, or null while there is none. */
+/** The end of the line, or null while there is none.
+ *
+ * @param game - The current immutable native game state.
+ * @returns The last cell of the current line, or null before any line is drawn.
+ * @example
+ * ```ts
+ * import type { MazeRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { buildMaze, headOf, newMazeGame } from "@johnmorrisdotca/meikyuu";
+ *
+ * const recipe: MazeRecipe = {shape:"square",w:5,h:5,algorithm:"backtracker",mode:"to-goal",seed:42};
+ * const maze = buildMaze(recipe);
+ * const game = newMazeGame(maze);
+ * console.log(headOf(game));
+ * ```
+ */
 export function headOf(game: MazeGame<MazeCore>): number | null {
   return game.path.length === 0 ? null : game.path[game.path.length - 1]!;
 }
@@ -65,7 +105,22 @@ function withLine<M extends MazeCore>(game: MazeGame<M>, path: readonly number[]
   return { ...game, path, collected, solved: finished(game, path, collected) };
 }
 
-/** A finger down on a cell: it begins a stroke if the cell is the start, the line's end, or on the line. */
+/** A finger down on a cell: it begins a stroke if the cell is the start, the line's end, or on the line.
+ *
+ * @param game - The current immutable native game state.
+ * @param cell - A zero-based native cell index.
+ * @returns A finger down on a cell: it begins a stroke if the cell is the start, the line's end, or on the line.
+ * @example
+ * ```ts
+ * import type { MazeRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { buildMaze, newMazeGame, pressMaze } from "@johnmorrisdotca/meikyuu";
+ *
+ * const recipe: MazeRecipe = {shape:"square",w:5,h:5,algorithm:"backtracker",mode:"to-goal",seed:42};
+ * const maze = buildMaze(recipe);
+ * const game = newMazeGame(maze);
+ * console.log(pressMaze(game,maze.start).path);
+ * ```
+ */
 export function pressMaze<M extends MazeCore>(game: MazeGame<M>, cell: number): MazeGame<M> {
   if (game.solved || game.drawing) return game;
   const onLine = game.path.includes(cell);
@@ -74,12 +129,42 @@ export function pressMaze<M extends MazeCore>(game: MazeGame<M>, cell: number): 
   return step(begun, cell);
 }
 
-/** The finger moved into a cell. A cell that is not next to the line's end is ignored: a page that moves faster than cells go calls this for each cell between. */
+/** The finger moved into a cell. A cell that is not next to the line's end is ignored: a page that moves faster than cells go calls this for each cell between.
+ *
+ * @param game - The current immutable native game state.
+ * @param cell - A zero-based native cell index.
+ * @returns The finger moved into a cell. A cell that is not next to the line's end is ignored: a page that moves faster than cells go calls this for each cell between.
+ * @example
+ * ```ts
+ * import type { MazeRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { buildMaze, dragMaze, newMazeGame, pressMaze, solutionOf } from "@johnmorrisdotca/meikyuu";
+ *
+ * const recipe: MazeRecipe = {shape:"square",w:5,h:5,algorithm:"backtracker",mode:"to-goal",seed:42};
+ * const maze = buildMaze(recipe);
+ * const route = solutionOf(maze);
+ * const game = newMazeGame(maze);
+ * console.log(dragMaze(pressMaze(game,maze.start),route[1]).path);
+ * ```
+ */
 export function dragMaze<M extends MazeCore>(game: MazeGame<M>, cell: number): MazeGame<M> {
   return game.drawing ? step(game, cell) : game;
 }
 
-/** The finger lifted. A stroke that changed nothing is forgotten, so Undo never has a step that did nothing. */
+/** The finger lifted. A stroke that changed nothing is forgotten, so Undo never has a step that did nothing.
+ *
+ * @param game - The current immutable native game state.
+ * @returns The finger lifted. A stroke that changed nothing is forgotten, so Undo never has a step that did nothing.
+ * @example
+ * ```ts
+ * import type { MazeRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { buildMaze, liftMaze, newMazeGame, pressMaze } from "@johnmorrisdotca/meikyuu";
+ *
+ * const recipe: MazeRecipe = {shape:"square",w:5,h:5,algorithm:"backtracker",mode:"to-goal",seed:42};
+ * const maze = buildMaze(recipe);
+ * const game = newMazeGame(maze);
+ * console.log(liftMaze(pressMaze(game,maze.start)).drawing);
+ * ```
+ */
 export function liftMaze<M extends MazeCore>(game: MazeGame<M>): MazeGame<M> {
   if (!game.drawing) return game;
   const last = game.undo[game.undo.length - 1]!;
@@ -87,14 +172,42 @@ export function liftMaze<M extends MazeCore>(game: MazeGame<M>): MazeGame<M> {
   return same ? { ...game, drawing: false, undo: game.undo.slice(0, -1) } : { ...game, drawing: false, strokes: game.strokes + 1 };
 }
 
-/** Put the whole line back as it was before the last stroke. */
+/** Put the whole line back as it was before the last stroke.
+ *
+ * @param game - The current immutable native game state.
+ * @returns Put the whole line back as it was before the last stroke.
+ * @example
+ * ```ts
+ * import type { MazeRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { buildMaze, newMazeGame, pressMaze, undoMaze } from "@johnmorrisdotca/meikyuu";
+ *
+ * const recipe: MazeRecipe = {shape:"square",w:5,h:5,algorithm:"backtracker",mode:"to-goal",seed:42};
+ * const maze = buildMaze(recipe);
+ * const game = newMazeGame(maze);
+ * console.log(undoMaze(pressMaze(game,maze.start)).path);
+ * ```
+ */
 export function undoMaze<M extends MazeCore>(game: MazeGame<M>): MazeGame<M> {
   const last = game.undo[game.undo.length - 1];
   if (last === undefined) return game;
   return { ...game, path: last.path, collected: last.collected, solved: last.solved, stones: last.stones, drawing: false, undo: game.undo.slice(0, -1) };
 }
 
-/** Everything off the maze again. */
+/** Everything off the maze again.
+ *
+ * @param game - The current immutable native game state.
+ * @returns Everything off the maze again.
+ * @example
+ * ```ts
+ * import type { MazeRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { buildMaze, newMazeGame, pressMaze, restartMaze } from "@johnmorrisdotca/meikyuu";
+ *
+ * const recipe: MazeRecipe = {shape:"square",w:5,h:5,algorithm:"backtracker",mode:"to-goal",seed:42};
+ * const maze = buildMaze(recipe);
+ * const game = newMazeGame(maze);
+ * console.log(restartMaze(pressMaze(game,maze.start)).path);
+ * ```
+ */
 export function restartMaze<M extends MazeCore>(game: MazeGame<M>): MazeGame<M> {
   return game.path.length === 0 && game.strokes === 0 && game.stones.length === 0 ? game : newMazeGame(game.maze, game.rules);
 }
@@ -103,6 +216,20 @@ export function restartMaze<M extends MazeCore>(game: MazeGame<M>): MazeGame<M> 
  * A tap on a cell: the line runs along the passage toward it as far as the next place it could have gone
  * another way, or to the cell itself if that comes first. A tap on a cell of the line cuts the line back to
  * it. It begins the line when the tap is on the start. It never decides a fork for the player.
+ *
+ * @param game - The current immutable native game state.
+ * @param cell - A zero-based native cell index.
+ * @returns A tap on a cell: the line runs along the passage toward it as far as the next place it could have gone another way, or to the cell itself if that comes first. A tap on a cell of the line cuts the line back to it. It begins the line when the tap is on the start. It never decides a fork for the player.
+ * @example
+ * ```ts
+ * import type { MazeRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { buildMaze, newMazeGame, tapMaze } from "@johnmorrisdotca/meikyuu";
+ *
+ * const recipe: MazeRecipe = {shape:"square",w:5,h:5,algorithm:"backtracker",mode:"to-goal",seed:42};
+ * const maze = buildMaze(recipe);
+ * const game = newMazeGame(maze);
+ * console.log(tapMaze(game,maze.start).path);
+ * ```
  */
 export function tapMaze<M extends MazeCore>(game: MazeGame<M>, cell: number): MazeGame<M> {
   if (game.solved || game.drawing) return game;
@@ -125,7 +252,21 @@ export function tapMaze<M extends MazeCore>(game: MazeGame<M>, cell: number): Ma
   return liftMaze(next);
 }
 
-/** How far the line has got, for a progress line: cells drawn, keys, and whether it is solved. */
+/** How far the line has got, for a progress line: cells drawn, keys, and whether it is solved.
+ *
+ * @param game - The current immutable native game state.
+ * @returns How far the line has got, for a progress line: cells drawn, keys, and whether it is solved.
+ * @example
+ * ```ts
+ * import type { MazeRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { buildMaze, mazeProgress, newMazeGame } from "@johnmorrisdotca/meikyuu";
+ *
+ * const recipe: MazeRecipe = {shape:"square",w:5,h:5,algorithm:"backtracker",mode:"to-goal",seed:42};
+ * const maze = buildMaze(recipe);
+ * const game = newMazeGame(maze);
+ * console.log(mazeProgress(game));
+ * ```
+ */
 export function mazeProgress(game: MazeGame<MazeCore>): { cells: number; keys: number; keysOf: number; solved: boolean } {
   return { cells: game.path.length, keys: game.collected.length, keysOf: game.maze.keys.length, solved: game.solved };
 }
@@ -135,6 +276,20 @@ export function mazeProgress(game: MazeGame<MazeCore>): { cells: number; keys: n
  * what is still needed), and the next stretch of the right way from there, up to `ahead` cells, not
  * counting the one the line is on. The right way goes to the nearest key not yet picked up, and to the goal
  * when there are none. Empty `ahead` when the maze is solved.
+ *
+ * @param game - The current immutable native game state.
+ * @param ahead - The number of hint cells to show ahead.
+ * @returns Where to look next: how many cells of the line to draw back (the part that has strayed from the way to what is still needed), and the next stretch of the right way from there, up to `ahead` cells, not counting the one the line is on. The right way goes to the nearest key not yet picked up, and to the goal when there are none. Empty `ahead` when the maze is solved.
+ * @example
+ * ```ts
+ * import type { MazeRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { buildMaze, hintMaze, newMazeGame } from "@johnmorrisdotca/meikyuu";
+ *
+ * const recipe: MazeRecipe = {shape:"square",w:5,h:5,algorithm:"backtracker",mode:"to-goal",seed:42};
+ * const maze = buildMaze(recipe);
+ * const game = newMazeGame(maze);
+ * console.log(hintMaze(game,1));
+ * ```
  */
 export function hintMaze(game: MazeGame<MazeCore>, ahead = 8): { back: number; cells: number[] } {
   const { maze } = game;
@@ -157,7 +312,21 @@ export function hintMaze(game: MazeGame<MazeCore>, ahead = 8): { back: number; c
   return { back: game.path.length - Math.max(keep, 1), cells: way.slice(0, ahead) };
 }
 
-/** Draw the maze's whole solution through the game, a cell at a time, as a finger would: the way a test or a demo plays. Keys are collected on the way. */
+/** Draw the maze's whole solution through the game, a cell at a time, as a finger would: the way a test or a demo plays. Keys are collected on the way.
+ *
+ * @param game - The current immutable native game state.
+ * @returns Draw the maze's whole solution through the game, a cell at a time, as a finger would: the way a test or a demo plays. Keys are collected on the way.
+ * @example
+ * ```ts
+ * import type { MazeRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { buildMaze, newMazeGame, playSolution } from "@johnmorrisdotca/meikyuu";
+ *
+ * const recipe: MazeRecipe = {shape:"square",w:5,h:5,algorithm:"backtracker",mode:"to-goal",seed:42};
+ * const maze = buildMaze(recipe);
+ * const game = newMazeGame(maze);
+ * console.log(playSolution(game).solved);
+ * ```
+ */
 export function playSolution<M extends MazeCore>(game: MazeGame<M>): MazeGame<M> {
   let next = pressMaze(game, game.maze.start);
   const { maze } = game;

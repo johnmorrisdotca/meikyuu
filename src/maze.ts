@@ -16,11 +16,37 @@ import { gridOf, ringCounts } from "./shapes.ts";
  *
  * A maze is a recipe (`MazeRecipe`) and nothing else: the same recipe makes the same maze in every
  * browser and every Node, because everything that decides it is integer arithmetic on a seeded stream.
+ *
+ * @example
+ * ```ts
+ * import { MEIKYUU_MODES } from "@johnmorrisdotca/meikyuu";
+ * console.log(MEIKYUU_MODES);
+ * ```
  */
 export const MEIKYUU_MODES = ["enter-leave", "to-goal", "centre-out", "keys"] as const;
+/** The enter/leave, goal, centre-out or key-collecting native maze mode.
+ *
+ * @example
+ * ```ts
+ * import type { MeikyuuMode } from "@johnmorrisdotca/meikyuu";
+ *
+ * const value: MeikyuuMode = "to-goal";
+ * console.log(value);
+ * ```
+ */
 export type MeikyuuMode = (typeof MEIKYUU_MODES)[number];
 
-/** Everything that makes a maze. */
+/** Everything that makes a maze.
+ *
+ * @example
+ * ```ts
+ * import type { MazeRecipe } from "@johnmorrisdotca/meikyuu";
+ *
+ * const recipe: MazeRecipe = {shape:"square",w:5,h:5,algorithm:"backtracker",mode:"to-goal",seed:42};
+ * const value: MazeRecipe = recipe;
+ * console.log(value);
+ * ```
+ */
 export type MazeRecipe = {
   readonly shape: MeikyuuShape;
   /** Columns, rings, a radius or the size of the square a shape is cut from: see `gridOf`. */
@@ -34,9 +60,34 @@ export type MazeRecipe = {
   readonly keys?: number;
 };
 
-/** A door in the outer wall: the cell it is beside, and which of that cell's sides. */
+/** A door in the outer wall: the cell it is beside, and which of that cell's sides.
+ *
+ * @example
+ * ```ts
+ * import type { Door, MazeRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { buildMaze } from "@johnmorrisdotca/meikyuu";
+ *
+ * const recipe: MazeRecipe = {shape:"square",w:5,h:5,algorithm:"backtracker",mode:"to-goal",seed:42};
+ * const maze = buildMaze(recipe);
+ * const value: Door = {cell:maze.start,side:0};
+ * console.log(value);
+ * ```
+ */
 export type Door = { readonly cell: number; readonly side: number };
 
+/** A seeded flat maze with its cell graph, passages, doors, endpoints and optional keys.
+ *
+ * @example
+ * ```ts
+ * import type { Maze, MazeRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { buildMaze } from "@johnmorrisdotca/meikyuu";
+ *
+ * const recipe: MazeRecipe = {shape:"square",w:5,h:5,algorithm:"backtracker",mode:"to-goal",seed:42};
+ * const maze = buildMaze(recipe);
+ * const value: Maze = maze;
+ * console.log(value);
+ * ```
+ */
 export type Maze = {
   readonly recipe: MazeRecipe;
   readonly grid: Grid;
@@ -58,6 +109,17 @@ export type Maze = {
  * What the game, the stones, the measure and the steps read of a maze: the passages, the two ends, the keys, and how many cells there are and which
  * are beside which. A `Maze` is one, and so is a maze over the surface of a solid (`SolidMaze` in `@johnmorrisdotca/meikyuu/3d`), so one set of rules
  * plays them both.
+ *
+ * @example
+ * ```ts
+ * import type { MazeCore, MazeRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { buildMaze } from "@johnmorrisdotca/meikyuu";
+ *
+ * const recipe: MazeRecipe = {shape:"square",w:5,h:5,algorithm:"backtracker",mode:"to-goal",seed:42};
+ * const maze = buildMaze(recipe);
+ * const value: MazeCore = maze;
+ * console.log(value);
+ * ```
  */
 export type MazeCore = {
   readonly links: Links;
@@ -69,7 +131,19 @@ export type MazeCore = {
 
 const ROWLESS: readonly MeikyuuShape[] = ["circle", "heart", "leaf", "star", "ring", "diamond", "cross", "moon", "hexagon", "pyramid"];
 
-/** A recipe as one short word, such as `square:12x9:wilson:to-goal:48213` or `heart:25:prim:keys-3:7`, and the other way (`parseRecipe`). */
+/** A recipe as one short word, such as `square:12x9:wilson:to-goal:48213` or `heart:25:prim:keys-3:7`, and the other way (`parseRecipe`).
+ *
+ * @param recipe - The complete reproducible native recipe.
+ * @returns A recipe as one short word, such as `square:12x9:wilson:to-goal:48213` or `heart:25:prim:keys-3:7`, and the other way (`parseRecipe`).
+ * @example
+ * ```ts
+ * import type { MazeRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { recipeCode } from "@johnmorrisdotca/meikyuu";
+ *
+ * const recipe: MazeRecipe = {shape:"square",w:5,h:5,algorithm:"backtracker",mode:"to-goal",seed:42};
+ * console.log(recipeCode(recipe));
+ * ```
+ */
 export function recipeCode(recipe: MazeRecipe): string {
   const size = ROWLESS.includes(recipe.shape) ? `${recipe.w}` : `${recipe.w}x${recipe.h}`;
   const mode = recipe.mode === "keys" ? `keys-${recipe.keys ?? 1}` : recipe.mode;
@@ -80,10 +154,23 @@ export function recipeCode(recipe: MazeRecipe): string {
  * The most cells a recipe may lay out: a little over twice what the biggest level does (19,321, a heart, leaf, star
  * or moon cut from a raster 139 across). A recipe names its own size, and a server that takes recipes from other
  * people must not be asked to build a maze of millions of cells, so `parseRecipe` refuses one that would.
+ *
+ * @example
+ * ```ts
+ * import { MEIKYUU_MOST_CELLS } from "@johnmorrisdotca/meikyuu";
+ * console.log(MEIKYUU_MOST_CELLS);
+ * ```
  */
 export const MEIKYUU_MOST_CELLS = 40_000;
 
-/** The most keys a recipe may ask for: twice the most any level uses (five). */
+/** The most keys a recipe may ask for: twice the most any level uses (five).
+ *
+ * @example
+ * ```ts
+ * import { MEIKYUU_MOST_KEYS } from "@johnmorrisdotca/meikyuu";
+ * console.log(MEIKYUU_MOST_KEYS);
+ * ```
+ */
 export const MEIKYUU_MOST_KEYS = 10;
 
 /**
@@ -91,6 +178,17 @@ export const MEIKYUU_MOST_KEYS = 10;
  * squares, hexagons, triangles and circles, and the whole raster for a shape cut out of one (a cut-out shape
  * keeps fewer, but is built from all of them). A hexagon of radius `w` is cut from a hex grid `2w + 1` across,
  * and a pyramid of `w` rows from a triangle grid twice as wide as it is tall.
+ *
+ * @param shape - The supported native flat-grid geometry or cut-out shape.
+ * @param w - The native grid width in cells.
+ * @param h - The native grid height in cells.
+ * @returns How many cells laying out a recipe's grid takes, counted before anything is built: the grid's own cells for squares, hexagons, triangles and circles, and the whole raster for a shape cut out of one (a cut-out shape keeps fewer, but is built from all of them). A hexagon of radius `w` is cut from a hex grid `2w + 1` across, and a pyramid of `w` rows from a triangle grid twice as wide as it is tall.
+ * @example
+ * ```ts
+ * import { layoutCells } from "@johnmorrisdotca/meikyuu";
+ *
+ * console.log(layoutCells("square",5,5));
+ * ```
  */
 export function layoutCells(shape: MeikyuuShape, w: number, h: number): number {
   switch (shape) {
@@ -110,7 +208,19 @@ export function layoutCells(shape: MeikyuuShape, w: number, h: number): number {
   }
 }
 
-/** A recipe from its code, or null when it is not one, or names a maze bigger than `MEIKYUU_MOST_CELLS` or more keys than `MEIKYUU_MOST_KEYS`. */
+/** A recipe from its code, or null when it is not one, or names a maze bigger than `MEIKYUU_MOST_CELLS` or more keys than `MEIKYUU_MOST_KEYS`.
+ *
+ * @param code - The native encoded recipe or saved run.
+ * @returns A recipe from its code, or null when it is not one, or names a maze bigger than `MEIKYUU_MOST_CELLS` or more keys than `MEIKYUU_MOST_KEYS`.
+ * @example
+ * ```ts
+ * import type { MazeRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { parseRecipe, recipeCode } from "@johnmorrisdotca/meikyuu";
+ *
+ * const recipe: MazeRecipe = {shape:"square",w:5,h:5,algorithm:"backtracker",mode:"to-goal",seed:42};
+ * console.log(parseRecipe(recipeCode(recipe)));
+ * ```
+ */
 export function parseRecipe(code: string): MazeRecipe | null {
   const parts = code.split(":");
   if (parts.length !== 5) return null;
@@ -129,7 +239,21 @@ export function parseRecipe(code: string): MazeRecipe | null {
   return { shape: shape as MeikyuuShape, w, h, algorithm: algorithm as MeikyuuAlgorithm, mode: modes[1] as MeikyuuMode, seed: Number(seed), ...(keys === undefined ? {} : { keys }) };
 }
 
-/** How far every cell is from `from` along the passages, and the cell before it on the way: -1 where unreachable. */
+/** How far every cell is from `from` along the passages, and the cell before it on the way: -1 where unreachable.
+ *
+ * @param links - Passage neighbour lists, one per cell.
+ * @param from - The start cell or pointer point specified by the signature.
+ * @returns How far every cell is from `from` along the passages, and the cell before it on the way: -1 where unreachable.
+ * @example
+ * ```ts
+ * import type { MazeRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { buildMaze, walk } from "@johnmorrisdotca/meikyuu";
+ *
+ * const recipe: MazeRecipe = {shape:"square",w:5,h:5,algorithm:"backtracker",mode:"to-goal",seed:42};
+ * const maze = buildMaze(recipe);
+ * console.log(walk(maze.links,maze.start).order.length);
+ * ```
+ */
 export function walk(links: Links, from: number): { dist: Int32Array; before: Int32Array; order: Int32Array } {
   const dist = new Int32Array(links.length).fill(-1);
   const before = new Int32Array(links.length).fill(-1);
@@ -211,7 +335,21 @@ function placeKeys(grid: Grid, links: Links, start: number, goal: number, count:
   return picked;
 }
 
-/** Make the maze a recipe names. */
+/** Make the maze a recipe names.
+ *
+ * @param recipe - The complete reproducible native recipe.
+ * @returns Make the maze a recipe names.
+ * @example
+ * ```ts
+ * import type { MazeRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { buildMaze } from "@johnmorrisdotca/meikyuu";
+ *
+ * const recipe: MazeRecipe = {shape:"square",w:5,h:5,algorithm:"backtracker",mode:"to-goal",seed:42};
+ * const maze = buildMaze(recipe);
+ * const grid = maze.grid;
+ * console.log(buildMaze(recipe).grid.cells);
+ * ```
+ */
 export function buildMaze(recipe: MazeRecipe): Maze {
   const grid = gridOf(recipe.shape, recipe.w, recipe.h);
   const random = seededRandom(recipe.seed);
@@ -253,7 +391,20 @@ export function buildMaze(recipe: MazeRecipe): Maze {
   return { recipe, grid, links, start, goal, entrance, exit, keys };
 }
 
-/** The one way from the start to the goal, cell by cell, both ends included. */
+/** The one way from the start to the goal, cell by cell, both ends included.
+ *
+ * @param maze - The valid flat/surface maze or required maze-core fields.
+ * @returns The one way from the start to the goal, cell by cell, both ends included.
+ * @example
+ * ```ts
+ * import type { MazeRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { buildMaze, solutionOf } from "@johnmorrisdotca/meikyuu";
+ *
+ * const recipe: MazeRecipe = {shape:"square",w:5,h:5,algorithm:"backtracker",mode:"to-goal",seed:42};
+ * const maze = buildMaze(recipe);
+ * console.log(solutionOf(maze));
+ * ```
+ */
 export function solutionOf(maze: Pick<MazeCore, "links" | "start" | "goal">): number[] {
   const { before } = walk(maze.links, maze.start);
   const out: number[] = [];
@@ -261,12 +412,40 @@ export function solutionOf(maze: Pick<MazeCore, "links" | "start" | "goal">): nu
   return out.reverse();
 }
 
-/** How many passages the maze has: one fewer than its cells, if it is perfect. */
+/** How many passages the maze has: one fewer than its cells, if it is perfect.
+ *
+ * @param links - Passage neighbour lists, one per cell.
+ * @returns How many passages the maze has: one fewer than its cells, if it is perfect.
+ * @example
+ * ```ts
+ * import type { MazeRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { buildMaze, passageCount } from "@johnmorrisdotca/meikyuu";
+ *
+ * const recipe: MazeRecipe = {shape:"square",w:5,h:5,algorithm:"backtracker",mode:"to-goal",seed:42};
+ * const maze = buildMaze(recipe);
+ * console.log(passageCount(maze.links));
+ * ```
+ */
 export function passageCount(links: Links): number {
   return links.reduce((sum, open) => sum + open.length, 0) / 2;
 }
 
-/** Whether the passages are a spanning tree of the grid: every cell reached, and exactly one way to each. */
+/** Whether the passages are a spanning tree of the grid: every cell reached, and exactly one way to each.
+ *
+ * @param grid - The valid native flat or surface cell graph.
+ * @param links - Passage neighbour lists, one per cell.
+ * @returns Whether the passages are a spanning tree of the grid: every cell reached, and exactly one way to each.
+ * @example
+ * ```ts
+ * import type { MazeRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { buildMaze, isPerfect } from "@johnmorrisdotca/meikyuu";
+ *
+ * const recipe: MazeRecipe = {shape:"square",w:5,h:5,algorithm:"backtracker",mode:"to-goal",seed:42};
+ * const maze = buildMaze(recipe);
+ * const grid = maze.grid;
+ * console.log(isPerfect(grid,maze.links));
+ * ```
+ */
 export function isPerfect(grid: MazeCore["grid"], links: Links): boolean {
   if (passageCount(links) !== grid.cells - 1) return false;
   for (let cell = 0; cell < grid.cells; cell += 1) for (const next of links[cell]!) if (!grid.neighbours[cell]!.includes(next) || !links[next]!.includes(cell)) return false;

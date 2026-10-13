@@ -31,6 +31,17 @@ import { measureMaze, type MazeMeasure } from "./measure.ts";
  * across the whole map, which is the easier to play.
  *
  * A way to play with keys is measured by the same terms: the detour to the keys is in the effort, and the trips to the keys are in the cover.
+ *
+ * @example
+ * ```ts
+ * import type { MazeDifficulty, MazeRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { buildMaze, difficultyOf } from "@johnmorrisdotca/meikyuu";
+ *
+ * const recipe: MazeRecipe = {shape:"square",w:5,h:5,algorithm:"backtracker",mode:"to-goal",seed:42};
+ * const maze = buildMaze(recipe);
+ * const value: MazeDifficulty = difficultyOf(maze);
+ * console.log(value);
+ * ```
  */
 export type MazeDifficulty = {
   /** From 0 (a corridor) to 100 (the hardest maze in the lists), whole: the six terms' sum times the coverage factor, rounded once. */
@@ -55,10 +66,24 @@ export type MazeDifficulty = {
   measure: MazeMeasure;
 };
 
-/** What each term is weighed by in the score; they add to 1. */
+/** What each term is weighed by in the score; they add to 1.
+ *
+ * @example
+ * ```ts
+ * import { DIFFICULTY_WEIGHTS } from "@johnmorrisdotca/meikyuu";
+ * console.log(DIFFICULTY_WEIGHTS);
+ * ```
+ */
 export const DIFFICULTY_WEIGHTS = { reach: 0.4, forks: 0.15, traps: 0.15, waste: 0.15, depth: 0.075, turns: 0.075 } as const;
 
-/** The count at which a term reaches its full weight, on its log scale. */
+/** The count at which a term reaches its full weight, on its log scale.
+ *
+ * @example
+ * ```ts
+ * import { DIFFICULTY_CEILINGS } from "@johnmorrisdotca/meikyuu";
+ * console.log(DIFFICULTY_CEILINGS);
+ * ```
+ */
 export const DIFFICULTY_CEILINGS = { forks: 400, traps: 160, waste: 4500, depth: 1100, turns: 1300 } as const;
 
 /** A heading change bigger than this, in radians (25 degrees), is a bend. */
@@ -71,6 +96,18 @@ const share = (count: number, ceiling: number): number => Math.min(1, Math.log(1
  * rises with distance will do, the squared distance is cheapest) and how far the line bends going from one cell through another to a third, in
  * radians from 0 (straight on) to pi (back the way it came). A flat maze reads these off its cell centres; a maze over a solid reads them in
  * three dimensions.
+ *
+ * @example
+ * ```ts
+ * import type { SolidRecipe } from "@johnmorrisdotca/meikyuu/3d";
+ * import { buildSolidMaze, solidGeometry } from "@johnmorrisdotca/meikyuu/3d";
+ * import type { MazeGeometry } from "@johnmorrisdotca/meikyuu";
+ *
+ * const solidRecipe: SolidRecipe = {kind:"cube",n:2,algorithm:"backtracker",seed:42};
+ * const solid = buildSolidMaze(solidRecipe);
+ * const value: MazeGeometry = solidGeometry(solid);
+ * console.log(value);
+ * ```
  */
 export type MazeGeometry = {
   /** Where each cell lies: two numbers for a flat maze, three for a solid. The cover reads it. */
@@ -118,12 +155,40 @@ function straightGuess(maze: MazeCore, onWay: Uint8Array, distance: (cell: numbe
   return wasted;
 }
 
-/** How hard a maze is, from 0 to 100, and what that is made of. */
+/** How hard a maze is, from 0 to 100, and what that is made of.
+ *
+ * @param maze - The valid flat/surface maze or required maze-core fields.
+ * @returns How hard a maze is, from 0 to 100, and what that is made of.
+ * @example
+ * ```ts
+ * import type { MazeRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { buildMaze, difficultyOf } from "@johnmorrisdotca/meikyuu";
+ *
+ * const recipe: MazeRecipe = {shape:"square",w:5,h:5,algorithm:"backtracker",mode:"to-goal",seed:42};
+ * const maze = buildMaze(recipe);
+ * console.log(difficultyOf(maze).score);
+ * ```
+ */
 export function difficultyOf(maze: Maze): MazeDifficulty {
   return difficultyOfGraph(maze, flatGeometry(maze));
 }
 
-/** The same for any maze, flat or over a solid, given how it lies in space (`MazeGeometry`). `difficultyOf` is this with a flat maze's own. */
+/** The same for any maze, flat or over a solid, given how it lies in space (`MazeGeometry`). `difficultyOf` is this with a flat maze's own.
+ *
+ * @param maze - The valid flat/surface maze or required maze-core fields.
+ * @param geometry - Logical centres, distance-to-goal and turn measurement functions.
+ * @returns The same for any maze, flat or over a solid, given how it lies in space (`MazeGeometry`). `difficultyOf` is this with a flat maze's own.
+ * @example
+ * ```ts
+ * import type { SolidRecipe } from "@johnmorrisdotca/meikyuu/3d";
+ * import { buildSolidMaze, solidGeometry } from "@johnmorrisdotca/meikyuu/3d";
+ * import { difficultyOfGraph } from "@johnmorrisdotca/meikyuu";
+ *
+ * const solidRecipe: SolidRecipe = {kind:"cube",n:2,algorithm:"backtracker",seed:42};
+ * const solid = buildSolidMaze(solidRecipe);
+ * console.log(difficultyOfGraph(solid,solidGeometry(solid)).score);
+ * ```
+ */
 export function difficultyOfGraph(maze: MazeCore, geometry: MazeGeometry): MazeDifficulty {
   const measure = measureMaze(maze);
   const way = solutionOf(maze);
@@ -170,23 +235,59 @@ export function difficultyOfGraph(maze: MazeCore, geometry: MazeGeometry): MazeD
  * The least a maze must have to be a level at all, wherever it is in a list (`isTooEasy`): the straight guess draws at least four cells it did
  * not need, is wrong at two forks or more, and the way has three places to choose, three wrong branches and four dead ends. Below any of these a
  * maze is pointed at the goal and walked.
+ *
+ * @example
+ * ```ts
+ * import { MEIKYUU_LEAST } from "@johnmorrisdotca/meikyuu";
+ * console.log(MEIKYUU_LEAST);
+ * ```
  */
 export const MEIKYUU_LEAST = { waste: 4, traps: 2, decisions: 3, branches: 3, deadEnds: 4 } as const;
 
-/** How far up a size the easy third reaches: its first 86 places. */
+/** How far up a size the easy third reaches: its first 86 places.
+ *
+ * @example
+ * ```ts
+ * import { MEIKYUU_EASY_PLACES } from "@johnmorrisdotca/meikyuu";
+ * console.log(MEIKYUU_EASY_PLACES);
+ * ```
+ */
 export const MEIKYUU_EASY_PLACES = 86;
 
 /**
  * What the easy third asks for beyond the least, rising through it so that it climbs: at place `place` (from 1) of a size, a maze has at
  * least this many traps, forks and wasted cells, and from the end of the easy third the least. Level 1 asks only for the least; level 86
  * asks for 3 traps, 5 forks and 8 wasted cells. A place of a size with no easy third, such as the huge ones, passes it without trying.
+ *
+ * @param place - The native numbered level position.
+ * @returns What the easy third asks for beyond the least, rising through it so that it climbs: at place `place` (from 1) of a size, a maze has at least this many traps, forks and wasted cells, and from the end of the easy third the least. Level 1 asks only for the least; level 86 asks for 3 traps, 5 forks and 8 wasted cells. A place of a size with no easy third, such as the huge ones, passes it without trying.
+ * @example
+ * ```ts
+ * import { easyFloorAt } from "@johnmorrisdotca/meikyuu";
+ *
+ * console.log(easyFloorAt(1));
+ * ```
  */
 export function easyFloorAt(place: number): { traps: number; decisions: number; waste: number } {
   const k = Math.min(Math.max(place, 1), MEIKYUU_EASY_PLACES);
   return { traps: MEIKYUU_LEAST.traps + Math.floor(k / 45), decisions: MEIKYUU_LEAST.decisions + Math.floor(k / 30), waste: MEIKYUU_LEAST.waste + Math.floor(k / 20) };
 }
 
-/** Whether a maze is too easy to be a level: it falls short of any of `MEIKYUU_LEAST`, or, with a `place` in the easy third of a size, of `easyFloorAt(place)`. */
+/** Whether a maze is too easy to be a level: it falls short of any of `MEIKYUU_LEAST`, or, with a `place` in the easy third of a size, of `easyFloorAt(place)`.
+ *
+ * @param difficulty - The native geometry-aware difficulty result.
+ * @param place - The native numbered level position.
+ * @returns Whether a maze is too easy to be a level: it falls short of any of `MEIKYUU_LEAST`, or, with a `place` in the easy third of a size, of `easyFloorAt(place)`.
+ * @example
+ * ```ts
+ * import type { MazeRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { buildMaze, difficultyOf, isTooEasy } from "@johnmorrisdotca/meikyuu";
+ *
+ * const recipe: MazeRecipe = {shape:"square",w:5,h:5,algorithm:"backtracker",mode:"to-goal",seed:42};
+ * const maze = buildMaze(recipe);
+ * console.log(isTooEasy(difficultyOf(maze),1));
+ * ```
+ */
 export function isTooEasy(difficulty: MazeDifficulty, place?: number): boolean {
   const { measure } = difficulty;
   if (difficulty.waste < MEIKYUU_LEAST.waste || difficulty.traps < MEIKYUU_LEAST.traps || measure.decisions < MEIKYUU_LEAST.decisions || measure.branches < MEIKYUU_LEAST.branches || measure.deadEnds < MEIKYUU_LEAST.deadEnds) return true;

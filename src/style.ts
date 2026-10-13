@@ -15,6 +15,14 @@ const TRAIL_RULES = Object.entries(MEIKYUU_TRAILS)
   .map(([name, { light, dark }]) => `.meikyuu[data-board="paper"][data-trail="${name}"] { --mk-trail: ${light}; }\n@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .meikyuu[data-board="paper"][data-trail="${name}"] { --mk-trail: ${dark}; } }\n:root[data-theme="dark"] .meikyuu[data-board="paper"][data-trail="${name}"] { --mk-trail: ${dark}; }`)
   .join("\n");
 
+/** The scoped native SVG styles for mazes and arrow boards.
+ *
+ * @example
+ * ```ts
+ * import { MEIKYUU_STYLE } from "@johnmorrisdotca/meikyuu/draw";
+ * console.log(MEIKYUU_STYLE.length);
+ * ```
+ */
 export const MEIKYUU_STYLE = `
 .meikyuu {
   --mk-paper: #fbf8f1; --mk-wall: #1f2320; --mk-frame: #a98954; --mk-trail: #2e8b57; --mk-start: #2f7a4f; --mk-goal: #e0b43b;

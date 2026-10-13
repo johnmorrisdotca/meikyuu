@@ -11,6 +11,14 @@ import { MEIKYUU_STYLE } from "./style.ts";
  * group with `data-id`, `data-dir` and `data-locked`, so a page can find the one under a finger; the
  * style (`MEIKYUU_STYLE`) gives it its colour and its motion. A locked arrow is grey, dashed, and has a
  * padlock at its tail.
+ *
+ * @example
+ * ```ts
+ * import type { DrawArrowsOptions } from "@johnmorrisdotca/meikyuu/draw";
+ *
+ * const value: DrawArrowsOptions = {language:"en",label:"Sample arrows"};
+ * console.log(value);
+ * ```
  */
 export type DrawArrowsOptions = MazeLook & {
   /** Which arrows are still on the board; all of them when left out. */
@@ -26,10 +34,37 @@ export type DrawArrowsOptions = MazeLook & {
 
 const escape = (text: string): string => text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
-/** The colour of arrow number `id`. */
+/** The colour of arrow number `id`.
+ *
+ * @param id - The zero-based arrow index.
+ * @returns The colour of arrow number `id`.
+ * @example
+ * ```ts
+ * import { arrowColour } from "@johnmorrisdotca/meikyuu/draw";
+ *
+ * console.log(arrowColour(0));
+ * ```
+ */
 export const arrowColour = (id: number): string => MEIKYUU_ARROW_COLOURS[id % MEIKYUU_ARROW_COLOURS.length]!;
 
-/** The arrow's picture: its stem, its head, and a padlock if it is locked. */
+/** The arrow's picture: its stem, its head, and a padlock if it is locked.
+ *
+ * @param board - The native arrow board or named maze appearance specified by this signature.
+ * @param arrow - One native arrow path and direction.
+ * @param id - The zero-based arrow index.
+ * @param extra - Locked, removed and hinted flags for this arrow.
+ * @returns The arrow's picture: its stem, its head, and a padlock if it is locked.
+ * @example
+ * ```ts
+ * import type { ArrowRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { makeArrows } from "@johnmorrisdotca/meikyuu";
+ * import { arrowMarkup } from "@johnmorrisdotca/meikyuu/draw";
+ *
+ * const arrowRecipe: ArrowRecipe = {shape:"square",w:5,h:5,longest:3,seed:42};
+ * const arrows = makeArrows(arrowRecipe);
+ * console.log(arrowMarkup(arrows,arrows.arrows[0],0,{locked:false}).length);
+ * ```
+ */
 export function arrowMarkup(board: Pick<ArrowBoard, "w">, arrow: Arrow, id: number, extra: { locked: boolean; gone?: boolean; hint?: boolean }): string {
   const centre = (cell: number): [number, number] => [(cell % board.w) + 0.5, Math.floor(cell / board.w) + 0.5];
   const head = arrow.cells[arrow.cells.length - 1]!;
@@ -51,6 +86,22 @@ export function arrowMarkup(board: Pick<ArrowBoard, "w">, arrow: Arrow, id: numb
   return `<g class="mk-arrow" data-id="${id}" data-dir="${arrow.dir}" data-locked="${extra.locked}"${extra.gone === true ? ` data-gone="true"` : ""}${extra.hint === true ? ` data-hint="true"` : ""} style="--mk-arrow:${arrowColour(id)}"><path class="mk-stem" d="${stem}"/><polygon class="mk-point" points="${point}"/>${lock}</g>`;
 }
 
+/** Render the native arrow board, locked/present arrows and optional hint as SVG text.
+ *
+ * @param board - The native arrow board or named maze appearance specified by this signature.
+ * @param options - Native display/mount choices, or the point tuple specified by this signature.
+ * @returns Render the native arrow board, locked/present arrows and optional hint as SVG text.
+ * @example
+ * ```ts
+ * import type { ArrowRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { makeArrows } from "@johnmorrisdotca/meikyuu";
+ * import { drawArrows } from "@johnmorrisdotca/meikyuu/draw";
+ *
+ * const arrowRecipe: ArrowRecipe = {shape:"square",w:5,h:5,longest:3,seed:42};
+ * const arrows = makeArrows(arrowRecipe);
+ * console.log(drawArrows(arrows,{label:"Sample arrows"}).startsWith("<svg"));
+ * ```
+ */
 export function drawArrows(board: ArrowBoard, options: DrawArrowsOptions = {}): string {
   const language = options.language ?? "en";
   const { w, h } = board;

@@ -12,6 +12,15 @@ import { MEIKYUU_LEVELS_PER_SIZE, MEIKYUU_MAZE_LEVELS, MEIKYUU_SIZES, sizeOf, ty
  *
  * It is an entry of its own (`@johnmorrisdotca/meikyuu/levels/legacy`) because it carries the first release's thousand recipes, which
  * only a site with players from before this release needs.
+ *
+ * @example
+ * ```ts
+ * import type { LegacyMazeLevel } from "@johnmorrisdotca/meikyuu/levels/legacy";
+ * import { legacyLevelOf } from "@johnmorrisdotca/meikyuu/levels/legacy";
+ *
+ * const value: LegacyMazeLevel = legacyLevelOf(1)!;
+ * console.log(value);
+ * ```
  */
 export type LegacyMazeLevel = {
   /** Its number in the 1.0.0 list, from 1. */
@@ -49,6 +58,14 @@ function nearestInSize(size: MeikyuuSize, score: number): number {
   return best;
 }
 
+/** The original published flat-maze numbering, its recipes and mappings to current collections.
+ *
+ * @example
+ * ```ts
+ * import { MEIKYUU_LEGACY_MAZE_LEVELS } from "@johnmorrisdotca/meikyuu/levels/legacy";
+ * console.log(MEIKYUU_LEGACY_MAZE_LEVELS.length);
+ * ```
+ */
 export const MEIKYUU_LEGACY_MAZE_LEVELS: readonly LegacyMazeLevel[] = MEIKYUU_LEGACY_MAZE_ROWS.map(([code, effort, cells, score], index) => {
   const now = byCode.get(code) ?? null;
   const size = sizeOf(cells);
@@ -58,12 +75,32 @@ export const MEIKYUU_LEGACY_MAZE_LEVELS: readonly LegacyMazeLevel[] = MEIKYUU_LE
   return { number: index + 1, code, effort, cells, score, size, place, now: now?.number ?? null, nowInSize: now?.inSize ?? null, nearest };
 });
 
-/** The 1.0.0 level with this number, or null. */
+/** The 1.0.0 level with this number, or null.
+ *
+ * @param number - The original one-based legacy level number.
+ * @returns The 1.0.0 level with this number, or null.
+ * @example
+ * ```ts
+ * import { legacyLevelOf } from "@johnmorrisdotca/meikyuu/levels/legacy";
+ *
+ * console.log(legacyLevelOf(1)?.code);
+ * ```
+ */
 export function legacyLevelOf(number: number): LegacyMazeLevel | null {
   return MEIKYUU_LEGACY_MAZE_LEVELS[number - 1] ?? null;
 }
 
-/** What became of a recipe the 1.0.0 list had, or null when it was not one of its levels. */
+/** What became of a recipe the 1.0.0 list had, or null when it was not one of its levels.
+ *
+ * @param code - The native encoded recipe or saved run.
+ * @returns What became of a recipe the 1.0.0 list had, or null when it was not one of its levels.
+ * @example
+ * ```ts
+ * import { MEIKYUU_LEGACY_MAZE_LEVELS, legacyLevelOfCode } from "@johnmorrisdotca/meikyuu/levels/legacy";
+ *
+ * console.log(legacyLevelOfCode(MEIKYUU_LEGACY_MAZE_LEVELS[0].code)?.number);
+ * ```
+ */
 export function legacyLevelOfCode(code: string): LegacyMazeLevel | null {
   return MEIKYUU_LEGACY_MAZE_LEVELS.find((level) => level.code === code) ?? null;
 }

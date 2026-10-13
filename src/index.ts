@@ -10,6 +10,7 @@
  * - Every recipe as a short code (`recipeCode`, `parseRecipe`). The numbered levels are in `/levels`, the drawing
  *   in `/draw`, and the board to play in a page in `/play`.
  */
+
 export { VERSION } from "./version.ts";
 export { below, pick, seededRandom, shuffled } from "./random.ts";
 export type { Random } from "./random.ts";

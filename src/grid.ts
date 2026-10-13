@@ -11,25 +11,104 @@
  * cannot change a maze.
  */
 
-/** A point, [x, y], in cells. */
+/** A point, [x, y], in cells.
+ *
+ * @example
+ * ```ts
+ * import type { Point } from "@johnmorrisdotca/meikyuu";
+ *
+ * const value: Point = [10,20];
+ * console.log(value);
+ * ```
+ */
 export type Point = readonly [number, number];
 
 /**
  * The line a wall is drawn along, from `a` to `b`. With `r`, an arc of the circle of radius `r`
  * about the origin, drawn clockwise on the screen from `a` to `b` (circle mazes only).
+ *
+ * @example
+ * ```ts
+ * import type { MazeRecipe, Wall } from "@johnmorrisdotca/meikyuu";
+ * import { buildMaze } from "@johnmorrisdotca/meikyuu";
+ *
+ * const recipe: MazeRecipe = {shape:"square",w:5,h:5,algorithm:"backtracker",mode:"to-goal",seed:42};
+ * const maze = buildMaze(recipe);
+ * const grid = maze.grid;
+ * const value: Wall = grid.sides[0][0].wall;
+ * console.log(value);
+ * ```
  */
 export type Wall = { readonly a: Point; readonly b: Point; readonly r?: number };
 
-/** One side of a cell: the cell across it (-1 for the edge of the shape) and the wall it is drawn with. */
+/** One side of a cell: the cell across it (-1 for the edge of the shape) and the wall it is drawn with.
+ *
+ * @example
+ * ```ts
+ * import type { MazeRecipe, Side } from "@johnmorrisdotca/meikyuu";
+ * import { buildMaze } from "@johnmorrisdotca/meikyuu";
+ *
+ * const recipe: MazeRecipe = {shape:"square",w:5,h:5,algorithm:"backtracker",mode:"to-goal",seed:42};
+ * const maze = buildMaze(recipe);
+ * const grid = maze.grid;
+ * const value: Side = grid.sides[0][0];
+ * console.log(value);
+ * ```
+ */
 export type Side = { readonly to: number; readonly wall: Wall };
 
-/** A rectangle, in cells. */
+/** A rectangle, in cells.
+ *
+ * @example
+ * ```ts
+ * import type { Box, MazeRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { buildMaze } from "@johnmorrisdotca/meikyuu";
+ *
+ * const recipe: MazeRecipe = {shape:"square",w:5,h:5,algorithm:"backtracker",mode:"to-goal",seed:42};
+ * const maze = buildMaze(recipe);
+ * const grid = maze.grid;
+ * const box = {width:390,height:844,area:grid.box};
+ * const value: Box = grid.box;
+ * console.log(value);
+ * ```
+ */
 export type Box = { readonly x: number; readonly y: number; readonly w: number; readonly h: number };
 
-/** Every shape a maze can be made on. */
+/** Every shape a maze can be made on.
+ *
+ * @example
+ * ```ts
+ * import { MEIKYUU_SHAPES } from "@johnmorrisdotca/meikyuu";
+ * console.log(MEIKYUU_SHAPES);
+ * ```
+ */
 export const MEIKYUU_SHAPES = ["square", "hex", "triangle", "circle", "heart", "leaf", "star", "ring", "diamond", "cross", "moon", "hexagon", "pyramid"] as const;
+/** A supported flat grid geometry or cut-out mask.
+ *
+ * @example
+ * ```ts
+ * import type { MeikyuuShape } from "@johnmorrisdotca/meikyuu";
+ *
+ * const value: MeikyuuShape = "square";
+ * console.log(value);
+ * ```
+ */
 export type MeikyuuShape = (typeof MEIKYUU_SHAPES)[number];
 
+/** The native flat cell graph with geometry, neighbour sides, bounds and point-to-cell lookup.
+ *
+ * @example
+ * ```ts
+ * import type { Grid, MazeRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { buildMaze } from "@johnmorrisdotca/meikyuu";
+ *
+ * const recipe: MazeRecipe = {shape:"square",w:5,h:5,algorithm:"backtracker",mode:"to-goal",seed:42};
+ * const maze = buildMaze(recipe);
+ * const grid = maze.grid;
+ * const value: Grid = grid;
+ * console.log(value);
+ * ```
+ */
 export type Grid = {
   readonly shape: MeikyuuShape;
   /** The two numbers the shape was asked for (columns and rows; rings; a radius). */
@@ -48,14 +127,42 @@ export type Grid = {
   at(x: number, y: number): number;
 };
 
-/** The cells with a side on the edge of the shape: where a door in the outer wall can be. */
+/** The cells with a side on the edge of the shape: where a door in the outer wall can be.
+ *
+ * @param grid - The valid native flat or surface cell graph.
+ * @returns The cells with a side on the edge of the shape: where a door in the outer wall can be.
+ * @example
+ * ```ts
+ * import type { MazeRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { boundaryCells, buildMaze } from "@johnmorrisdotca/meikyuu";
+ *
+ * const recipe: MazeRecipe = {shape:"square",w:5,h:5,algorithm:"backtracker",mode:"to-goal",seed:42};
+ * const maze = buildMaze(recipe);
+ * const grid = maze.grid;
+ * console.log(boundaryCells(grid));
+ * ```
+ */
 export function boundaryCells(grid: Grid): number[] {
   const out: number[] = [];
   for (let cell = 0; cell < grid.cells; cell += 1) if (grid.sides[cell]!.some((side) => side.to < 0)) out.push(cell);
   return out;
 }
 
-/** The cell whose middle is nearest the middle of the shape. */
+/** The cell whose middle is nearest the middle of the shape.
+ *
+ * @param grid - The valid native flat or surface cell graph.
+ * @returns The cell whose middle is nearest the middle of the shape.
+ * @example
+ * ```ts
+ * import type { MazeRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { buildMaze, centreCell } from "@johnmorrisdotca/meikyuu";
+ *
+ * const recipe: MazeRecipe = {shape:"square",w:5,h:5,algorithm:"backtracker",mode:"to-goal",seed:42};
+ * const maze = buildMaze(recipe);
+ * const grid = maze.grid;
+ * console.log(centreCell(grid));
+ * ```
+ */
 export function centreCell(grid: Grid): number {
   const mx = grid.box.x + grid.box.w / 2;
   const my = grid.box.y + grid.box.h / 2;

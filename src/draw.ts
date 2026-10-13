@@ -16,7 +16,16 @@ import { MEIKYUU_STYLE } from "./style.ts";
  * so it is a picture on its own).
  */
 
-/** What a maze looks like: every option that does not depend on where the line is. */
+/** What a maze looks like: every option that does not depend on where the line is.
+ *
+ * @example
+ * ```ts
+ * import type { MazeLook } from "@johnmorrisdotca/meikyuu/draw";
+ *
+ * const value: MazeLook = {board:"paper",trail:"green"};
+ * console.log(value);
+ * ```
+ */
 export type MazeLook = {
   /** A board by name, or its colours. */
   board?: MeikyuuBoardName | MeikyuuBoardLook;
@@ -28,6 +37,16 @@ export type MazeLook = {
   line?: number;
 };
 
+/** Native maze appearance, current trail, collected keys, stones, hints, label and SVG presentation choices.
+ *
+ * @example
+ * ```ts
+ * import type { DrawMazeOptions } from "@johnmorrisdotca/meikyuu/draw";
+ *
+ * const value: DrawMazeOptions = {label:"Sample maze",solution:true};
+ * console.log(value);
+ * ```
+ */
 export type DrawMazeOptions = MazeLook & {
   /** The line drawn so far, as cells from the start. */
   path?: readonly number[];
@@ -57,12 +76,32 @@ export type DrawMazeOptions = MazeLook & {
 
 const escape = (text: string): string => text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
-/** The look a board name or board object means. */
+/** The look a board name or board object means.
+ *
+ * @param board - The native arrow board or named maze appearance specified by this signature.
+ * @returns The look a board name or board object means.
+ * @example
+ * ```ts
+ * import { boardLookOf } from "@johnmorrisdotca/meikyuu/draw";
+ *
+ * console.log(boardLookOf("paper"));
+ * ```
+ */
 export function boardLookOf(board: MazeLook["board"]): MeikyuuBoardLook {
   return typeof board === "object" ? board : MEIKYUU_BOARDS[board ?? "paper"];
 }
 
-/** The inline custom properties a look needs: none for plain paper with the default line, which the style gives. */
+/** The inline custom properties a look needs: none for plain paper with the default line, which the style gives.
+ *
+ * @param look - Native board, trail, wall and line appearance choices.
+ * @returns The inline custom properties a look needs: none for plain paper with the default line, which the style gives.
+ * @example
+ * ```ts
+ * import { lookStyle } from "@johnmorrisdotca/meikyuu/draw";
+ *
+ * console.log(lookStyle({board:"paper",trail:"green"}));
+ * ```
+ */
 export function lookStyle(look: MazeLook): string {
   const board = look.board ?? "paper";
   const colours: string[] = [];
@@ -75,7 +114,17 @@ export function lookStyle(look: MazeLook): string {
   return colours.join(";");
 }
 
-/** The attributes (as text) that make an element a Meikyuu drawing: its class, its look, and its custom properties. */
+/** The attributes (as text) that make an element a Meikyuu drawing: its class, its look, and its custom properties.
+ *
+ * @param look - Native board, trail, wall and line appearance choices.
+ * @returns The attributes (as text) that make an element a Meikyuu drawing: its class, its look, and its custom properties.
+ * @example
+ * ```ts
+ * import { lookAttributes } from "@johnmorrisdotca/meikyuu/draw";
+ *
+ * console.log(lookAttributes({board:"paper",trail:"green"}));
+ * ```
+ */
 export function lookAttributes(look: MazeLook): string {
   const board = typeof look.board === "object" ? "custom" : (look.board ?? "paper");
   const trail = look.trail !== undefined && look.trail in MEIKYUU_TRAILS && board === "paper" ? ` data-trail="${look.trail}"` : "";
@@ -83,7 +132,22 @@ export function lookAttributes(look: MazeLook): string {
   return `class="meikyuu" data-board="${board}"${trail}${style === "" ? "" : ` style="${style}"`}`;
 }
 
-/** The marks on a maze: the start, the goal or exit, the doors and the keys, as SVG. */
+/** The marks on a maze: the start, the goal or exit, the doors and the keys, as SVG.
+ *
+ * @param maze - The valid flat/surface maze or required maze-core fields.
+ * @param collected - The keys already collected.
+ * @returns The marks on a maze: the start, the goal or exit, the doors and the keys, as SVG.
+ * @example
+ * ```ts
+ * import type { MazeRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { buildMaze } from "@johnmorrisdotca/meikyuu";
+ * import { marksOf } from "@johnmorrisdotca/meikyuu/draw";
+ *
+ * const recipe: MazeRecipe = {shape:"square",w:5,h:5,algorithm:"backtracker",mode:"to-goal",seed:42};
+ * const maze = buildMaze(recipe);
+ * console.log(marksOf(maze));
+ * ```
+ */
 export function marksOf(maze: Maze, collected: readonly number[] = []): string {
   const { grid } = maze;
   const out: string[] = [];
@@ -113,7 +177,22 @@ export function marksOf(maze: Maze, collected: readonly number[] = []): string {
   return out.join("");
 }
 
-/** The stones laid on a maze, as SVG: each a marble (`mk-stone`) with a small gleam (`mk-gleam`) on the cell, one unit across being a cell. */
+/** The stones laid on a maze, as SVG: each a marble (`mk-stone`) with a small gleam (`mk-gleam`) on the cell, one unit across being a cell.
+ *
+ * @param maze - The valid flat/surface maze or required maze-core fields.
+ * @param stones - The currently placed passage-blocking stones.
+ * @returns The stones laid on a maze, as SVG: each a marble (`mk-stone`) with a small gleam (`mk-gleam`) on the cell, one unit across being a cell.
+ * @example
+ * ```ts
+ * import type { MazeRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { buildMaze } from "@johnmorrisdotca/meikyuu";
+ * import { stonesOf } from "@johnmorrisdotca/meikyuu/draw";
+ *
+ * const recipe: MazeRecipe = {shape:"square",w:5,h:5,algorithm:"backtracker",mode:"to-goal",seed:42};
+ * const maze = buildMaze(recipe);
+ * console.log(stonesOf(maze,[]));
+ * ```
+ */
 export function stonesOf(maze: Maze, stones: readonly number[]): string {
   return stones.map((cell) => {
     const [x, y] = maze.grid.centres[cell]!;
@@ -121,7 +200,22 @@ export function stonesOf(maze: Maze, stones: readonly number[]): string {
   }).join("");
 }
 
-/** The maze as SVG text. */
+/** The maze as SVG text.
+ *
+ * @param maze - The valid flat/surface maze or required maze-core fields.
+ * @param options - Native display/mount choices, or the point tuple specified by this signature.
+ * @returns The maze as SVG text.
+ * @example
+ * ```ts
+ * import type { MazeRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { buildMaze } from "@johnmorrisdotca/meikyuu";
+ * import { drawMaze } from "@johnmorrisdotca/meikyuu/draw";
+ *
+ * const recipe: MazeRecipe = {shape:"square",w:5,h:5,algorithm:"backtracker",mode:"to-goal",seed:42};
+ * const maze = buildMaze(recipe);
+ * console.log(drawMaze(maze,{label:"Sample maze"}).startsWith("<svg"));
+ * ```
+ */
 export function drawMaze(maze: Maze, options: DrawMazeOptions = {}): string {
   const { grid } = maze;
   const language = options.language ?? "en";

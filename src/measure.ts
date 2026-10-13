@@ -11,6 +11,17 @@ import { solutionOf, walk, type MazeCore } from "./maze.ts";
  * the depth of each wrong branch), plus two for every fork on the way (looking, and deciding), plus
  * what collecting the keys adds. A big maze with a long way through costs more than a small one with
  * many dead ends, as it takes longer to draw; two mazes of one size cost what their branching makes them.
+ *
+ * @example
+ * ```ts
+ * import type { MazeMeasure, MazeRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { buildMaze, measureMaze } from "@johnmorrisdotca/meikyuu";
+ *
+ * const recipe: MazeRecipe = {shape:"square",w:5,h:5,algorithm:"backtracker",mode:"to-goal",seed:42};
+ * const maze = buildMaze(recipe);
+ * const value: MazeMeasure = measureMaze(maze);
+ * console.log(value);
+ * ```
  */
 export type MazeMeasure = {
   cells: number;
@@ -36,7 +47,20 @@ export type MazeMeasure = {
   effort: number;
 };
 
-/** Measure a maze. */
+/** Measure a maze.
+ *
+ * @param maze - The valid flat/surface maze or required maze-core fields.
+ * @returns Measure a maze.
+ * @example
+ * ```ts
+ * import type { MazeRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { buildMaze, measureMaze } from "@johnmorrisdotca/meikyuu";
+ *
+ * const recipe: MazeRecipe = {shape:"square",w:5,h:5,algorithm:"backtracker",mode:"to-goal",seed:42};
+ * const maze = buildMaze(recipe);
+ * console.log(measureMaze(maze));
+ * ```
+ */
 export function measureMaze(maze: MazeCore): MazeMeasure {
   const { links } = maze;
   const cells = links.length;
@@ -92,11 +116,36 @@ export function measureMaze(maze: MazeCore): MazeMeasure {
   return { cells, deadEnds, deadEndShare: deadEnds / cells, junctions, river: straight / cells, solution: solution.length, decisions, branches, longestBranch, wasted, detour, effort };
 }
 
-/** The easiest effort a level is given a rating for, and the hardest: 1 and 100 are these. */
+/** The easiest effort a level is given a rating for, and the hardest: 1 and 100 are these.
+ *
+ * @example
+ * ```ts
+ * import { EFFORT_LEAST } from "@johnmorrisdotca/meikyuu";
+ * console.log(EFFORT_LEAST);
+ * ```
+ */
 export const EFFORT_LEAST = 9;
+/** The upper native effort bound used when converting effort to a rating.
+ *
+ * @example
+ * ```ts
+ * import { EFFORT_MOST } from "@johnmorrisdotca/meikyuu";
+ * console.log(EFFORT_MOST);
+ * ```
+ */
 export const EFFORT_MOST = 5400;
 
-/** An effort as a rating from 1 to 100, on a scale where doubling the effort adds the same each time. */
+/** An effort as a rating from 1 to 100, on a scale where doubling the effort adds the same each time.
+ *
+ * @param effort - Native measured effort to convert to a rating.
+ * @returns An effort as a rating from 1 to 100, on a scale where doubling the effort adds the same each time.
+ * @example
+ * ```ts
+ * import { ratingOf } from "@johnmorrisdotca/meikyuu";
+ *
+ * console.log(ratingOf(100));
+ * ```
+ */
 export function ratingOf(effort: number): number {
   const share = Math.log(Math.max(effort, EFFORT_LEAST) / EFFORT_LEAST) / Math.log(EFFORT_MOST / EFFORT_LEAST);
   return Math.min(100, Math.max(1, Math.round(1 + 99 * share)));

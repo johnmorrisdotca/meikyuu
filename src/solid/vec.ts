@@ -7,13 +7,39 @@
  * one onto the other (`quatBetween`).
  */
 
-/** A point or a direction in three dimensions. */
+/** A point or a direction in three dimensions.
+ *
+ * @example
+ * ```ts
+ * import type { Vec3 } from "@johnmorrisdotca/meikyuu/3d";
+ *
+ * const value: Vec3 = [1,0,0];
+ * console.log(value);
+ * ```
+ */
 export type Vec3 = readonly [number, number, number];
 
-/** A rotation: `[x, y, z, w]`, of length one. */
+/** A rotation: `[x, y, z, w]`, of length one.
+ *
+ * @example
+ * ```ts
+ * import type { Quat } from "@johnmorrisdotca/meikyuu/3d";
+ *
+ * const q: Quat = [0,0,0,1];
+ * const value: Quat = q;
+ * console.log(value);
+ * ```
+ */
 export type Quat = readonly [number, number, number, number];
 
-/** The rotation that does nothing. */
+/** The rotation that does nothing.
+ *
+ * @example
+ * ```ts
+ * import { QUAT_IDENTITY } from "@johnmorrisdotca/meikyuu/3d";
+ * console.log(QUAT_IDENTITY);
+ * ```
+ */
 export const QUAT_IDENTITY: Quat = [0, 0, 0, 1];
 
 export const dot = (a: Vec3, b: Vec3): number => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
@@ -47,27 +73,72 @@ export function mean(points: readonly Vec3[]): Vec3 {
   return [x / n, y / n, z / n];
 }
 
-/** Two rotations in turn: `b` after `a`. */
+/** Two rotations in turn: `b` after `a`.
+ *
+ * @param b - The second quaternion or vector specified by the signature.
+ * @param a - The first quaternion or vector specified by the signature.
+ * @returns Two rotations in turn: `b` after `a`.
+ * @example
+ * ```ts
+ * import type { Quat } from "@johnmorrisdotca/meikyuu/3d";
+ * import { quatMul } from "@johnmorrisdotca/meikyuu/3d";
+ *
+ * const q: Quat = [0,0,0,1];
+ * console.log(quatMul(q,q));
+ * ```
+ */
 export function quatMul(b: Quat, a: Quat): Quat {
   const [bx, by, bz, bw] = b;
   const [ax, ay, az, aw] = a;
   return [bw * ax + bx * aw + by * az - bz * ay, bw * ay - bx * az + by * aw + bz * ax, bw * az + bx * ay - by * ax + bz * aw, bw * aw - bx * ax - by * ay - bz * az];
 }
 
-/** A rotation made one again: the turns a drag adds up carry a little error, which this takes out. */
+/** A rotation made one again: the turns a drag adds up carry a little error, which this takes out.
+ *
+ * @param q - The current normalized rotation quaternion.
+ * @returns A rotation made one again: the turns a drag adds up carry a little error, which this takes out.
+ * @example
+ * ```ts
+ * import { quatNormalize } from "@johnmorrisdotca/meikyuu/3d";
+ *
+ * console.log(quatNormalize([0,0,0,2]));
+ * ```
+ */
 export function quatNormalize(q: Quat): Quat {
   const l = Math.hypot(q[0], q[1], q[2], q[3]);
   return l < 1e-12 ? QUAT_IDENTITY : [q[0] / l, q[1] / l, q[2] / l, q[3] / l];
 }
 
-/** The turn of `angle` radians about an axis (any length but nought). */
+/** The turn of `angle` radians about an axis (any length but nought).
+ *
+ * @param axis - A normalized three-dimensional rotation axis.
+ * @param angle - The rotation angle in radians.
+ * @returns The turn of `angle` radians about an axis (any length but nought).
+ * @example
+ * ```ts
+ * import { quatAxisAngle } from "@johnmorrisdotca/meikyuu/3d";
+ *
+ * console.log(quatAxisAngle([0,1,0],Math.PI/4));
+ * ```
+ */
 export function quatAxisAngle(axis: Vec3, angle: number): Quat {
   const [x, y, z] = unit(axis);
   const s = Math.sin(angle / 2);
   return [x * s, y * s, z * s, Math.cos(angle / 2)];
 }
 
-/** The shortest turn that carries the direction `a` onto the direction `b`. */
+/** The shortest turn that carries the direction `a` onto the direction `b`.
+ *
+ * @param a - The first quaternion or vector specified by the signature.
+ * @param b - The second quaternion or vector specified by the signature.
+ * @returns The shortest turn that carries the direction `a` onto the direction `b`.
+ * @example
+ * ```ts
+ * import { quatBetween } from "@johnmorrisdotca/meikyuu/3d";
+ *
+ * console.log(quatBetween([1,0,0],[0,1,0]));
+ * ```
+ */
 export function quatBetween(a: Vec3, b: Vec3): Quat {
   const from = unit(a);
   const to = unit(b);
@@ -81,7 +152,20 @@ export function quatBetween(a: Vec3, b: Vec3): Quat {
   return quatNormalize([c[0], c[1], c[2], 1 + d]);
 }
 
-/** A point turned. */
+/** A point turned.
+ *
+ * @param q - The current normalized rotation quaternion.
+ * @param p - A three-dimensional point to rotate.
+ * @returns A point turned.
+ * @example
+ * ```ts
+ * import type { Quat } from "@johnmorrisdotca/meikyuu/3d";
+ * import { quatTurn } from "@johnmorrisdotca/meikyuu/3d";
+ *
+ * const q: Quat = [0,0,0,1];
+ * console.log(quatTurn(q,[1,0,0]));
+ * ```
+ */
 export function quatTurn(q: Quat, p: Vec3): Vec3 {
   const [qx, qy, qz, qw] = q;
   // p + 2w(q x p) + 2 q x (q x p)
@@ -97,7 +181,21 @@ export function quatMatrix(q: Quat): readonly number[] {
   return [1 - 2 * (y * y + z * z), 2 * (x * y - z * w), 2 * (x * z + y * w), 2 * (x * y + z * w), 1 - 2 * (x * x + z * z), 2 * (y * z - x * w), 2 * (x * z - y * w), 2 * (y * z + x * w), 1 - 2 * (x * x + y * y)];
 }
 
-/** Halfway (or any share) from one rotation to another along the shortest way. */
+/** Halfway (or any share) from one rotation to another along the shortest way.
+ *
+ * @param a - The first quaternion or vector specified by the signature.
+ * @param b - The second quaternion or vector specified by the signature.
+ * @param t - The interpolation share from 0 to 1.
+ * @returns Halfway (or any share) from one rotation to another along the shortest way.
+ * @example
+ * ```ts
+ * import type { Quat } from "@johnmorrisdotca/meikyuu/3d";
+ * import { quatAxisAngle, quatSlerp } from "@johnmorrisdotca/meikyuu/3d";
+ *
+ * const q: Quat = [0,0,0,1];
+ * console.log(quatSlerp(q,quatAxisAngle([0,1,0],Math.PI/4),0.5));
+ * ```
+ */
 export function quatSlerp(a: Quat, b: Quat, t: number): Quat {
   let d = a[0] * b[0] + a[1] * b[1] + a[2] * b[2] + a[3] * b[3];
   let to: Quat = b;
@@ -112,7 +210,20 @@ export function quatSlerp(a: Quat, b: Quat, t: number): Quat {
   return [a[0] * sa + to[0] * sb, a[1] * sa + to[1] * sb, a[2] * sa + to[2] * sb, a[3] * sa + to[3] * sb];
 }
 
-/** How far apart two rotations are, in radians, from 0 to pi. */
+/** How far apart two rotations are, in radians, from 0 to pi.
+ *
+ * @param a - The first quaternion or vector specified by the signature.
+ * @param b - The second quaternion or vector specified by the signature.
+ * @returns How far apart two rotations are, in radians, from 0 to pi.
+ * @example
+ * ```ts
+ * import type { Quat } from "@johnmorrisdotca/meikyuu/3d";
+ * import { quatAngle } from "@johnmorrisdotca/meikyuu/3d";
+ *
+ * const q: Quat = [0,0,0,1];
+ * console.log(quatAngle(q,q));
+ * ```
+ */
 export function quatAngle(a: Quat, b: Quat): number {
   const d = Math.abs(a[0] * b[0] + a[1] * b[1] + a[2] * b[2] + a[3] * b[3]);
   return 2 * Math.acos(Math.min(1, d));

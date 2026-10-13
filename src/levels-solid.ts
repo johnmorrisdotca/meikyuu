@@ -17,7 +17,53 @@ export type { MeikyuuSolidLevel };
 export { MEIKYUU_SOLID_PER_LIST, SOLID_CUTS, SOLID_FIRST, SOLID_KINDS, SOLID_SIZE_NAMES, solidCellsOf, solidCutOf };
 export type { SolidKind, SolidSize };
 
-/** Every list this entry has: a solid, then a size. */
+/** Every list this entry has: a solid, then a size.
+ *
+ * @example
+ * ```ts
+ * import { MEIKYUU_SOLID_LEVELS } from "@johnmorrisdotca/meikyuu/3d/levels";
+ * console.log(Object.keys(MEIKYUU_SOLID_LEVELS));
+ * ```
+ */
 export const MEIKYUU_SOLID_LEVELS = solidListsOf(MEIKYUU_SOLID_ROWS);
 
-export const { solidLevelsOf, solidLevelOf, findSolidLevels } = solidFinders(MEIKYUU_SOLID_LEVELS);
+const finders = solidFinders(MEIKYUU_SOLID_LEVELS);
+
+/** The native surface-level collection for this kind and size; empty when this entry has none.
+ *
+ * @param kind - The native surface kind.
+ * @param size - The small, medium, large, huge or colossal collection.
+ * @returns The native surface-level collection for this kind and size; empty when this entry has none.
+ * @example
+ * ```ts
+ * import { solidLevelsOf } from "@johnmorrisdotca/meikyuu/3d/levels";
+ * console.log(solidLevelsOf("cube","small").length);
+ * ```
+ */
+export const solidLevelsOf = finders.solidLevelsOf;
+
+/** The one-based surface level, or null when this entry has no such kind, size or number.
+ *
+ * @param kind - The native surface kind.
+ * @param size - The small, medium, large, huge or colossal collection.
+ * @param n - The one-based level number.
+ * @returns The one-based surface level, or null when this entry has no such kind, size or number.
+ * @example
+ * ```ts
+ * import { solidLevelOf } from "@johnmorrisdotca/meikyuu/3d/levels";
+ * console.log(solidLevelOf("cube","small",1)?.code);
+ * ```
+ */
+export const solidLevelOf = finders.solidLevelOf;
+
+/** All surface levels in this entry matching the optional kind and size filters.
+ *
+ * @param filter - Optional native kind and size filters.
+ * @returns All surface levels in this entry matching the optional kind and size filters.
+ * @example
+ * ```ts
+ * import { findSolidLevels } from "@johnmorrisdotca/meikyuu/3d/levels";
+ * console.log(findSolidLevels({kind:"cube",size:"small"}).length);
+ * ```
+ */
+export const findSolidLevels = finders.findSolidLevels;

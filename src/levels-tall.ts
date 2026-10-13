@@ -12,6 +12,15 @@ import { TALL_RATIO, TALL_WIDTHS } from "./tall.ts";
  *
  * This is a list of its own, in an entry of its own (`@johnmorrisdotca/meikyuu/levels/tall`), so a page that plays only the square
  * mazes does not carry it. Play one with `mountMeikyuu(host, { recipe: level.code, ratio: level.ratio })`.
+ *
+ * @example
+ * ```ts
+ * import type { MeikyuuTallLevel } from "@johnmorrisdotca/meikyuu/levels/tall";
+ * import { tallLevelOf } from "@johnmorrisdotca/meikyuu/levels/tall";
+ *
+ * const value: MeikyuuTallLevel = tallLevelOf(1)!;
+ * console.log(value);
+ * ```
  */
 export type MeikyuuTallLevel = {
   readonly kind: "maze";
@@ -35,12 +44,34 @@ export type MeikyuuTallLevel = {
   readonly ratio: number;
 };
 
-/** How many levels each tall size has. */
+/** How many levels each tall size has.
+ *
+ * @example
+ * ```ts
+ * import { MEIKYUU_TALL_PER_SIZE } from "@johnmorrisdotca/meikyuu/levels/tall";
+ * console.log(MEIKYUU_TALL_PER_SIZE);
+ * ```
+ */
 export const MEIKYUU_TALL_PER_SIZE = 256;
 
-/** The sizes: their number, how many cells across, and the squares' columns and rows ("6×9"). */
+/** The sizes: their number, how many cells across, and the squares' columns and rows ("6×9").
+ *
+ * @example
+ * ```ts
+ * import { MEIKYUU_TALL_SIZES } from "@johnmorrisdotca/meikyuu/levels/tall";
+ * console.log(MEIKYUU_TALL_SIZES);
+ * ```
+ */
 export const MEIKYUU_TALL_SIZES: readonly { readonly size: number; readonly width: number; readonly height: number; readonly label: string }[] = TALL_WIDTHS.map((width, index) => ({ size: index + 1, width, height: Math.round(width * 1.5), label: `${width}×${Math.round(width * 1.5)}` }));
 
+/** The fixed numbered tall-maze recipes, dimensions and difficulty metadata.
+ *
+ * @example
+ * ```ts
+ * import { MEIKYUU_TALL_LEVELS } from "@johnmorrisdotca/meikyuu/levels/tall";
+ * console.log(MEIKYUU_TALL_LEVELS.length);
+ * ```
+ */
 export const MEIKYUU_TALL_LEVELS: readonly MeikyuuTallLevel[] = MEIKYUU_TALL_ROWS.map(([code, effort, cells, score], index) => {
   const recipe = parseRecipe(code);
   if (recipe === null) throw new Error(`${code} is not a recipe`);
@@ -48,22 +79,63 @@ export const MEIKYUU_TALL_LEVELS: readonly MeikyuuTallLevel[] = MEIKYUU_TALL_ROW
   return { kind: "maze", list: "tall", number: index + 1, size, width: TALL_WIDTHS[size - 1]!, inSize: (index % MEIKYUU_TALL_PER_SIZE) + 1, code, recipe, cells, effort, rating: ratingOf(effort), score, ratio: TALL_RATIO };
 });
 
-/** Tall level `n` (from 1) of the whole list, or null when there is none. */
+/** Tall level `n` (from 1) of the whole list, or null when there is none.
+ *
+ * @param n - The level number, random bound or surface subdivision specified by the signature.
+ * @returns Tall level `n` (from 1) of the whole list, or null when there is none.
+ * @example
+ * ```ts
+ * import { tallLevelOf } from "@johnmorrisdotca/meikyuu/levels/tall";
+ *
+ * console.log(tallLevelOf(1)?.code);
+ * ```
+ */
 export function tallLevelOf(n: number): MeikyuuTallLevel | null {
   return MEIKYUU_TALL_LEVELS[n - 1] ?? null;
 }
 
-/** The levels of one size (1 to 6), in order. */
+/** The levels of one size (1 to 6), in order.
+ *
+ * @param size - The one-based tall collection size from 1 (smallest) to 6 (largest).
+ * @returns The levels of one size (1 to 6), in order.
+ * @example
+ * ```ts
+ * import { MEIKYUU_TALL_LEVELS, tallLevelsOfSize } from "@johnmorrisdotca/meikyuu/levels/tall";
+ *
+ * console.log(tallLevelsOfSize(MEIKYUU_TALL_LEVELS[0].size).length);
+ * ```
+ */
 export function tallLevelsOfSize(size: number): readonly MeikyuuTallLevel[] {
   return Number.isInteger(size) && size >= 1 && size <= TALL_WIDTHS.length ? MEIKYUU_TALL_LEVELS.slice((size - 1) * MEIKYUU_TALL_PER_SIZE, size * MEIKYUU_TALL_PER_SIZE) : [];
 }
 
-/** Level `n` (from 1) of a size, or null. */
+/** Level `n` (from 1) of a size, or null.
+ *
+ * @param size - The one-based tall collection size from 1 (smallest) to 6 (largest).
+ * @param n - The level number, random bound or surface subdivision specified by the signature.
+ * @returns Level `n` (from 1) of a size, or null.
+ * @example
+ * ```ts
+ * import { MEIKYUU_TALL_LEVELS, tallLevelOfSize } from "@johnmorrisdotca/meikyuu/levels/tall";
+ *
+ * console.log(tallLevelOfSize(MEIKYUU_TALL_LEVELS[0].size,1)?.code);
+ * ```
+ */
 export function tallLevelOfSize(size: number, n: number): MeikyuuTallLevel | null {
   return tallLevelsOfSize(size)[n - 1] ?? null;
 }
 
-/** The tall levels that pass a filter, by shape, way to play and size, each when given. */
+/** The tall levels that pass a filter, by shape, way to play and size, each when given.
+ *
+ * @param filter - Optional native shape, mode, size or collection filters.
+ * @returns The tall levels that pass a filter, by shape, way to play and size, each when given.
+ * @example
+ * ```ts
+ * import { findTallLevels } from "@johnmorrisdotca/meikyuu/levels/tall";
+ *
+ * console.log(findTallLevels({shape:"square"}).length);
+ * ```
+ */
 export function findTallLevels(filter: { shape?: MazeRecipe["shape"]; mode?: MazeRecipe["mode"]; size?: number } = {}): MeikyuuTallLevel[] {
   return MEIKYUU_TALL_LEVELS.filter((level) => (filter.shape === undefined || level.recipe.shape === filter.shape) && (filter.mode === undefined || level.recipe.mode === filter.mode) && (filter.size === undefined || level.size === filter.size));
 }

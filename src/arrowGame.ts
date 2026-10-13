@@ -12,6 +12,18 @@ import { blockersOf, type ArrowBoard } from "./arrows.ts";
  *
  * The mixed puzzles lock some arrows until a button deep in a maze is reached. `unlockArrows`
  * is what reaching it does.
+ *
+ * @example
+ * ```ts
+ * import type { ArrowGame, ArrowRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { makeArrows, newArrowGame } from "@johnmorrisdotca/meikyuu";
+ *
+ * const arrowRecipe: ArrowRecipe = {shape:"square",w:5,h:5,longest:3,seed:42};
+ * const arrows = makeArrows(arrowRecipe);
+ * const arrowGame = newArrowGame(arrows);
+ * const value: ArrowGame = arrowGame;
+ * console.log(value);
+ * ```
  */
 export type ArrowGame = {
   readonly board: ArrowBoard;
@@ -28,7 +40,21 @@ export type ArrowGame = {
   readonly mistakes: number;
 };
 
-/** What a tap did. */
+/** What a tap did.
+ *
+ * @example
+ * ```ts
+ * import type { ArrowRecipe, ArrowTap } from "@johnmorrisdotca/meikyuu";
+ * import { hintArrow, makeArrows, newArrowGame, tapArrow } from "@johnmorrisdotca/meikyuu";
+ *
+ * const arrowRecipe: ArrowRecipe = {shape:"square",w:5,h:5,longest:3,seed:42};
+ * const arrows = makeArrows(arrowRecipe);
+ * const arrowGame = newArrowGame(arrows);
+ * const arrowId = hintArrow(arrowGame)!;
+ * const value: ArrowTap = tapArrow(arrowGame,arrowId);
+ * console.log(value);
+ * ```
+ */
 export type ArrowTap = {
   readonly game: ArrowGame;
   readonly result: "removed" | "blocked" | "locked" | "ignored";
@@ -36,19 +62,73 @@ export type ArrowTap = {
   readonly by?: number;
 };
 
-/** The hearts a puzzle starts with. */
+/** The hearts a puzzle starts with.
+ *
+ * @example
+ * ```ts
+ * import { ARROW_HEARTS } from "@johnmorrisdotca/meikyuu";
+ * console.log(ARROW_HEARTS);
+ * ```
+ */
 export const ARROW_HEARTS = 3;
 
+/** Create the native arrow state with all arrows present and a starting heart count.
+ *
+ * @param board - The native arrow board or named maze appearance specified by this signature.
+ * @param hearts - The starting error allowance for the arrow game.
+ * @returns Create the native arrow state with all arrows present and a starting heart count.
+ * @example
+ * ```ts
+ * import type { ArrowRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { makeArrows, newArrowGame } from "@johnmorrisdotca/meikyuu";
+ *
+ * const arrowRecipe: ArrowRecipe = {shape:"square",w:5,h:5,longest:3,seed:42};
+ * const arrows = makeArrows(arrowRecipe);
+ * console.log(newArrowGame(arrows).status);
+ * ```
+ */
 export function newArrowGame(board: ArrowBoard, hearts: number = ARROW_HEARTS): ArrowGame {
   return { board, present: board.arrows.map(() => true), hearts, heartsAtStart: hearts, unlocked: !board.locked.some(Boolean), status: "playing", taken: [], mistakes: 0 };
 }
 
-/** The arrows on the way out of `id` that are still on the board. */
+/** The arrows on the way out of `id` that are still on the board.
+ *
+ * @param game - The current immutable native game state.
+ * @param id - The zero-based arrow index.
+ * @returns The arrows on the way out of `id` that are still on the board.
+ * @example
+ * ```ts
+ * import type { ArrowRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { blockedBy, hintArrow, makeArrows, newArrowGame } from "@johnmorrisdotca/meikyuu";
+ *
+ * const arrowRecipe: ArrowRecipe = {shape:"square",w:5,h:5,longest:3,seed:42};
+ * const arrows = makeArrows(arrowRecipe);
+ * const arrowGame = newArrowGame(arrows);
+ * const arrowId = hintArrow(arrowGame)!;
+ * console.log(blockedBy(arrowGame,arrowId));
+ * ```
+ */
 export function blockedBy(game: ArrowGame, id: number): number[] {
   return blockersOf(game.board)[id]!.filter((other) => game.present[other]);
 }
 
-/** Whether an arrow can be tapped now and slide off: it is on the board, not locked, and nothing is in front of it. */
+/** Whether an arrow can be tapped now and slide off: it is on the board, not locked, and nothing is in front of it.
+ *
+ * @param game - The current immutable native game state.
+ * @param id - The zero-based arrow index.
+ * @returns Whether an arrow can be tapped now and slide off: it is on the board, not locked, and nothing is in front of it.
+ * @example
+ * ```ts
+ * import type { ArrowRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { hintArrow, isFree, makeArrows, newArrowGame } from "@johnmorrisdotca/meikyuu";
+ *
+ * const arrowRecipe: ArrowRecipe = {shape:"square",w:5,h:5,longest:3,seed:42};
+ * const arrows = makeArrows(arrowRecipe);
+ * const arrowGame = newArrowGame(arrows);
+ * const arrowId = hintArrow(arrowGame)!;
+ * console.log(isFree(arrowGame,arrowId));
+ * ```
+ */
 export function isFree(game: ArrowGame, id: number): boolean {
   return game.present[id] === true && !(game.board.locked[id] && !game.unlocked) && blockedBy(game, id).length === 0;
 }
@@ -57,6 +137,21 @@ export function isFree(game: ArrowGame, id: number): boolean {
  * Whether an arrow cannot be cleared before the unlock whatever the player taps: with every free arrow taken off, one after another,
  * it is still on the board. Only a locked arrow can hold it up like that, in its way or in the way of what is in its way.
  * Nothing is held once the arrows are unlocked.
+ *
+ * @param game - The current immutable native game state.
+ * @param id - The zero-based arrow index.
+ * @returns Whether an arrow cannot be cleared before the unlock whatever the player taps: with every free arrow taken off, one after another, it is still on the board. Only a locked arrow can hold it up like that, in its way or in the way of what is in its way. Nothing is held once the arrows are unlocked.
+ * @example
+ * ```ts
+ * import type { ArrowRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { heldByLocks, hintArrow, makeArrows, newArrowGame } from "@johnmorrisdotca/meikyuu";
+ *
+ * const arrowRecipe: ArrowRecipe = {shape:"square",w:5,h:5,longest:3,seed:42};
+ * const arrows = makeArrows(arrowRecipe);
+ * const arrowGame = newArrowGame(arrows);
+ * const arrowId = hintArrow(arrowGame)!;
+ * console.log(heldByLocks(arrowGame,arrowId));
+ * ```
  */
 export function heldByLocks(game: ArrowGame, id: number): boolean {
   if (game.unlocked || !game.present[id]) return false;
@@ -73,6 +168,23 @@ export function heldByLocks(game: ArrowGame, id: number): boolean {
   return left[id] === true;
 }
 
+/** Attempt to remove a native arrow and return the new game and removed/blocked/locked/ignored result.
+ *
+ * @param game - The current immutable native game state.
+ * @param id - The zero-based arrow index.
+ * @returns Attempt to remove a native arrow and return the new game and removed/blocked/locked/ignored result.
+ * @example
+ * ```ts
+ * import type { ArrowRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { hintArrow, makeArrows, newArrowGame, tapArrow } from "@johnmorrisdotca/meikyuu";
+ *
+ * const arrowRecipe: ArrowRecipe = {shape:"square",w:5,h:5,longest:3,seed:42};
+ * const arrows = makeArrows(arrowRecipe);
+ * const arrowGame = newArrowGame(arrows);
+ * const arrowId = hintArrow(arrowGame)!;
+ * console.log(tapArrow(arrowGame,arrowId).result);
+ * ```
+ */
 export function tapArrow(game: ArrowGame, id: number): ArrowTap {
   if (game.status !== "playing" || id < 0 || id >= game.present.length || !game.present[id]) return { game, result: "ignored" };
   if (game.board.locked[id] && !game.unlocked) return { game, result: "locked" };
@@ -87,18 +199,65 @@ export function tapArrow(game: ArrowGame, id: number): ArrowTap {
   return { game: { ...game, present, taken: [...game.taken, id], status: cleared ? "cleared" : "playing" }, result: "removed" };
 }
 
-/** Let the locked arrows be tapped. */
+/** Let the locked arrows be tapped.
+ *
+ * @param game - The current immutable native game state.
+ * @returns Let the locked arrows be tapped.
+ * @example
+ * ```ts
+ * import type { ArrowRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { makeArrows, newArrowGame, unlockArrows } from "@johnmorrisdotca/meikyuu";
+ *
+ * const arrowRecipe: ArrowRecipe = {shape:"square",w:5,h:5,longest:3,seed:42};
+ * const arrows = makeArrows(arrowRecipe);
+ * const arrowGame = newArrowGame(arrows);
+ * console.log(unlockArrows(arrowGame).unlocked);
+ * ```
+ */
 export function unlockArrows(game: ArrowGame): ArrowGame {
   return game.unlocked ? game : { ...game, unlocked: true };
 }
 
-/** Put the last arrow taken back, and give back no heart. */
+/** Put the last arrow taken back, and give back no heart.
+ *
+ * @param game - The current immutable native game state.
+ * @returns Put the last arrow taken back, and give back no heart.
+ * @example
+ * ```ts
+ * import type { ArrowRecipe, MazeRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { buildMaze, hintArrow, makeArrows, newArrowGame, newMazeGame, tapArrow, undoArrow } from "@johnmorrisdotca/meikyuu";
+ *
+ * const recipe: MazeRecipe = {shape:"square",w:5,h:5,algorithm:"backtracker",mode:"to-goal",seed:42};
+ * const maze = buildMaze(recipe);
+ * const game = newMazeGame(maze);
+ * const arrowRecipe: ArrowRecipe = {shape:"square",w:5,h:5,longest:3,seed:42};
+ * const arrows = makeArrows(arrowRecipe);
+ * const arrowGame = newArrowGame(arrows);
+ * const arrowId = hintArrow(arrowGame)!;
+ * console.log(undoArrow(tapArrow(arrowGame,arrowId).game).status);
+ * ```
+ */
 export function undoArrow(game: ArrowGame): ArrowGame {
   const last = game.taken[game.taken.length - 1];
   if (last === undefined || game.status === "lost") return game;
   return { ...game, present: game.present.map((here, id) => here || id === last), taken: game.taken.slice(0, -1), status: "playing" };
 }
 
+/** Restore every native arrow and the original hearts, clearing mistakes and removals.
+ *
+ * @param game - The current immutable native game state.
+ * @returns Restore every native arrow and the original hearts, clearing mistakes and removals.
+ * @example
+ * ```ts
+ * import type { ArrowRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { makeArrows, newArrowGame, restartArrows } from "@johnmorrisdotca/meikyuu";
+ *
+ * const arrowRecipe: ArrowRecipe = {shape:"square",w:5,h:5,longest:3,seed:42};
+ * const arrows = makeArrows(arrowRecipe);
+ * const arrowGame = newArrowGame(arrows);
+ * console.log(restartArrows(arrowGame).status);
+ * ```
+ */
 export function restartArrows(game: ArrowGame): ArrowGame {
   return { ...newArrowGame(game.board, game.heartsAtStart), unlocked: game.unlocked };
 }
@@ -106,6 +265,19 @@ export function restartArrows(game: ArrowGame): ArrowGame {
 /**
  * The arrow to tap next: one that is free now and keeps the most arrows waiting behind it, so it also frees
  * the most others. None when every arrow still on the board is blocked or locked (the player must unlock).
+ *
+ * @param game - The current immutable native game state.
+ * @returns A removable unlocked arrow index, or null when none is currently available.
+ * @example
+ * ```ts
+ * import type { ArrowRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { hintArrow, makeArrows, newArrowGame } from "@johnmorrisdotca/meikyuu";
+ *
+ * const arrowRecipe: ArrowRecipe = {shape:"square",w:5,h:5,longest:3,seed:42};
+ * const arrows = makeArrows(arrowRecipe);
+ * const arrowGame = newArrowGame(arrows);
+ * console.log(hintArrow(arrowGame));
+ * ```
  */
 export function hintArrow(game: ArrowGame): number | null {
   const blockers = blockersOf(game.board);
@@ -122,12 +294,40 @@ export function hintArrow(game: ArrowGame): number | null {
   return best;
 }
 
-/** The count of arrows still on the board. */
+/** The count of arrows still on the board.
+ *
+ * @param game - The current immutable native game state.
+ * @returns The count of arrows still on the board.
+ * @example
+ * ```ts
+ * import type { ArrowRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { arrowsLeft, makeArrows, newArrowGame } from "@johnmorrisdotca/meikyuu";
+ *
+ * const arrowRecipe: ArrowRecipe = {shape:"square",w:5,h:5,longest:3,seed:42};
+ * const arrows = makeArrows(arrowRecipe);
+ * const arrowGame = newArrowGame(arrows);
+ * console.log(arrowsLeft(arrowGame));
+ * ```
+ */
 export function arrowsLeft(game: ArrowGame): number {
   return game.present.filter(Boolean).length;
 }
 
-/** Take every arrow off by tapping only free ones, the way a test or a demo plays. The same game when it cannot (a locked arrow in the way of the rest). */
+/** Take every arrow off by tapping only free ones, the way a test or a demo plays. The same game when it cannot (a locked arrow in the way of the rest).
+ *
+ * @param game - The current immutable native game state.
+ * @returns Take every arrow off by tapping only free ones, the way a test or a demo plays. The same game when it cannot (a locked arrow in the way of the rest).
+ * @example
+ * ```ts
+ * import type { ArrowRecipe } from "@johnmorrisdotca/meikyuu";
+ * import { clearArrows, makeArrows, newArrowGame } from "@johnmorrisdotca/meikyuu";
+ *
+ * const arrowRecipe: ArrowRecipe = {shape:"square",w:5,h:5,longest:3,seed:42};
+ * const arrows = makeArrows(arrowRecipe);
+ * const arrowGame = newArrowGame(arrows);
+ * console.log(clearArrows(arrowGame).status);
+ * ```
+ */
 export function clearArrows(game: ArrowGame): ArrowGame {
   let next = game;
   for (;;) {

@@ -11,7 +11,18 @@ import { maskOf } from "./masks.ts";
 
 const wall = (a: Point, b: Point, r?: number): Wall => (r === undefined ? { a, b } : { a, b, r });
 
-/** Columns by rows of square cells. */
+/** Columns by rows of square cells.
+ *
+ * @param w - The native grid width in cells.
+ * @param h - The native grid height in cells.
+ * @returns Columns by rows of square cells.
+ * @example
+ * ```ts
+ * import { squareGrid } from "@johnmorrisdotca/meikyuu";
+ *
+ * console.log(squareGrid(5,5).cells);
+ * ```
+ */
 export function squareGrid(w: number, h: number): Grid {
   const centres: Point[] = [];
   const sides: Side[][] = [];
@@ -31,7 +42,18 @@ export function squareGrid(w: number, h: number): Grid {
 
 const HEX_S = 1 / Math.sqrt(3);
 
-/** Columns by rows of hexagons, pointy side up, every odd row shifted half a cell right. */
+/** Columns by rows of hexagons, pointy side up, every odd row shifted half a cell right.
+ *
+ * @param w - The native grid width in cells.
+ * @param h - The native grid height in cells.
+ * @returns Columns by rows of hexagons, pointy side up, every odd row shifted half a cell right.
+ * @example
+ * ```ts
+ * import { hexGrid } from "@johnmorrisdotca/meikyuu";
+ *
+ * console.log(hexGrid(5,5).cells);
+ * ```
+ */
 export function hexGrid(w: number, h: number): Grid {
   const centreOf = (col: number, row: number): Point => [col + 0.5 + (row & 1 ? 0.5 : 0), HEX_S + row * 1.5 * HEX_S];
   const centres: Point[] = [];
@@ -77,7 +99,18 @@ export function hexGrid(w: number, h: number): Grid {
 
 const TRI_H = Math.sqrt(3) / 2;
 
-/** Rows of triangles, each pointing up or down in turn, `w` to a row; a cell is up when its column and row make an even number. */
+/** Rows of triangles, each pointing up or down in turn, `w` to a row; a cell is up when its column and row make an even number.
+ *
+ * @param w - The native grid width in cells.
+ * @param h - The native grid height in cells.
+ * @returns Rows of triangles, each pointing up or down in turn, `w` to a row; a cell is up when its column and row make an even number.
+ * @example
+ * ```ts
+ * import { triangleGrid } from "@johnmorrisdotca/meikyuu";
+ *
+ * console.log(triangleGrid(5,5).cells);
+ * ```
+ */
 export function triangleGrid(w: number, h: number): Grid {
   const centres: Point[] = [];
   const sides: Side[][] = [];
@@ -120,7 +153,17 @@ export function triangleGrid(w: number, h: number): Grid {
   return makeGrid({ shape: "triangle", w, h, centres, sides, box: { x: 0, y: 0, w: (w + 1) / 2, h: h * TRI_H }, at });
 }
 
-/** How many cells each ring of a circle maze holds: one in the middle, six round it, and a ring doubles its cells when its cells would otherwise be wider than tall. */
+/** How many cells each ring of a circle maze holds: one in the middle, six round it, and a ring doubles its cells when its cells would otherwise be wider than tall.
+ *
+ * @param rings - The positive number of circular grid rings.
+ * @returns How many cells each ring of a circle maze holds: one in the middle, six round it, and a ring doubles its cells when its cells would otherwise be wider than tall.
+ * @example
+ * ```ts
+ * import { ringCounts } from "@johnmorrisdotca/meikyuu";
+ *
+ * console.log(ringCounts(3));
+ * ```
+ */
 export function ringCounts(rings: number): number[] {
   const counts = [1];
   for (let ring = 1; ring < rings; ring += 1) {
@@ -132,7 +175,17 @@ export function ringCounts(rings: number): number[] {
   return counts;
 }
 
-/** A circle maze: `rings` rings round a middle cell, cells running round each ring and out between the rings. */
+/** A circle maze: `rings` rings round a middle cell, cells running round each ring and out between the rings.
+ *
+ * @param rings - The positive number of circular grid rings.
+ * @returns A circle maze: `rings` rings round a middle cell, cells running round each ring and out between the rings.
+ * @example
+ * ```ts
+ * import { circleGrid } from "@johnmorrisdotca/meikyuu";
+ *
+ * console.log(circleGrid(3).cells);
+ * ```
+ */
 export function circleGrid(rings: number): Grid {
   const counts = ringCounts(rings);
   const first: number[] = [];
@@ -214,7 +267,19 @@ function pyramidGrid(rows: number): Grid {
   });
 }
 
-/** A grid by name. `w` and `h` are columns and rows for squares, hexagons and triangles, and the size of the raster a shape is cut from for the rest (`h` is ignored there); for a circle `w` is the number of rings, and for a hexagon the radius, and for a pyramid the rows. */
+/** A grid by name. `w` and `h` are columns and rows for squares, hexagons and triangles, and the size of the raster a shape is cut from for the rest (`h` is ignored there); for a circle `w` is the number of rings, and for a hexagon the radius, and for a pyramid the rows.
+ *
+ * @param shape - The supported native flat-grid geometry or cut-out shape.
+ * @param w - The native grid width in cells.
+ * @param h - The native grid height in cells.
+ * @returns A grid by name. `w` and `h` are columns and rows for squares, hexagons and triangles, and the size of the raster a shape is cut from for the rest (`h` is ignored there); for a circle `w` is the number of rings, and for a hexagon the radius, and for a pyramid the rows.
+ * @example
+ * ```ts
+ * import { gridOf } from "@johnmorrisdotca/meikyuu";
+ *
+ * console.log(gridOf("heart",9,9).cells);
+ * ```
+ */
 export function gridOf(shape: MeikyuuShape, w: number, h: number = w): Grid {
   switch (shape) {
     case "square":

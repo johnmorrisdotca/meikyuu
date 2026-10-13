@@ -9,7 +9,18 @@ const ALGORITHMS: Readonly<Record<string, string>> = { b: "backtracker", h: "hun
 
 const KEPT = new Map<string, readonly string[]>();
 
-/** The recipes of a solid at a size, in the order of its levels (level 1 first), as the codes `buildSolidMaze` takes; empty for a solid or a size there is none of. */
+/** The recipes of a solid at a size, in the order of its levels (level 1 first), as the codes `buildSolidMaze` takes; empty for a solid or a size there is none of.
+ *
+ * @param kind - The native puzzle family or surface shape specified by this signature.
+ * @param size - The named level size, or numeric tall width specified by this signature.
+ * @returns The recipes of a solid at a size, in the order of its levels (level 1 first), as the codes `buildSolidMaze` takes; empty for a solid or a size there is none of.
+ * @example
+ * ```ts
+ * import { solidRecipesOf } from "@johnmorrisdotca/meikyuu/3d/levels/recipes";
+ *
+ * console.log(solidRecipesOf("cube","small").length);
+ * ```
+ */
 export function solidRecipesOf(kind: string, size: string): readonly string[] {
   const key = `${kind}/${size}`;
   const kept = KEPT.get(key);
@@ -26,7 +37,19 @@ export function solidRecipesOf(kind: string, size: string): readonly string[] {
   return codes;
 }
 
-/** The place (from 1) a recipe has among the levels of a solid at a size, or null when it is not one of them. */
+/** The place (from 1) a recipe has among the levels of a solid at a size, or null when it is not one of them.
+ *
+ * @param kind - The native puzzle family or surface shape specified by this signature.
+ * @param size - The named level size, or numeric tall width specified by this signature.
+ * @param code - The native encoded recipe or saved run.
+ * @returns The place (from 1) a recipe has among the levels of a solid at a size, or null when it is not one of them.
+ * @example
+ * ```ts
+ * import { solidLevelNumberOf, solidRecipesOf } from "@johnmorrisdotca/meikyuu/3d/levels/recipes";
+ *
+ * console.log(solidLevelNumberOf("cube","small",solidRecipesOf("cube","small")[0]));
+ * ```
+ */
 export function solidLevelNumberOf(kind: string, size: string, code: string): number | null {
   const at = solidRecipesOf(kind, size).indexOf(code);
   return at === -1 ? null : at + 1;

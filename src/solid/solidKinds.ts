@@ -10,20 +10,62 @@ import { SOLID_DICE_MORE, SOLID_SHAPES_MORE, type SolidShapeKind } from "./solid
  *
  * The files the levels are kept in are cut another way, by when a solid came: the first five (`SOLID_FIRST`: the cube, the globe and the three solids of triangles) are `3d/levels`, the seven further dice
  * `3d/levels/dice` and the six further shapes `3d/levels/shapes`, so that a page loads only the file of the solid it shows.
+ *
+ * @example
+ * ```ts
+ * import { SOLID_FIRST } from "@johnmorrisdotca/meikyuu/3d";
+ * console.log(SOLID_FIRST);
+ * ```
  */
 export const SOLID_FIRST = ["cube", "sphere", "tetrahedron", "octahedron", "icosahedron"] as const;
 export type SolidFirstKind = (typeof SOLID_FIRST)[number];
 
-/** The seven dice that came after the first five, and the six shapes. */
+/** The seven dice that came after the first five, and the six shapes.
+ *
+ * @example
+ * ```ts
+ * import { SOLID_MORE_DICE } from "@johnmorrisdotca/meikyuu/3d";
+ * console.log(SOLID_MORE_DICE);
+ * ```
+ */
 export const SOLID_MORE_DICE = SOLID_DICE_MORE;
+/** The additional box, cross, ring, torus, star and heart surface families.
+ *
+ * @example
+ * ```ts
+ * import { SOLID_MORE_SHAPES } from "@johnmorrisdotca/meikyuu/3d";
+ * console.log(SOLID_MORE_SHAPES);
+ * ```
+ */
 export const SOLID_MORE_SHAPES = SOLID_SHAPES_MORE;
 
-/** The dice, by how many sides, smallest first. */
+/** The dice, by how many sides, smallest first.
+ *
+ * @example
+ * ```ts
+ * import { SOLID_DICE } from "@johnmorrisdotca/meikyuu/3d";
+ * console.log(SOLID_DICE);
+ * ```
+ */
 export const SOLID_DICE = ["prism", "tetrahedron", "cube", "octahedron", "trapezohedron", "dodecahedron", "rhombic-dodecahedron", "bipyramid", "icosahedron", "icositetrahedron", "triacontahedron"] as const;
-/** The shapes. */
+/** The shapes.
+ *
+ * @example
+ * ```ts
+ * import { SOLID_SHAPES } from "@johnmorrisdotca/meikyuu/3d";
+ * console.log(SOLID_SHAPES);
+ * ```
+ */
 export const SOLID_SHAPES = ["sphere", "box", "cross", "ring", "torus", "star", "heart"] as const;
 
-/** How many sides a die has (what its name on a die is: d6). Only a solid in `SOLID_DICE` has one. */
+/** How many sides a die has (what its name on a die is: d6). Only a solid in `SOLID_DICE` has one.
+ *
+ * @example
+ * ```ts
+ * import { SOLID_DIE_SIDES } from "@johnmorrisdotca/meikyuu/3d";
+ * console.log(SOLID_DIE_SIDES);
+ * ```
+ */
 export const SOLID_DIE_SIDES: Readonly<Record<(typeof SOLID_DICE)[number], number>> = {
   prism: 3,
   tetrahedron: 4,
@@ -38,7 +80,17 @@ export const SOLID_DIE_SIDES: Readonly<Record<(typeof SOLID_DICE)[number], numbe
   triacontahedron: 30,
 };
 
-/** Whether a solid is among the dice (the rest are shapes). */
+/** Whether a solid is among the dice (the rest are shapes).
+ *
+ * @param kind - The native puzzle family or surface shape specified by this signature.
+ * @returns Whether a solid is among the dice (the rest are shapes).
+ * @example
+ * ```ts
+ * import { isSolidDie } from "@johnmorrisdotca/meikyuu/3d";
+ *
+ * console.log(isSolidDie("cube"));
+ * ```
+ */
 export function isSolidDie(kind: string): kind is (typeof SOLID_DICE)[number] {
   return (SOLID_DICE as readonly string[]).includes(kind);
 }

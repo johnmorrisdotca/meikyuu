@@ -3,9 +3,27 @@
  * light or dark), `wood`, and four cloths, the family's own; and five colours for the line. Each board is
  * the paper's colour, the wall's, and the frame's; each line is a colour for light and a colour for dark.
  */
-/** A board's colours: the paper, the walls, the frame, whether it is a dark board, and the line that shows on it when none is chosen. */
+/** A board's colours: the paper, the walls, the frame, whether it is a dark board, and the line that shows on it when none is chosen.
+ *
+ * @example
+ * ```ts
+ * import type { MeikyuuBoardLook } from "@johnmorrisdotca/meikyuu/draw";
+ * import { boardLookOf } from "@johnmorrisdotca/meikyuu/draw";
+ *
+ * const value: MeikyuuBoardLook = boardLookOf("paper");
+ * console.log(value);
+ * ```
+ */
 export type MeikyuuBoardLook = { paper: string; wall: string; frame: string; dark: boolean; trail: string };
 
+/** The paper, wall, frame and default trail colours of every named maze board.
+ *
+ * @example
+ * ```ts
+ * import { MEIKYUU_BOARDS } from "@johnmorrisdotca/meikyuu/draw";
+ * console.log(MEIKYUU_BOARDS);
+ * ```
+ */
 export const MEIKYUU_BOARDS = {
   paper: { paper: "#fbf8f1", wall: "#1f2320", frame: "#a98954", dark: false, trail: "#2e8b57" },
   wood: { paper: "#e2ba7a", wall: "#3a2410", frame: "#8a5a2b", dark: false, trail: "#1d6b46" },
@@ -15,9 +33,35 @@ export const MEIKYUU_BOARDS = {
   black: { paper: "#2f3236", wall: "#ece8dc", frame: "#1b1d20", dark: true, trail: "#7fe3a6" },
 } as const satisfies Record<string, MeikyuuBoardLook>;
 
+/** A supported named maze board appearance.
+ *
+ * @example
+ * ```ts
+ * import type { MeikyuuBoardName } from "@johnmorrisdotca/meikyuu/draw";
+ *
+ * const value: MeikyuuBoardName = "paper";
+ * console.log(value);
+ * ```
+ */
 export type MeikyuuBoardName = keyof typeof MEIKYUU_BOARDS;
+/** The supported named native maze board appearances.
+ *
+ * @example
+ * ```ts
+ * import { MEIKYUU_BOARD_NAMES } from "@johnmorrisdotca/meikyuu/draw";
+ * console.log(MEIKYUU_BOARD_NAMES);
+ * ```
+ */
 export const MEIKYUU_BOARD_NAMES = Object.keys(MEIKYUU_BOARDS) as MeikyuuBoardName[];
 
+/** The light and dark colours of every named trail.
+ *
+ * @example
+ * ```ts
+ * import { MEIKYUU_TRAILS } from "@johnmorrisdotca/meikyuu/draw";
+ * console.log(MEIKYUU_TRAILS);
+ * ```
+ */
 export const MEIKYUU_TRAILS = {
   green: { light: "#2e8b57", dark: "#6fcf97" },
   blue: { light: "#2865a6", dark: "#7fb4ee" },
@@ -26,8 +70,33 @@ export const MEIKYUU_TRAILS = {
   orange: { light: "#d97a1e", dark: "#ffb061" },
 } as const satisfies Record<string, { light: string; dark: string }>;
 
+/** A supported named trail palette.
+ *
+ * @example
+ * ```ts
+ * import type { MeikyuuTrailName } from "@johnmorrisdotca/meikyuu/draw";
+ *
+ * const value: MeikyuuTrailName = "green";
+ * console.log(value);
+ * ```
+ */
 export type MeikyuuTrailName = keyof typeof MEIKYUU_TRAILS;
+/** The supported named native trail colours.
+ *
+ * @example
+ * ```ts
+ * import { MEIKYUU_TRAIL_NAMES } from "@johnmorrisdotca/meikyuu/draw";
+ * console.log(MEIKYUU_TRAIL_NAMES);
+ * ```
+ */
 export const MEIKYUU_TRAIL_NAMES = Object.keys(MEIKYUU_TRAILS) as MeikyuuTrailName[];
 
-/** The colours of each arrow on an arrow board, in turn. */
+/** The colours of each arrow on an arrow board, in turn.
+ *
+ * @example
+ * ```ts
+ * import { MEIKYUU_ARROW_COLOURS } from "@johnmorrisdotca/meikyuu/draw";
+ * console.log(MEIKYUU_ARROW_COLOURS);
+ * ```
+ */
 export const MEIKYUU_ARROW_COLOURS: readonly string[] = ["#d9381e", "#2865a6", "#2e8b57", "#d97a1e", "#7b4fb0", "#c2185b", "#00838f", "#8d6e63"];
