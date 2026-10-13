@@ -1,4 +1,4 @@
-<h1 align="center">Meikyuu <sub>迷宮</sub></h1>
+<h1 align="center">Meikyuu <sub>迷宮</sub> — Maze generator and maze game</h1>
 
 <p align="center"><strong>A maze game for JavaScript and TypeScript.</strong><br>
 Draw a line through over a thousand mazes, and as many tall ones for a phone held upright, with a finger or the mouse: squares, hexagons, triangles, circles and shapes cut out of them (a heart, a leaf, a star), from a few cells to thousands, and mazes over the whole surface of dice and shapes (a cube, a d12, a globe, a torus, a star, a heart) that you turn to follow your line round, each level a short recipe that rebuilds the same maze in every browser. Seven algorithms, a difficulty measure, a score for how hard each is to play, lists that never get easier, zoom and pan, and arrow puzzles too. The maze drawn as SVG and played in any page with one call or one tag. No dependencies.</p>
@@ -9,16 +9,18 @@ Draw a line through over a thousand mazes, and as many tall ones for a phone hel
   <a href="./LICENSE"><img alt="MIT licence" src="https://img.shields.io/badge/licence-MIT-2f5d4a"></a>
   <img alt="No dependencies" src="https://img.shields.io/badge/dependencies-0-2f5d4a">
   <img alt="TypeScript" src="https://img.shields.io/badge/types-TypeScript-3178c6">
+  <a href="https://johnmorrisdotca.github.io/meikyuu/docs/api/main/index.html"><img alt="12.6 kB minified and gzipped" src="https://img.shields.io/badge/min%2Bgzip-12.6%20kB-2f5d4a"></a>
+  <a href="https://www.npmjs.com/package/@johnmorrisdotca/meikyuu#provenance"><img alt="Published with npm provenance" src="https://img.shields.io/badge/npm-provenance-2f5d4a"></a>
 </p>
 
-<p align="center"><a href="https://johnmorrisdotca.github.io/meikyuu/"><strong>Play a level →</strong></a> · <a href="https://johnmorrisdotca.github.io/meikyuu/api.html">API reference</a> · <a href="docs/LEVELS.md">The levels</a></p>
+<p align="center"><a href="https://johnmorrisdotca.github.io/meikyuu/"><strong>Play a level →</strong></a> · <a href="https://johnmorrisdotca.github.io/meikyuu/docs/">Documentation</a> · <a href="https://johnmorrisdotca.github.io/meikyuu/docs/guides/getting-started.html">Getting started</a> · <a href="https://johnmorrisdotca.github.io/meikyuu/api.html">API reference</a> · <a href="docs/LEVELS.md">The levels</a></p>
 
 <table align="center">
 <tr>
 <td align="center" valign="top">
 <picture>
 <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/johnmorrisdotca/meikyuu/main/docs/images/hero-desk-dark.webp">
-<img src="https://raw.githubusercontent.com/johnmorrisdotca/meikyuu/main/docs/images/hero-desk-light.webp" alt="A heart-shaped maze of 602 cells on a desk, under the demo's header with its language chooser and cloth swatches and its choosers by shape, size and way to play: the maze on green felt with a green line drawn from its entrance a good part of the way, and the Undo, Restart and Hint buttons under it." width="720">
+<img src="https://raw.githubusercontent.com/johnmorrisdotca/meikyuu/main/docs/images/hero-desk-light.webp" alt="A heart-shaped maze of 602 cells on a desk, under the demo's header with its language chooser, Docs link and cloth swatches and its choosers by shape, size and way to play: the maze on green felt with a green line drawn from its entrance a good part of the way, and the Undo, Restart and Hint buttons under it." width="720">
 </picture>
 <br><em>Level 397, a heart-shaped maze, part of the way drawn, on a desk.</em>
 </td>
@@ -184,6 +186,17 @@ Each picture is a board the package draws, taken from [the demo](https://johnmor
 [Build a fixed or daily puzzle embed](https://johnmorrisdotca.github.io/meikyuu/builder.html). `size`, `width`, `theme` and `label` control display; `daily` selects a UTC level. The [embed guide](docs/embeds.md) explains properties and event messages.
 
 ## Use it in your project
+
+### Install under another name
+
+```sh
+npm install maze@npm:@johnmorrisdotca/meikyuu
+```
+
+```ts no-check
+import { buildMaze } from "maze";
+console.log(buildMaze({shape:"square",w:5,h:5,algorithm:"backtracker",mode:"to-goal",seed:42}).grid.cells);
+```
 
 ### Install
 
@@ -602,6 +615,8 @@ A board is drawn with a finger or the mouse (a wall stops the line and drawing b
 
 ## API
 
+The [documentation](https://johnmorrisdotca.github.io/meikyuu/docs/) provides paired guides, local search and checked examples. The [API index](https://johnmorrisdotca.github.io/meikyuu/api.html) retains export anchors.
+
 Every export of every entry point, with its signature and its doc comment, is in the
 [API reference](https://johnmorrisdotca.github.io/meikyuu/api.html), made from the source when the site is built so it cannot fall behind the code.
 
@@ -724,11 +739,7 @@ What is **not**, and could come next:
 
 ## Architecture
 
-Everything that decides a maze or a game is a plain function over a cell graph, with no DOM. The drawing is SVG text in an entry of its own,
-so a server that only builds mazes never loads it, and the page's part (the mount and the element) is another.
-
-The file-by-file tree, with a line on each source file, is in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md): the grids and the algorithms, the maze and the measure, the game and the arrows, the levels (`levels/`, `levels-*`), the drawing (`draw`), the page (`mount`, `element`, `style`), and the solids (`solid/`). Tests sit beside the code they test (`*.test.ts`, and the maze list in eight files and the tall list in three so that they run side by side). `scripts/` makes the levels, builds the demo and its API reference page,
-takes the pictures and checks the package as npm packs it; `demo/` is the playable page, and `e2e/` its browser tests.
+The cell graph, recipes, immutable game state, views and measured difficulty are explained in the [architecture guide](docs/guides/architecture.md), which preserves this overview. The [complete source tree](docs/ARCHITECTURE.md) remains checked against the files.
 
 ## The name
 

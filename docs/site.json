@@ -1,0 +1,78 @@
+{
+  "job": "Maze generator and maze game",
+  "pitch": {
+    "en": "Generate seeded mazes and arrow puzzles, follow numbered levels, and play on flat grids or three-dimensional surfaces.",
+    "ja": "シード付きの迷路と矢印パズルを作り、番号付きの問題を進め、平面や立体表面で遊べます。"
+  },
+  "name": {
+    "en": "Meikyuu is the Japanese word 迷宮 for labyrinth.",
+    "ja": "「迷宮」は迷路のように入り組んだ場所を表す言葉です。"
+  },
+  "icon": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%232f5d4a'/%3E%3Ctext x='50' y='70' font-size='60' text-anchor='middle' fill='%23f3efe4'%3E迷%3C/text%3E%3C/svg%3E",
+  "entries": {
+    ".": {
+      "en": "Mazes, arrows and mixed boards",
+      "ja": "迷路・矢印・混合の盤"
+    },
+    "./draw": {
+      "en": "SVG grids",
+      "ja": "SVGの盤"
+    },
+    "./play": {
+      "en": "Playable boards",
+      "ja": "遊べる盤"
+    },
+    "./element": {
+      "en": "Puzzle elements",
+      "ja": "パズルの要素"
+    },
+    "./element/define": {
+      "en": "Register puzzles",
+      "ja": "パズルの登録"
+    },
+    "./levels": {
+      "en": "Numbered puzzle levels",
+      "ja": "番号付きの問題"
+    },
+    "./levels/tall": {
+      "en": "Tall maze levels",
+      "ja": "縦長の迷路"
+    },
+    "./levels/colossal": {
+      "en": "Colossal maze levels",
+      "ja": "巨大な迷路"
+    },
+    "./levels/legacy": {
+      "en": "Original numbered levels",
+      "ja": "初版の番号付き問題"
+    },
+    "./3d": {
+      "en": "Surface maze rules and geometry",
+      "ja": "立体表面の規則と形"
+    },
+    "./3d/play": {
+      "en": "Playable surface mazes",
+      "ja": "遊べる立体表面の迷路"
+    },
+    "./3d/levels": {
+      "en": "Numbered surface levels",
+      "ja": "番号付きの立体問題"
+    },
+    "./3d/levels/dice": {
+      "en": "Dice surface levels",
+      "ja": "サイコロ表面の問題"
+    },
+    "./3d/levels/shapes": {
+      "en": "Solid shape levels",
+      "ja": "立体の形ごとの問題"
+    },
+    "./3d/levels/recipes": {
+      "en": "Surface recipe readers",
+      "ja": "立体問題の設定を読む"
+    },
+    "./3d/levels/all": {
+      "en": "All surface collections",
+      "ja": "立体問題の全一覧"
+    }
+  }
+}

@@ -24,6 +24,7 @@ const solidLevelOf = (kind, size, n) => solidModules.get(solidFileOf(kind)).soli
 // The page's own words, in the two languages it speaks. Set as text, never as HTML. The names of the shapes and the ways to play are the package's own.
 const WORDS = {
   en: {
+    pageDocs: "Docs",
     pageApi: "API reference",
     pitch: "Draw a line through the labyrinth with a finger or the mouse. Over a thousand mazes, from a few cells to thousands, in every shape, tall ones for a phone held upright, and arrow puzzles too. Zoom in and out with a pinch or the wheel.",
     name: "Meikyuu (迷宮) is Japanese for labyrinth: 迷, to be lost, and 宮, a palace.",
@@ -80,6 +81,7 @@ const WORDS = {
     foot: "Every level is a short recipe that rebuilds the same maze in every browser, and each size is checked on every build to get a little harder, level by level. Your progress stays on this device.",
   },
   ja: {
+    pageDocs: "ドキュメント",
     pageApi: "API（英語）",
     pitch: "指やマウスで、迷宮の中に線を引いて進みます。数マスから数千マスまで千を超える迷路が、あらゆる形で並びます。スマホを縦に持って遊ぶ縦長の迷路も、矢印パズルもあります。ピンチやホイールで拡大・縮小できます。",
     name: "「迷宮」は、迷（道に迷う）と宮（宮殿）で、ラビリンスのことです。",
@@ -210,7 +212,7 @@ const solid = {
 };
 let solidMount = null;
 
-const language = familyLanguage({ id: "meikyuu", words: WORDS, onChange: () => render() });
+const language = familyLanguage({ id: "meikyuu", words: WORDS, onChange: () => { docsLink(); render(); } });
 const say = (key, ...args) => {
   const word = WORDS[language.lang][key];
   return typeof word === "function" ? word(...args) : word;
@@ -504,3 +506,6 @@ await loadSolidLevels(solid.kind);
 choose(kind, null);
 putSolid();
 host.dataset.ready = "true";
+
+function docsLink(){document.querySelector('[data-say="pageDocs"]')?.setAttribute("href",language.lang==="ja"?"docs/ja/index.html":"docs/index.html");}
+docsLink();

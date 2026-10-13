@@ -1,0 +1,69 @@
+{
+  "measured": "esbuild 0.28.2, bundled, minified, ES2020, gzip level 9",
+  "entries": {
+    ".": {
+      "minified": 32859,
+      "gzip": 12583
+    },
+    "./draw": {
+      "minified": 27991,
+      "gzip": 8549
+    },
+    "./play": {
+      "minified": 150812,
+      "gzip": 50597
+    },
+    "./element": {
+      "minified": 161599,
+      "gzip": 52527
+    },
+    "./element/define": {
+      "minified": 161604,
+      "gzip": 52531
+    },
+    "./levels": {
+      "minified": 67869,
+      "gzip": 20821
+    },
+    "./levels/tall": {
+      "minified": 88487,
+      "gzip": 22115
+    },
+    "./levels/colossal": {
+      "minified": 17253,
+      "gzip": 5735
+    },
+    "./levels/legacy": {
+      "minified": 117112,
+      "gzip": 34829
+    },
+    "./3d": {
+      "minified": 58084,
+      "gzip": 20129
+    },
+    "./3d/play": {
+      "minified": 87945,
+      "gzip": 30028
+    },
+    "./3d/levels": {
+      "minified": 76244,
+      "gzip": 21192
+    },
+    "./3d/levels/dice": {
+      "minified": 115243,
+      "gzip": 29276
+    },
+    "./3d/levels/shapes": {
+      "minified": 82806,
+      "gzip": 24909
+    },
+    "./3d/levels/recipes": {
+      "minified": 50289,
+      "gzip": 32083
+    },
+    "./3d/levels/all": {
+      "minified": 268698,
+      "gzip": 71915
+    }
+  }
+}

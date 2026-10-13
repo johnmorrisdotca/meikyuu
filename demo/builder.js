@@ -6,8 +6,8 @@ import { embedDay } from "./dist/embed-day.js";
 import "./dist/element-define.js";
 import { familyEmbedBuilder, FAMILY_EMBED_BUILDER_WORDS } from "./family-embed-builder.js";
 const words = {
-  en: { ...FAMILY_EMBED_BUILDER_WORDS.en, pitch: "Choose a maze, arrow puzzle or UTC daily level, preview it, and copy its embed code.", name: "Meikyuu means labyrinth in Japanese.", nameLink: "About the name", foot: "The setup is in the link. No game or personal data is stored.", toGallery: "The puzzles", makerBoard: "A board", makerBoardSays: "A maze, arrow puzzle or a puzzle combining both.", copyLink: "Copy a link to this puzzle", badDay: "Use a real UTC date written YYYY-MM-DD, today or off.", badLevel: "Choose a level in this puzzle's list." },
-  ja: { ...FAMILY_EMBED_BUILDER_WORDS.ja, pitch: "迷路、矢印パズル、またはUTCの日替わりレベルを選び、プレビューを確認して、ページに埋め込むコードをコピーできます。", name: "「迷宮」は英語の labyrinth に当たる日本語です。", nameLink: "名前について", foot: "設定はリンクに入ります。ゲームや個人情報は保存しません。", toGallery: "パズルの一覧", makerBoard: "盤", makerBoardSays: "迷路、矢印パズル、または両方を組み合わせたパズルです。", copyLink: "このパズルへのリンクをコピー", badDay: "実在する日付をYYYY-MM-DD形式で入力するか、today または off を指定してください。UTCの日付を使います。", badLevel: "このパズルの一覧にあるレベルを選んでください。" },
+  en: { ...FAMILY_EMBED_BUILDER_WORDS.en,pageDocs:"Docs",pageApi:"API reference", pitch: "Choose a maze, arrow puzzle or UTC daily level, preview it, and copy its embed code.", name: "Meikyuu means labyrinth in Japanese.", nameLink: "About the name", foot: "The setup is in the link. No game or personal data is stored.", toGallery: "The puzzles", makerBoard: "A board", makerBoardSays: "A maze, arrow puzzle or a puzzle combining both.", copyLink: "Copy a link to this puzzle", badDay: "Use a real UTC date written YYYY-MM-DD, today or off.", badLevel: "Choose a level in this puzzle's list." },
+  ja: { ...FAMILY_EMBED_BUILDER_WORDS.ja,pageDocs:"ドキュメント",pageApi:"API（英語）", pitch: "迷路、矢印パズル、またはUTCの日替わりレベルを選び、プレビューを確認して、ページに埋め込むコードをコピーできます。", name: "「迷宮」は英語の labyrinth に当たる日本語です。", nameLink: "名前について", foot: "設定はリンクに入ります。ゲームや個人情報は保存しません。", toGallery: "パズルの一覧", makerBoard: "盤", makerBoardSays: "迷路、矢印パズル、または両方を組み合わせたパズルです。", copyLink: "このパズルへのリンクをコピー", badDay: "実在する日付をYYYY-MM-DD形式で入力するか、today または off を指定してください。UTCの日付を使います。", badLevel: "このパズルの一覧にあるレベルを選んでください。" },
 };
 const row = (id, kind, en, ja, extra = {}) => ({ id, kind, group: "board", names: { board: id, mount: ({ lang: "language", "edge-pan": "edgePan", "turn-button": "turnButton" }[id] ?? id) }, say: { en: { label: en[0], help: en[1] }, ja: { label: ja[0], help: ja[1] } }, ...extra });
 const options = [
@@ -32,7 +32,7 @@ const options = [
 ];
 const leftOut = { "board.recipe": "Custom recipes belong to host code; this builder selects published levels.", "mount.recipe": "Custom recipe strings or objects belong to host code.", "mount.wall": "Custom wall thickness belongs to host drawing options.", "mount.line": "Custom line thickness belongs to host drawing options." };
 for (const name of ["onMove", "onSolve", "onKey", "onUnlock", "onBump", "onLose", "onStones"]) leftOut[`mount.${name}`] = "Host callbacks belong to options; native events carry the same detail.";
-let mounted; const page = globalThis.familyLanguage({ id: "meikyuu", words, onChange: () => mounted?.draw() });
+let mounted; const page = globalThis.familyLanguage({ id: "meikyuu", words, onChange: () => { docsLink(); mounted?.draw(); } });
 const heights = {}; const key = (settings) => JSON.stringify(settings);
 function problem(settings) { try { const day = embedDay(settings.daily); return day !== null || Number.isInteger(Number(settings.level ?? 1)) && Number(settings.level ?? 1) >= 1 && Number(settings.level ?? 1) <= levelCount(settings.kind ?? "maze") ? null : "badLevel"; } catch { return "badDay"; } }
 const builder = familyEmbedBuilder({ id: "meikyuu", packageName: "@johnmorrisdotca/meikyuu", major: VERSION.split(".")[0], site: "https://johnmorrisdotca.github.io/meikyuu/", title: "Meikyuu · puzzle", titleJa: "迷宮の埋め込み", options, leftOut, groups: { board: { en: "The puzzle", ja: "パズルの設定" } }, makers: { board: { names: "board", element: "board", tag: "meikyuu-board", embed: "embed/", required: ["kind", "level", "size"], description: "makerBoardSays", formats: ["element", "iframe", "module", "react", "vue", "svelte", "angular", "html", "url"], width: 640, height: (settings) => heights[key(settings)] ?? 1100 } }, code: ({ maker, format, settings }) => {
@@ -45,3 +45,6 @@ mounted = builder.mount({ words, language: () => page, initial: { board: { kind:
   const board = globalThis.document.createElement("meikyuu-board"); for (const [name, value] of attrs) board.setAttribute(name, value);
   board.addEventListener("meikyuu-load", () => { heights[key(settings)] = Math.max(900, Math.ceil(board.getBoundingClientRect().height) + 240); mounted?.refreshCode(); }); stage.append(board); return { destroy() { board.remove(); } };
 } });
+
+function docsLink(){document.querySelector('[data-say="pageDocs"]')?.setAttribute("href",page.lang==="ja"?"docs/ja/index.html":"docs/index.html");}
+docsLink();

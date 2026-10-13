@@ -6,6 +6,8 @@ All notable changes to this project are written here. The format follows
 
 ## [Unreleased]
 
+- Add the bilingual documentation site, checked public examples, paired guides, local search and machine-readable pages.
+
 - Add a shared embed builder and validated, storage-free iframe for fixed and UTC daily maze, arrow and mixed levels.
 - Reflect display and play attributes without replacing methods; preserve host drawing options and emit composed, JSON-safe native events.
 
