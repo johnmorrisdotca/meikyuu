@@ -238,20 +238,7 @@ maze.exit;                       // { cell, side }: the door in the outer wall
 
 ### The game as functions
 
-A line drawn through a maze is a game, and every move is a pure function that returns a new game (or the same one when nothing changed), so a server, a page and a test play by the same rules:
-
-```ts no-check
-import { newMazeGame, pressMaze, dragMaze, liftMaze, undoMaze, tapMaze, hintMaze } from "@johnmorrisdotca/meikyuu";
-
-let game = newMazeGame(maze);
-game = pressMaze(game, maze.start);   // a finger down on the start begins a stroke
-game = dragMaze(game, nextCell);      // into each cell it enters: a wall, or a cell not next to the line, is ignored
-game = liftMaze(game);                // the stroke is over, and Undo takes it back
-hintMaze(game).cells;                 // the next stretch of the right way, and how many cells to draw back first
-```
-
-A cell the line is on again cuts the line back to it, so a line never crosses itself. Arrow puzzles are `newArrowGame`, `tapArrow` (`removed`, `blocked`, `locked`), `heldByLocks`, `hintArrow`, `undoArrow`, and mixed ones are `buildMixed` with `withMaze`
-unlocking the arrows when the labyrinth's button is reached.
+A line drawn through a maze is a game, and every move is a pure function that returns a new game, so a server, a page and a test play by the same rules (`newMazeGame`, `pressMaze`, `dragMaze`, `liftMaze`, `hintMaze`; for arrows `newArrowGame` and `tapArrow`; for mixed puzzles `buildMixed`). The calls, with an example, are in [docs/PLAYING.md](docs/PLAYING.md#the-game-as-functions).
 
 ### On a server, in a page and in a framework
 
@@ -322,25 +309,7 @@ defineProps({ level: Number });
 <meikyuu-board bind:this={board} level={level} board="wood"></meikyuu-board>
 ```
 
-```ts no-check
-// Angular: a standalone component with CUSTOM_ELEMENTS_SCHEMA
-import { Component, CUSTOM_ELEMENTS_SCHEMA } from "@angular/core";
-import "@johnmorrisdotca/meikyuu/element/define";
-
-@Component({
-  selector: "app-maze",
-  standalone: true,
-  schemas: [CUSTOM_ELEMENTS_SCHEMA],
-  template: `<meikyuu-board level="40" board="wood" (meikyuu-solve)="solved($event)"></meikyuu-board>`,
-})
-export class Maze {
-  solved(event: Event) { console.log((event as CustomEvent).detail.moves); }
-}
-```
-
-In Next.js or any server-rendering framework, import the define entry from a client component, so the tag is defined in the browser. Or skip the tag and call `mountMeikyuu(element, options)` from `@johnmorrisdotca/meikyuu/play` in an effect: the handle it returns has `destroy()`.
-
-These recipes are written to the tag's documented attributes and events; they are not built from the packed tarball by this repository's tests, which play the tag in a bare page in Chromium and WebKit.
+Angular (a standalone component with `CUSTOM_ELEMENTS_SCHEMA`), Next.js and other server-rendering frameworks (import the define entry from a client component, or call `mountMeikyuu` in an effect) are in [docs/FRAMEWORKS.md](docs/FRAMEWORKS.md).
 
 The cookbook, with the output of each example, is under [Examples](#examples).
 
@@ -776,7 +745,7 @@ Nobody is listed yet. Using Meikyuu in something? Open an *Add my project* issue
 ### The family
 
 <!-- family:start (made by scripts/family-readme.mjs from scripts/family-template.mjs; change those, not this) -->
-Meikyuu is one of twenty-four packages, each made for the same site, each at
+Meikyuu is one of twenty-six packages, each made for the same site, each at
 [github.com/johnmorrisdotca](https://github.com/johnmorrisdotca). The code of every one is MIT.
 
 - [Korokoro](https://github.com/johnmorrisdotca/korokoro) (コロコロ): dice, with notation, exact odds, real sounds and the dice of many games. [Demo](https://johnmorrisdotca.github.io/korokoro/).
@@ -803,8 +772,10 @@ Meikyuu is one of twenty-four packages, each made for the same site, each at
 - [Gunjin](https://github.com/johnmorrisdotca/gunjin) (軍人): five hidden-rank strategy games with pass-the-device play. [Demo](https://johnmorrisdotca.github.io/gunjin/).
 - [Karakuri](https://github.com/johnmorrisdotca/karakuri) (からくり): eight hyper-casual puzzle games, some of them physics: draw a shield, pull pins, cut ropes, slide blocks, pour tubes. [Demo](https://johnmorrisdotca.github.io/karakuri/).
 - [Houseki](https://github.com/johnmorrisdotca/houseki) (宝石): gem and stone matching puzzles: falling triplets, stone collapse, colour chains and gem swap. [Demo](https://johnmorrisdotca.github.io/houseki/).
+- [Kyogijo Stadiums](https://github.com/johnmorrisdotca/kyogijo-stadiums) (競技場): sports fields, rinks, courts and ballparks drawn to scale as SVG, with each team and the score on them. [Demo](https://johnmorrisdotca.github.io/kyogijo-stadiums/).
+- [Taisen](https://github.com/johnmorrisdotca/taisen-brackets) (対戦): a sport-agnostic tournament bracket, drawn as SVG, from a list of ties. [Demo](https://johnmorrisdotca.github.io/taisen-brackets/). Not on npm yet.
 
-**This package is Meikyuu.** The demos of all twenty-four share one header and footer, so each links the rest.
+**This package is Meikyuu.** The demos of all twenty-six share one header and footer, so each links the rest.
 <!-- family:end -->
 
 ## Development
