@@ -820,7 +820,7 @@ Please follow the [code of conduct](./CODE_OF_CONDUCT.md). A recipe that makes t
 
 See [CHANGELOG.md](./CHANGELOG.md).
 
-The latest release is 3.2.0: adds the board as an element with the standard embed attributes, the shared embed builder, and the documentation site with a checked example for every export.
+The latest release, 3.2.0, adds the board as an element with the standard embed attributes, the shared embed builder, and the documentation site with a checked example for every export.
 
 ## Licence
 
