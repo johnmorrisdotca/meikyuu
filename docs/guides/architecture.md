@@ -17,4 +17,4 @@ takes the pictures and checks the package as npm packs it; `demo/` is the playab
 
 Effort counts native drawing/clearing work, not seconds on a device. Maze difficulty blends path/branch/turn features with geometric coverage. A route confined to one corner can score less than one visiting the whole map. Flat and surface geometry contribute different coordinate dimensions, so custom MazeGeometry must supply points and appropriate distance/bend functions.
 
-Numbered collections hold recipes and metadata, not every built maze. This rollout preserves recipe arrays and ordering. Search is a static local index, and example checking is a build tool. Native rules and game functions stay free of DOM; browser mounts/styles/sound are optional entries. [LEVELS.md](../LEVELS.md) preserves score formulas and versioned ordering notes.
+Numbered collections hold recipes and metadata, not every built maze. Search is a static local index, and example checking is a build tool. Native rules and game functions stay free of DOM; browser mounts/styles/sound are optional entries. [LEVELS.md](../LEVELS.md) preserves score formulas and versioned ordering notes.

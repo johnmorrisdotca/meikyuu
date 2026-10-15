@@ -1,6 +1,6 @@
 {
   "name": "@johnmorrisdotca/meikyuu",
-  "version": "3.1.1",
+  "version": "3.2.0",
   "description": "Meikyuu 迷宮 — Maze generator and maze game: made by seven algorithms, seeded square, hex, triangle and circular grids, cut-out shapes, arrow puzzles, mixed boards and 3D surfaces, drawn through by finger or mouse. TypeScript, zero dependencies.",
   "keywords": [
     "3d",

@@ -3,67 +3,67 @@
   "entries": {
     ".": {
       "minified": 32859,
-      "gzip": 12583
+      "gzip": 12654
     },
     "./draw": {
       "minified": 27991,
-      "gzip": 8549
+      "gzip": 8652
     },
     "./play": {
       "minified": 150812,
-      "gzip": 50597
+      "gzip": 50239
     },
     "./element": {
       "minified": 161599,
-      "gzip": 52527
+      "gzip": 52766
     },
     "./element/define": {
       "minified": 161604,
-      "gzip": 52531
+      "gzip": 52767
     },
     "./levels": {
       "minified": 67869,
-      "gzip": 20821
+      "gzip": 20573
     },
     "./levels/tall": {
       "minified": 88487,
-      "gzip": 22115
+      "gzip": 21771
     },
     "./levels/colossal": {
       "minified": 17253,
-      "gzip": 5735
+      "gzip": 5605
     },
     "./levels/legacy": {
       "minified": 117112,
-      "gzip": 34829
+      "gzip": 34385
     },
     "./3d": {
       "minified": 58084,
-      "gzip": 20129
+      "gzip": 20343
     },
     "./3d/play": {
       "minified": 87945,
-      "gzip": 30028
+      "gzip": 30241
     },
     "./3d/levels": {
-      "minified": 76244,
-      "gzip": 21192
+      "minified": 76250,
+      "gzip": 20714
     },
     "./3d/levels/dice": {
-      "minified": 115243,
-      "gzip": 29276
+      "minified": 115249,
+      "gzip": 28570
     },
     "./3d/levels/shapes": {
-      "minified": 82806,
-      "gzip": 24909
+      "minified": 82812,
+      "gzip": 23841
     },
     "./3d/levels/recipes": {
       "minified": 50289,
-      "gzip": 32083
+      "gzip": 31454
     },
     "./3d/levels/all": {
-      "minified": 268698,
-      "gzip": 71915
+      "minified": 268730,
+      "gzip": 70319
     }
   }
 }

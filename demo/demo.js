@@ -25,7 +25,7 @@ const solidLevelOf = (kind, size, n) => solidModules.get(solidFileOf(kind)).soli
 const WORDS = {
   en: {
     pageDocs: "Docs",
-    pageApi: "API reference",
+    pageApi: "API",
     pitch: "Draw a line through the labyrinth with a finger or the mouse. Over a thousand mazes, from a few cells to thousands, in every shape, tall ones for a phone held upright, and arrow puzzles too. Zoom in and out with a pinch or the wheel.",
     name: "Meikyuu (迷宮) is Japanese for labyrinth: 迷, to be lost, and 宮, a palace.",
     nameLink: "About the name",

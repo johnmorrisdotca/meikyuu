@@ -56,3 +56,20 @@ The handle: `load`, `set`, `undo`, `restart`, `hint`, `fit(mode?)`, `zoomIn`, `z
 
 Attributes, each read again when it changes: `kind` and `level`, or `recipe`; `board`, `trail`; `tap`; `hints` (`off` for no Hint button); `banner` (`off` for no message over a solved board); `sound`; `controls` (`off` for only the board); `zoom` (`off` for no pad); `lang`; `ratio`, `orientation`, `gutter`, `reserve`, `fit`, `pan`, `edge-pan` (`off`), `turn-button`, `stones`, `stone-limit`, `stone-reach`.
 Methods: `undo()`, `restart()`, `hint()`, `fit()`; `.mount` is the handle. `@johnmorrisdotca/meikyuu/element/define` defines the tag; `/element` holds the class alone.
+
+## The game as functions
+
+A line drawn through a maze is a game, and every move is a pure function that returns a new game (or the same one when nothing changed), so a server, a page and a test play by the same rules:
+
+```ts no-check
+import { newMazeGame, pressMaze, dragMaze, liftMaze, undoMaze, tapMaze, hintMaze } from "@johnmorrisdotca/meikyuu";
+
+let game = newMazeGame(maze);
+game = pressMaze(game, maze.start);   // a finger down on the start begins a stroke
+game = dragMaze(game, nextCell);      // into each cell it enters: a wall, or a cell not next to the line, is ignored
+game = liftMaze(game);                // the stroke is over, and Undo takes it back
+hintMaze(game).cells;                 // the next stretch of the right way, and how many cells to draw back first
+```
+
+A cell the line is on again cuts the line back to it, so a line never crosses itself. Arrow puzzles are `newArrowGame`, `tapArrow` (`removed`, `blocked`, `locked`), `heldByLocks`, `hintArrow`, `undoArrow`, and mixed ones are `buildMixed` with `withMaze`
+unlocking the arrows when the labyrinth's button is reached.

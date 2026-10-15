@@ -9,7 +9,7 @@ Draw a line through over a thousand mazes, and as many tall ones for a phone hel
   <a href="./LICENSE"><img alt="MIT licence" src="https://img.shields.io/badge/licence-MIT-2f5d4a"></a>
   <img alt="No dependencies" src="https://img.shields.io/badge/dependencies-0-2f5d4a">
   <img alt="TypeScript" src="https://img.shields.io/badge/types-TypeScript-3178c6">
-  <a href="https://johnmorrisdotca.github.io/meikyuu/docs/api/main/index.html"><img alt="12.6 kB minified and gzipped" src="https://img.shields.io/badge/min%2Bgzip-12.6%20kB-2f5d4a"></a>
+  <a href="https://johnmorrisdotca.github.io/meikyuu/docs/api/main/index.html"><img alt="12.7 kB minified and gzipped" src="https://img.shields.io/badge/min%2Bgzip-12.7%20kB-2f5d4a"></a>
   <a href="https://www.npmjs.com/package/@johnmorrisdotca/meikyuu#provenance"><img alt="Published with npm provenance" src="https://img.shields.io/badge/npm-provenance-2f5d4a"></a>
 </p>
 
@@ -253,20 +253,7 @@ maze.exit;                       // { cell, side }: the door in the outer wall
 
 ### The game as functions
 
-A line drawn through a maze is a game, and every move is a pure function that returns a new game (or the same one when nothing changed), so a server, a page and a test play by the same rules:
-
-```ts no-check
-import { newMazeGame, pressMaze, dragMaze, liftMaze, undoMaze, tapMaze, hintMaze } from "@johnmorrisdotca/meikyuu";
-
-let game = newMazeGame(maze);
-game = pressMaze(game, maze.start);   // a finger down on the start begins a stroke
-game = dragMaze(game, nextCell);      // into each cell it enters: a wall, or a cell not next to the line, is ignored
-game = liftMaze(game);                // the stroke is over, and Undo takes it back
-hintMaze(game).cells;                 // the next stretch of the right way, and how many cells to draw back first
-```
-
-A cell the line is on again cuts the line back to it, so a line never crosses itself. Arrow puzzles are `newArrowGame`, `tapArrow` (`removed`, `blocked`, `locked`), `heldByLocks`, `hintArrow`, `undoArrow`, and mixed ones are `buildMixed` with `withMaze`
-unlocking the arrows when the labyrinth's button is reached.
+A line drawn through a maze is a game, and every move is a pure function that returns a new game, so a server, a page and a test play by the same rules (`newMazeGame`, `pressMaze`, `dragMaze`, `liftMaze`, `hintMaze`; for arrows `newArrowGame` and `tapArrow`; for mixed puzzles `buildMixed`). The calls, with an example, are in [docs/PLAYING.md](docs/PLAYING.md#the-game-as-functions).
 
 ### On a server, in a page and in a framework
 
@@ -337,25 +324,7 @@ defineProps({ level: Number });
 <meikyuu-board bind:this={board} level={level} board="wood"></meikyuu-board>
 ```
 
-```ts no-check
-// Angular: a standalone component with CUSTOM_ELEMENTS_SCHEMA
-import { Component, CUSTOM_ELEMENTS_SCHEMA } from "@angular/core";
-import "@johnmorrisdotca/meikyuu/element/define";
-
-@Component({
-  selector: "app-maze",
-  standalone: true,
-  schemas: [CUSTOM_ELEMENTS_SCHEMA],
-  template: `<meikyuu-board level="40" board="wood" (meikyuu-solve)="solved($event)"></meikyuu-board>`,
-})
-export class Maze {
-  solved(event: Event) { console.log((event as CustomEvent).detail.moves); }
-}
-```
-
-In Next.js or any server-rendering framework, import the define entry from a client component, so the tag is defined in the browser. Or skip the tag and call `mountMeikyuu(element, options)` from `@johnmorrisdotca/meikyuu/play` in an effect: the handle it returns has `destroy()`.
-
-These recipes are written to the tag's documented attributes and events; they are not built from the packed tarball by this repository's tests, which play the tag in a bare page in Chromium and WebKit.
+Angular (a standalone component with `CUSTOM_ELEMENTS_SCHEMA`), Next.js and other server-rendering frameworks (import the define entry from a client component, or call `mountMeikyuu` in an effect) are in [docs/FRAMEWORKS.md](docs/FRAMEWORKS.md).
 
 The cookbook, with the output of each example, is under [Examples](#examples).
 
@@ -765,7 +734,7 @@ Nobody is listed yet. Using Meikyuu in something? Open an *Add my project* issue
 ### The family
 
 <!-- family:start (made by scripts/family-readme.mjs from scripts/family-template.mjs; change those, not this) -->
-Meikyuu is one of twenty-eight packages, each made for the same site, each at
+Meikyuu is one of thirty-two packages, each made for the same site, each at
 [github.com/johnmorrisdotca](https://github.com/johnmorrisdotca) or [github.com/spxis](https://github.com/spxis). The code of every one is MIT.
 
 **Games — board**
@@ -813,12 +782,19 @@ Meikyuu is one of twenty-eight packages, each made for the same site, each at
 - [Hata](https://github.com/johnmorrisdotca/hata) (旗): country and regional flags as SVG, at their true proportions and keyed by ISO code. [Demo](https://johnmorrisdotca.github.io/hata/).
 - [Kuni](https://github.com/johnmorrisdotca/kuni) (国): countries and their regions, with ISO codes and names in English and Japanese. [Demo](https://johnmorrisdotca.github.io/kuni/).
 
+**Sports**
+
+- [Dougu Sports](https://github.com/johnmorrisdotca/dougu-sports) (道具): sports emblems as SVG: trophies, medals, crests, and the ball and gear of every sport, with optional 3D turning. [Demo](https://johnmorrisdotca.github.io/dougu-sports/).
+- [Kyogijo Stadiums](https://github.com/johnmorrisdotca/kyogijo-stadiums) (競技場): sports fields, rinks, courts and ballparks drawn to scale as SVG, with each team and the score on them. [Demo](https://johnmorrisdotca.github.io/kyogijo-stadiums/).
+- [Senshu Jerseys](https://github.com/johnmorrisdotca/senshu-jerseys) (選手): sports jerseys, sweaters, kits, caps, helmets and retired-number banners as SVG, front and back, with optional 2.5D turning. [Demo](https://johnmorrisdotca.github.io/senshu-jerseys/).
+- [Taisen Brackets](https://github.com/johnmorrisdotca/taisen-brackets) (対戦): a sport-agnostic tournament bracket, drawn as SVG, from a list of ties. [Demo](https://johnmorrisdotca.github.io/taisen-brackets/).
+
 **Developer tools**
 
 - [REST in Pieces](https://github.com/spxis/rest-in-pieces) (レスト・イン・ピーシーズ): seeded test data and REST APIs for frontend development, with latency and error drills. [Demo](https://spxis.github.io/rest-in-pieces/).
 
 
-**This package is Meikyuu.** The demos of all twenty-eight share one header and footer, so each links the rest.
+**This package is Meikyuu.** The demos of all thirty-two share one header and footer, so each links the rest.
 <!-- family:end -->
 
 ## Development
@@ -844,7 +820,7 @@ Please follow the [code of conduct](./CODE_OF_CONDUCT.md). A recipe that makes t
 
 See [CHANGELOG.md](./CHANGELOG.md).
 
-The latest release is 3.1.1: 18 solids (a d3 to a d30, a box, a cross, a ring, a torus, a star, a heart), five sizes to the colossal, 5,760 levels, zoomed to six.
+The latest release is 3.2.0: adds the board as an element with the standard embed attributes, the shared embed builder, and the documentation site with a checked example for every export.
 
 ## Licence
 
