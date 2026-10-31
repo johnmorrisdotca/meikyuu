@@ -1,9 +1,8 @@
 import { describe, expect, it } from "vitest";
-
+import { drawSolid } from "./solidDraw.ts";
 import { SOLID_KINDS, type SolidKind } from "./solidGrid.ts";
 import { buildSolidMaze, solidSolutionOf } from "./solidMaze.ts";
-import { drawSolid } from "./solidDraw.ts";
-import { paintSolid, shadeAt, shadeOf, type PaintContext, type SolidColours } from "./solidPaint.ts";
+import { type PaintContext, paintSolid, type SolidColours, shadeAt, shadeOf } from "./solidPaint.ts";
 import { createFrame, openingTurn, projectFrame, stepTurn } from "./solidView.ts";
 
 const COLOURS: SolidColours = {
@@ -93,11 +92,11 @@ describe("painting a solid", () => {
       });
       expect(maze.grid.cells).toBeGreaterThan(kind === "dodecahedron" ? 500 : 250);
       // A solid whose parts can hide parts is painted from the back to the front, a few fills for every dozen cells; the others in a few dozen fills in all.
-      if (maze.grid.convex) expect((calls["fill"] ?? 0) + (calls["stroke"] ?? 0)).toBeLessThan(60);
-      else expect((calls["fill"] ?? 0) + (calls["stroke"] ?? 0)).toBeLessThan(maze.grid.cells / 2);
-      expect(calls["beginPath"]).toBeGreaterThan(5);
+      if (maze.grid.convex) expect((calls.fill ?? 0) + (calls.stroke ?? 0)).toBeLessThan(60);
+      else expect((calls.fill ?? 0) + (calls.stroke ?? 0)).toBeLessThan(maze.grid.cells / 2);
+      expect(calls.beginPath).toBeGreaterThan(5);
       // The walls are many segments in few paths.
-      expect(calls["lineTo"]).toBeGreaterThan(200);
+      expect(calls.lineTo).toBeGreaterThan(200);
     });
   }
 

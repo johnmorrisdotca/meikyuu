@@ -1,19 +1,19 @@
+import type { SolidMaze } from "./solidMaze.ts";
 import { paintSolidOrdered } from "./solidPaintOrdered.ts";
 import {
-  SHADES,
-  openEdges,
   discOn,
-  roomPixels,
-  trace,
-  shadeAt,
-  shadeOf,
-  placeOn,
-  tangentsOf,
+  openEdges,
   type PaintContext,
+  placeOn,
+  roomPixels,
+  SHADES,
   type SolidColours,
   type SolidPaintState,
+  shadeAt,
+  shadeOf,
+  tangentsOf,
+  trace,
 } from "./solidPaintParts.ts";
-import type { SolidMaze } from "./solidMaze.ts";
 import type { SolidFrame } from "./solidView.ts";
 import { quatMatrix } from "./vec.ts";
 
@@ -30,8 +30,8 @@ import { quatMatrix } from "./vec.ts";
  * A solid whose parts can hide parts (a star, a cross, a ring, a heart) is painted by `paintSolidOrdered` instead, cell by cell from the back to the front.
  */
 
-export { placeOn, shadeAt, shadeOf, tangentsOf };
 export type { PaintContext, Rgb, SolidColours, SolidPaintState } from "./solidPaintParts.ts";
+export { placeOn, shadeAt, shadeOf, tangentsOf };
 
 /** The shade a cell is filled with, bucketed. */
 const shadeBucket = (frame: SolidFrame, cell: number): number =>
@@ -201,7 +201,10 @@ export function paintSolid(
     const room = maze.grid.radii[cell]!;
     const outline = discOn(frame, m, maze, cell, room * 0.62);
     ctx.beginPath();
-    outline.forEach(([x, y], i) => (i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y)));
+    outline.forEach(([x, y], i) => {
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    });
     ctx.closePath();
     ctx.fillStyle = fill;
     ctx.strokeStyle = colours.wall;
@@ -211,7 +214,10 @@ export function paintSolid(
     if (ring) {
       const inner = discOn(frame, m, maze, cell, room * 0.3);
       ctx.beginPath();
-      inner.forEach(([x, y], i) => (i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y)));
+      inner.forEach(([x, y], i) => {
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
       ctx.closePath();
       ctx.strokeStyle = colours.wall;
       ctx.stroke();

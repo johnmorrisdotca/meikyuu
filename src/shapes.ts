@@ -1,4 +1,4 @@
-import { makeGrid, subGrid, type Grid, type MeikyuuShape, type Point, type Side, type Wall } from "./grid.ts";
+import { type Grid, type MeikyuuShape, makeGrid, type Point, type Side, subGrid, type Wall } from "./grid.ts";
 import { maskOf } from "./masks.ts";
 
 /**

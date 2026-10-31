@@ -1,12 +1,11 @@
 import { describe, expect, it } from "vitest";
-
+import { makeArrows } from "./arrows.ts";
 import { MEIKYUU_BOARD_NAMES, MEIKYUU_BOARDS } from "./boards.ts";
 import { drawMaze, lookAttributes } from "./draw.ts";
 import { drawArrows } from "./drawArrows.ts";
-import { standingWalls, linePath } from "./geometry.ts";
-import { makeArrows } from "./arrows.ts";
+import { linePath, standingWalls } from "./geometry.ts";
 import { MEIKYUU_SHAPES } from "./grid.ts";
-import { buildMaze, solutionOf, type MazeRecipe } from "./maze.ts";
+import { buildMaze, type MazeRecipe, solutionOf } from "./maze.ts";
 import { MEIKYUU_STYLE } from "./style.ts";
 
 const recipe: MazeRecipe = { shape: "square", w: 8, h: 6, algorithm: "wilson", mode: "enter-leave", seed: 9 };

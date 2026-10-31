@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { difficultyOf, DIFFICULTY_WEIGHTS, isTooEasy, MEIKYUU_LEAST } from "./difficulty.ts";
+import { DIFFICULTY_WEIGHTS, difficultyOf, isTooEasy, MEIKYUU_LEAST } from "./difficulty.ts";
 import { MEIKYUU_SHAPES } from "./grid.ts";
+import { MEIKYUU_MAZE_LEVELS } from "./levels.ts";
 import { buildMaze, type Maze } from "./maze.ts";
 import { ratingOf } from "./measure.ts";
-import { MEIKYUU_MAZE_LEVELS } from "./levels.ts";
 import { squareGrid } from "./shapes.ts";
 
 /** A maze made by hand from the passages of a square grid, to count what is known. */

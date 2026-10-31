@@ -1,5 +1,5 @@
-import { assemble, baseSolid, latticeOf, outward, trianglesOf, type Loop, type Parts } from "./solidParts.ts";
-import { solidShapeCells, solidShapeParts, SOLID_SHAPE_KINDS, type SolidShapeKind } from "./solidShapes.ts";
+import { assemble, baseSolid, type Loop, latticeOf, outward, type Parts, trianglesOf } from "./solidParts.ts";
+import { SOLID_SHAPE_KINDS, type SolidShapeKind, solidShapeCells, solidShapeParts } from "./solidShapes.ts";
 import { mean, unit, type Vec3 } from "./vec.ts";
 
 /**

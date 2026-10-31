@@ -1,10 +1,9 @@
-import { embedDay, dailySeed } from "./embed-day.ts";
-import { MEIKYUU_PLAY_STYLE } from "./playStyle.ts";
-import { levelCount } from "./levels.ts";
 import { MEIKYUU_BOARD_NAMES, MEIKYUU_TRAIL_NAMES, type MeikyuuBoardName, type MeikyuuTrailName } from "./boards.ts";
-import { MEIKYUU_KINDS, type MeikyuuKind } from "./levels.ts";
-import { mountMeikyuu, type MeikyuuMount, type MeikyuuMountOptions } from "./mount.ts";
+import { dailySeed, embedDay } from "./embed-day.ts";
+import { levelCount, MEIKYUU_KINDS, type MeikyuuKind } from "./levels.ts";
+import { type MeikyuuMount, type MeikyuuMountOptions, mountMeikyuu } from "./mount.ts";
 import { MEIKYUU_ORIENTATIONS, type MeikyuuOrientation } from "./orientation.ts";
+import { MEIKYUU_PLAY_STYLE } from "./playStyle.ts";
 import type { StoneOption } from "./stones.ts";
 import type { MeikyuuLanguage } from "./strings.ts";
 import { FIT_MODES, type FitMode } from "./viewport.ts";

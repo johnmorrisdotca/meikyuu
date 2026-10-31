@@ -5,7 +5,7 @@
 // drawing by its touch protocol too, at 390 x 844 and at 360 x 740.
 import { expect, test } from "@playwright/test";
 
-import { at, bare, board, cellPoint, findTall, noSidewaysScroll, open, touchDrag, twoTouches, along } from "./demo.mjs";
+import { along, at, bare, board, cellPoint, findTall, noSidewaysScroll, open, touchDrag, twoTouches } from "./demo.mjs";
 
 const svgOf = (page) => page.locator(`${at("board")} .mk-box svg`);
 const GUTTER = 24;
@@ -389,19 +389,17 @@ test.describe("a line drawn to the edge of a zoomed box", () => {
       const moved = (await viewX()) - x0;
       if (moves) expect(moved).toBeGreaterThan(0.2);
       else expect(Math.abs(moved)).toBeLessThan(0.01);
-      await page
-        .locator("#a .mk-box")
-        .evaluate((element) =>
-          element.dispatchEvent(
-            new PointerEvent("pointerup", {
-              pointerId: 7,
-              pointerType: "touch",
-              isPrimary: true,
-              bubbles: true,
-              cancelable: true,
-            }),
-          ),
-        );
+      await page.locator("#a .mk-box").evaluate((element) =>
+        element.dispatchEvent(
+          new PointerEvent("pointerup", {
+            pointerId: 7,
+            pointerType: "touch",
+            isPrimary: true,
+            bubbles: true,
+            cancelable: true,
+          }),
+        ),
+      );
     }
   });
 });

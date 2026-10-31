@@ -3,14 +3,14 @@ import {
   crossing,
   discOn,
   openEdges,
+  type PaintContext,
   roomPixels,
   SHADES,
+  type SolidColours,
+  type SolidPaintState,
   shadeAt,
   shadeOf,
   slabsOf,
-  type PaintContext,
-  type SolidColours,
-  type SolidPaintState,
 } from "./solidPaintParts.ts";
 import type { SolidFrame } from "./solidView.ts";
 import { quatMatrix } from "./vec.ts";
@@ -75,7 +75,11 @@ export function paintSolidOrdered(
   const { marks, routeAt } = scratch;
   marks.fill(0);
   for (const at of routeAt) at.fill(-1);
-  routes.forEach((route, r) => route.cells.forEach((cell, i) => (routeAt[r]![cell] = i)));
+  routes.forEach((route, r) => {
+    route.cells.forEach((cell, i) => {
+      routeAt[r]![cell] = i;
+    });
+  });
   marks[maze.start] |= START;
   marks[maze.goal] |= GOAL;
   for (const cell of state.stones) marks[cell] |= STONE;
@@ -222,7 +226,10 @@ export function paintSolidOrdered(
         const room = grid.radii[cell]!;
         const outline = discOn(frame, m, maze, cell, room * 0.62);
         ctx.beginPath();
-        outline.forEach(([x, y], k) => (k === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y)));
+        outline.forEach(([x, y], k) => {
+          if (k === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        });
         ctx.closePath();
         ctx.fillStyle = fill;
         ctx.strokeStyle = colours.wall;
@@ -232,7 +239,10 @@ export function paintSolidOrdered(
         if (ring) {
           const inner = discOn(frame, m, maze, cell, room * 0.3);
           ctx.beginPath();
-          inner.forEach(([x, y], k) => (k === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y)));
+          inner.forEach(([x, y], k) => {
+            if (k === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+          });
           ctx.closePath();
           ctx.stroke();
         }

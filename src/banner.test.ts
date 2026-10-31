@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { bannerAfter, bannerShows, type BannerState } from "./banner.ts";
+import { type BannerState, bannerAfter, bannerShows } from "./banner.ts";
 
 const fresh: BannerState = { enabled: true, closed: false };
 

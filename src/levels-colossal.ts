@@ -1,6 +1,6 @@
 import { COLOSSAL_CELLS, COLOSSAL_TALL_HEIGHT, COLOSSAL_TALL_WIDTH, MEIKYUU_COLOSSAL_PER_LIST } from "./colossal.ts";
 import { MEIKYUU_COLOSSAL_ROWS, MEIKYUU_COLOSSAL_TALL_ROWS } from "./levels/colossal.data.ts";
-import { parseRecipe, type MazeRecipe } from "./maze.ts";
+import { type MazeRecipe, parseRecipe } from "./maze.ts";
 import { ratingOf } from "./measure.ts";
 import { TALL_RATIO } from "./tall.ts";
 

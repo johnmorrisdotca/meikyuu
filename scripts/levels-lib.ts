@@ -6,8 +6,8 @@
 import { MEIKYUU_ALGORITHMS, type MeikyuuAlgorithm } from "../src/algorithms.ts";
 import { difficultyOf, isTooEasy, type MazeDifficulty } from "../src/difficulty.ts";
 import type { MeikyuuShape } from "../src/grid.ts";
-import { buildMaze, isPerfect, recipeCode, walk, type Maze, type MazeRecipe, type MeikyuuMode } from "../src/maze.ts";
-import { below, seededRandom, type Random } from "../src/random.ts";
+import { buildMaze, isPerfect, type Maze, type MazeRecipe, type MeikyuuMode, recipeCode, walk } from "../src/maze.ts";
+import { below, type Random, seededRandom } from "../src/random.ts";
 import { gridOf } from "../src/shapes.ts";
 
 /** The cells of each size of the square lists, as `sizeOf` words them: small under 150, medium under 800, large under 4,000, and huge up to the most any level has. */

@@ -11,32 +11,37 @@
  *   in `/draw`, and the board to play in a page in `/play`.
  */
 
-export { VERSION } from "./version.ts";
-export { below, pick, seededRandom, shuffled } from "./random.ts";
-export type { Random } from "./random.ts";
-export { boundaryCells, centreCell, MEIKYUU_SHAPES } from "./grid.ts";
-export type { Box, Grid, MeikyuuShape, Point, Side, Wall } from "./grid.ts";
-export { circleGrid, gridOf, hexGrid, ringCounts, squareGrid, triangleGrid } from "./shapes.ts";
-export { maskOf } from "./masks.ts";
-export type { Mask } from "./masks.ts";
-export { carveMaze, MEIKYUU_ALGORITHMS } from "./algorithms.ts";
 export type { CellGraph, Links, MeikyuuAlgorithm } from "./algorithms.ts";
+export { carveMaze, MEIKYUU_ALGORITHMS } from "./algorithms.ts";
+export type { ArrowGame, ArrowTap } from "./arrowGame.ts";
 export {
-  buildMaze,
-  isPerfect,
-  layoutCells,
-  MEIKYUU_MODES,
-  MEIKYUU_MOST_CELLS,
-  MEIKYUU_MOST_KEYS,
-  parseRecipe,
-  passageCount,
-  recipeCode,
-  solutionOf,
-  walk,
-} from "./maze.ts";
-export type { Door, MazeRecipe, Maze, MazeCore, MeikyuuMode } from "./maze.ts";
-export { EFFORT_LEAST, EFFORT_MOST, measureMaze, ratingOf } from "./measure.ts";
-export type { MazeMeasure } from "./measure.ts";
+  ARROW_HEARTS,
+  arrowsLeft,
+  blockedBy,
+  clearArrows,
+  heldByLocks,
+  hintArrow,
+  isFree,
+  newArrowGame,
+  restartArrows,
+  tapArrow,
+  undoArrow,
+  unlockArrows,
+} from "./arrowGame.ts";
+export type { Arrow, ArrowBoard, ArrowDirection, ArrowMeasure, ArrowRecipe, ArrowShape } from "./arrows.ts";
+export {
+  ARROW_SHAPES,
+  ARROW_STEPS,
+  arrowRecipeCode,
+  blockersOf,
+  MEIKYUU_MOST_ARROW_CELLS,
+  makeArrows,
+  measureArrows,
+  parseArrowRecipe,
+  peelRounds,
+  rayOf,
+} from "./arrows.ts";
+export type { MazeCoverage } from "./coverage.ts";
 export {
   COVER_FROM,
   COVER_SPAN,
@@ -47,7 +52,7 @@ export {
   ZONE_VISIT,
   zonesAcross,
 } from "./coverage.ts";
-export type { MazeCoverage } from "./coverage.ts";
+export type { MazeDifficulty, MazeGeometry } from "./difficulty.ts";
 export {
   DIFFICULTY_CEILINGS,
   DIFFICULTY_WEIGHTS,
@@ -58,22 +63,7 @@ export {
   MEIKYUU_EASY_PLACES,
   MEIKYUU_LEAST,
 } from "./difficulty.ts";
-export type { MazeDifficulty, MazeGeometry } from "./difficulty.ts";
-export {
-  autoTurn,
-  cellsAlong,
-  MEIKYUU_ORIENTATIONS,
-  resolveTurn,
-  toDisplay,
-  toLogical,
-  turnedBox,
-  turnFor,
-  turnTransform,
-  unturnedBox,
-} from "./orientation.ts";
-export type { MeikyuuOrientation, Turn } from "./orientation.ts";
-export { lineToSteps, stepsToLine } from "./steps.ts";
-export { TALL_RATIO, TALL_SHAPES, TALL_WIDTHS, tallDimensions } from "./tall.ts";
+export type { MazeGame } from "./game.ts";
 export {
   dragMaze,
   headOf,
@@ -87,7 +77,55 @@ export {
   tapMaze,
   undoMaze,
 } from "./game.ts";
-export type { MazeGame } from "./game.ts";
+export type { Box, Grid, MeikyuuShape, Point, Side, Wall } from "./grid.ts";
+export { boundaryCells, centreCell, MEIKYUU_SHAPES } from "./grid.ts";
+export type { Mask } from "./masks.ts";
+export { maskOf } from "./masks.ts";
+export type { Door, Maze, MazeCore, MazeRecipe, MeikyuuMode } from "./maze.ts";
+export {
+  buildMaze,
+  isPerfect,
+  layoutCells,
+  MEIKYUU_MODES,
+  MEIKYUU_MOST_CELLS,
+  MEIKYUU_MOST_KEYS,
+  parseRecipe,
+  passageCount,
+  recipeCode,
+  solutionOf,
+  walk,
+} from "./maze.ts";
+export type { MazeMeasure } from "./measure.ts";
+export { EFFORT_LEAST, EFFORT_MOST, measureMaze, ratingOf } from "./measure.ts";
+export type { MixedBoard, MixedGame, MixedRecipe } from "./mixed.ts";
+export {
+  buildMixed,
+  measureMixed,
+  mixedRecipeCode,
+  mixedSolved,
+  newMixedGame,
+  parseMixedRecipe,
+  withArrows,
+  withMaze,
+} from "./mixed.ts";
+export type { MeikyuuOrientation, Turn } from "./orientation.ts";
+export {
+  autoTurn,
+  cellsAlong,
+  MEIKYUU_ORIENTATIONS,
+  resolveTurn,
+  toDisplay,
+  toLogical,
+  turnedBox,
+  turnFor,
+  turnTransform,
+  unturnedBox,
+} from "./orientation.ts";
+export type { Random } from "./random.ts";
+export { below, pick, seededRandom, shuffled } from "./random.ts";
+export { circleGrid, gridOf, hexGrid, ringCounts, squareGrid, triangleGrid } from "./shapes.ts";
+export { lineToSteps, stepsToLine } from "./steps.ts";
+export type { StoneOption, StoneRules, StoneVerdict } from "./stones.ts";
 export {
   canLayStone,
   clearStones,
@@ -103,43 +141,5 @@ export {
   toggleStone,
   withStoneRules,
 } from "./stones.ts";
-export type { StoneOption, StoneRules, StoneVerdict } from "./stones.ts";
-export {
-  ARROW_SHAPES,
-  ARROW_STEPS,
-  MEIKYUU_MOST_ARROW_CELLS,
-  arrowRecipeCode,
-  blockersOf,
-  makeArrows,
-  measureArrows,
-  parseArrowRecipe,
-  peelRounds,
-  rayOf,
-} from "./arrows.ts";
-export type { Arrow, ArrowBoard, ArrowDirection, ArrowMeasure, ArrowRecipe, ArrowShape } from "./arrows.ts";
-export {
-  ARROW_HEARTS,
-  arrowsLeft,
-  blockedBy,
-  clearArrows,
-  heldByLocks,
-  hintArrow,
-  isFree,
-  newArrowGame,
-  restartArrows,
-  tapArrow,
-  undoArrow,
-  unlockArrows,
-} from "./arrowGame.ts";
-export type { ArrowGame, ArrowTap } from "./arrowGame.ts";
-export {
-  buildMixed,
-  measureMixed,
-  mixedRecipeCode,
-  mixedSolved,
-  newMixedGame,
-  parseMixedRecipe,
-  withArrows,
-  withMaze,
-} from "./mixed.ts";
-export type { MixedBoard, MixedGame, MixedRecipe } from "./mixed.ts";
+export { TALL_RATIO, TALL_SHAPES, TALL_WIDTHS, tallDimensions } from "./tall.ts";
+export { VERSION } from "./version.ts";

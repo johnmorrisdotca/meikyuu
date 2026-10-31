@@ -1,10 +1,11 @@
-import { VERSION } from "./dist/index.js";
-import { MeikyuuBoard, MEIKYUU_EMBED_OPTION_KEYS } from "./dist/element.js";
-import { MEIKYUU_KINDS, levelCount } from "./dist/levels.js";
 import { MEIKYUU_BOARD_NAMES, MEIKYUU_TRAIL_NAMES } from "./dist/boards.js";
+import { MEIKYUU_EMBED_OPTION_KEYS, MeikyuuBoard } from "./dist/element.js";
 import { embedDay } from "./dist/embed-day.js";
+import { VERSION } from "./dist/index.js";
+import { levelCount, MEIKYUU_KINDS } from "./dist/levels.js";
 import "./dist/element-define.js";
-import { familyEmbedBuilder, FAMILY_EMBED_BUILDER_WORDS } from "./family-embed-builder.js";
+import { FAMILY_EMBED_BUILDER_WORDS, familyEmbedBuilder } from "./family-embed-builder.js";
+
 const words = {
   en: {
     ...FAMILY_EMBED_BUILDER_WORDS.en,

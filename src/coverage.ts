@@ -159,7 +159,7 @@ export function coverageOf(points: readonly (readonly number[])[], route: readon
   let product = 1;
   for (let axis = 0; axis < dimensions; axis += 1)
     product *= extent[axis]! > 0 ? Math.max(0, rhi[axis]! - rlo[axis]!) / extent[axis]! : 1;
-  const bbox = route.length === 0 ? 0 : Math.pow(product, 1 / dimensions);
+  const bbox = route.length === 0 ? 0 : product ** (1 / dimensions);
 
   // The zones, each as a number made of its position along every axis.
   const across = zonesAcross(cells, dimensions);

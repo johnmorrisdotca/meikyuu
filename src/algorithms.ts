@@ -1,5 +1,5 @@
 import type { Grid } from "./grid.ts";
-import { below, shuffled, type Random } from "./random.ts";
+import { below, type Random, shuffled } from "./random.ts";
 
 /**
  * THE SEVEN WAYS TO MAKE A PERFECT MAZE, each over any grid: a perfect maze is a spanning tree of

@@ -1,6 +1,6 @@
 import type { MazeGame } from "./game.ts";
-import { lineToSteps, stepsToLine } from "./steps.ts";
 import type { MazeCore } from "./maze.ts";
+import { lineToSteps, stepsToLine } from "./steps.ts";
 
 /**
  * STONES: a marble laid on a cell of the maze that the line may not enter. Where the maze is big, a player who has found that a passage

@@ -32,12 +32,12 @@ import { layoutCells, parseRecipe } from "../src/maze.ts";
 import { EFFORT_MOST } from "../src/measure.ts";
 import {
   arrivedAt,
+  type Candidate,
   candidateOf,
   candidates,
   SIZE_CELLS,
-  tooEasy,
-  type Candidate,
   type SizeWord,
+  tooEasy,
 } from "./levels-lib.ts";
 
 const args = process.argv.slice(2);

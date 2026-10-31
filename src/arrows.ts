@@ -1,5 +1,5 @@
 import { maskOf } from "./masks.ts";
-import { below, seededRandom, shuffled, type Random } from "./random.ts";
+import { below, type Random, seededRandom, shuffled } from "./random.ts";
 
 /**
  * AN ARROW PUZZLE: a board of arrows, each a snake of cells with its head at one end, laid out to make a
@@ -353,7 +353,11 @@ export function blockersOf(board: Pick<ArrowBoard, "w" | "h" | "arrows">): numbe
   const known = BLOCKERS.get(board);
   if (known !== undefined) return known;
   const owner = new Int32Array(board.w * board.h).fill(-1);
-  board.arrows.forEach((arrow, id) => arrow.cells.forEach((cell) => (owner[cell] = id)));
+  board.arrows.forEach((arrow, id) => {
+    arrow.cells.forEach((cell) => {
+      owner[cell] = id;
+    });
+  });
   const blockers = board.arrows.map((arrow) => [
     ...new Set(
       rayOf(board, arrow)
@@ -374,7 +378,11 @@ function lockedFor(board: ArrowBoard, count: number, random: Random): boolean[] 
   if (count === 0) return locked;
   const blockers = blockersOf(board);
   const dependents = board.arrows.map(() => 0);
-  blockers.forEach((ids) => ids.forEach((id) => (dependents[id] = dependents[id]! + 1)));
+  blockers.forEach((ids) => {
+    ids.forEach((id) => {
+      dependents[id] = dependents[id]! + 1;
+    });
+  });
   const wanted = board.arrows.map((_, id) => id).filter((id) => dependents[id]! > 0 && blockers[id]!.length === 0);
   const candidates = shuffled(wanted, random).sort((a, b) => dependents[b]! - dependents[a]!);
   // Take them from the top few, not strictly the top, so the choice varies between puzzles.

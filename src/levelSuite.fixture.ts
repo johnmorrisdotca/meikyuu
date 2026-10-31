@@ -1,12 +1,12 @@
 import { expect, it } from "vitest";
 
 import { difficultyOf, isTooEasy } from "./difficulty.ts";
-import { isPerfect, recipeCode, buildMaze } from "./maze.ts";
-import { measureMaze } from "./measure.ts";
 import { newMazeGame, playSolution } from "./game.ts";
 import { MEIKYUU_MAZE_LEVELS, sizeOf } from "./levels.ts";
 import { MEIKYUU_COLOSSAL_LEVELS, MEIKYUU_COLOSSAL_TALL_LEVELS } from "./levels-colossal.ts";
 import { MEIKYUU_TALL_LEVELS } from "./levels-tall.ts";
+import { buildMaze, isPerfect, recipeCode } from "./maze.ts";
+import { measureMaze } from "./measure.ts";
 import { TALL_RATIO } from "./tall.ts";
 
 /**

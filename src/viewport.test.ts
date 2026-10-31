@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  edgeNudge,
   EDGE,
   EDGE_STEP,
+  edgeNudge,
   fitView,
   isFitted,
   keptView,
@@ -11,10 +11,10 @@ import {
   pannedBy,
   pointAt,
   scaleLimits,
+  type ViewBox,
   viewBoxOf,
   visibleArea,
   zoomedAbout,
-  type ViewBox,
 } from "./viewport.ts";
 
 const box: ViewBox = { width: 400, height: 400, area: { x: 0, y: 0, w: 80, h: 80 } };

@@ -1,6 +1,6 @@
-import type { SolidFrame } from "./solidView.ts";
 import type { SolidMaze } from "./solidMaze.ts";
-import { cross, dot, scale as times, sub, unit, type Vec3 } from "./vec.ts";
+import type { SolidFrame } from "./solidView.ts";
+import { cross, dot, sub, scale as times, unit, type Vec3 } from "./vec.ts";
 
 /**
  * WHAT A SOLID IS PAINTED WITH, shared by the two painters (`solidPaint.ts`, which fills a convex solid a shade at a time, and `solidPaintOrdered.ts`, which paints a solid with

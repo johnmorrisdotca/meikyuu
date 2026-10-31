@@ -1,4 +1,4 @@
-import { blockersOf, type ArrowBoard } from "./arrows.ts";
+import { type ArrowBoard, blockersOf } from "./arrows.ts";
 
 /**
  * AN ARROW PUZZLE BEING PLAYED, as pure functions. `tapArrow` is the one move: a free arrow

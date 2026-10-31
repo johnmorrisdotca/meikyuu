@@ -1,9 +1,8 @@
 // Which way up a maze is shown: a tall one stands on a phone held upright and lies down on a wide screen, by the room there is, or as asked;
 // and the line drawn on it is the same line either way, started one way up and finished the other, in every shape.
 import { expect, test } from "@playwright/test";
-
-import { at, bare, dragCells, findTall, open } from "./demo.mjs";
 import { buildMaze, lineToSteps, MEIKYUU_SHAPES, solutionOf } from "../dist/index.js";
+import { at, bare, dragCells, findTall, open } from "./demo.mjs";
 
 const svgOf = (page, selector = `${at("board")}`) => page.locator(`${selector} .mk-box svg`);
 const tall = findTall(

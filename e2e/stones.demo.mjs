@@ -31,7 +31,7 @@ function forkOf(number) {
 }
 
 /** A finger held down on a pixel for `ms`, then lifted: pointer events with the touch type, the wait made in the page. */
-async function touchHold(page, target, point, ms) {
+async function touchHold(_page, target, point, ms) {
   await target.evaluate(
     (element, { point, ms }) =>
       new Promise((resolve) => {

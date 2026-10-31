@@ -1,13 +1,13 @@
 import type { SolidGrid } from "./solidGrid.ts";
 import { revealDirection } from "./solidReveal.ts";
 import {
+  type Quat,
   quatAxisAngle,
   quatBetween,
   quatMatrix,
   quatMul,
   quatNormalize,
   quatTurn,
-  type Quat,
   type Vec3,
 } from "./vec.ts";
 
@@ -737,7 +737,7 @@ export function edgeTurn(
   let any = urgency > 0;
   // On a solid with parts that hide parts, a cell facing the viewer can still be hidden. The end of the line itself hidden is turned to the view it can be seen from (`revealDirection`),
   // and nothing else is looked at until it is seen.
-  if (hidden !== undefined && hidden(cell)) {
+  if (hidden?.(cell)) {
     const w = quatTurn(q, revealDirection(grid, cell));
     sx = w[0];
     sy = w[1];
@@ -750,7 +750,7 @@ export function edgeTurn(
     const wanted: { cell: number; w: Vec3 }[] = [];
     const own: Vec3 = [sx, sy, sz];
     for (const next of links[cell]!) {
-      if (hidden !== undefined && hidden(next)) {
+      if (hidden?.(next)) {
         wanted.push({ cell: next, w: quatTurn(q, revealDirection(grid, next)) });
         any = true;
         urgency = Math.max(urgency, 0.8);

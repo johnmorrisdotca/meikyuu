@@ -10,17 +10,16 @@
  * writes the same files.
  */
 import { writeFileSync } from "node:fs";
-
+import { MEIKYUU_ALGORITHMS } from "../src/algorithms.ts";
 import {
-  arrowRecipeCode,
   ARROW_SHAPES,
-  makeArrows,
-  measureArrows,
   type ArrowRecipe,
   type ArrowShape,
+  arrowRecipeCode,
+  makeArrows,
+  measureArrows,
 } from "../src/arrows.ts";
-import { MEIKYUU_ALGORITHMS } from "../src/algorithms.ts";
-import { buildMaze, recipeCode, type MazeRecipe } from "../src/maze.ts";
+import { buildMaze, type MazeRecipe, recipeCode } from "../src/maze.ts";
 import { measureMaze } from "../src/measure.ts";
 import { buildMixed, measureMixed, mixedRecipeCode } from "../src/mixed.ts";
 import { seededRandom } from "../src/random.ts";

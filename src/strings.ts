@@ -306,7 +306,7 @@ export function meikyuuSay(
   values: Record<string, string | number> = {},
 ): string {
   const table = MEIKYUU_STRINGS[language];
-  const one = values["n"] === 1 && `${key}One` in table ? `${key}One` : key;
+  const one = values.n === 1 && `${key}One` in table ? `${key}One` : key;
   const line = table[one] ?? MEIKYUU_STRINGS.en[one] ?? table[key] ?? MEIKYUU_STRINGS.en[key] ?? key;
   return line.replace(/\{(\w+)\}/g, (whole, name: string) => (name in values ? String(values[name]) : whole));
 }

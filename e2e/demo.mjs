@@ -129,7 +129,7 @@ export async function dragCells(page, svg, maze, cells, { lift = true, steps = 3
 }
 
 /** A touch, made as the browser makes one: pointer events with the touch type, sent to the box. `points` are pixels of the page. */
-export async function touchDrag(page, target, points, { id = 7, lift = true } = {}) {
+export async function touchDrag(_page, target, points, { id = 7, lift = true } = {}) {
   const [first, ...rest] = points;
   await target.evaluate(
     (element, { first, rest, id, lift }) => {
@@ -157,7 +157,7 @@ export async function touchDrag(page, target, points, { id = 7, lift = true } = 
 }
 
 /** Two touches at once (a pinch or a two finger move): each a list of pixels, moved together. */
-export async function twoTouches(page, target, a, b, { lift = true } = {}) {
+export async function twoTouches(_page, target, a, b, { lift = true } = {}) {
   await target.evaluate(
     (element, { a, b, lift }) => {
       const send = (type, id, p) =>
@@ -286,11 +286,12 @@ export async function mixedPlan(number) {
   const board = buildMixed(level.recipe);
   const start = newArrowGame(board.arrows);
   const take = (game, order) => {
-    for (let id = hintArrow(game); id !== null; id = hintArrow(game)) {
+    let current = game;
+    for (let id = hintArrow(current); id !== null; id = hintArrow(current)) {
       order.push(id);
-      game = tapArrow(game, id).game;
+      current = tapArrow(current, id).game;
     }
-    return game;
+    return current;
   };
   const before = [];
   const stuck = take(start, before);

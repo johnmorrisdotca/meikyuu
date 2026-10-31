@@ -8,9 +8,8 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { chromium } from "@playwright/test";
-
-import { buildMaze, parseRecipe } from "../dist/index.js";
 import { drawMaze } from "../dist/draw-entry.js";
+import { buildMaze, parseRecipe } from "../dist/index.js";
 import { MEIKYUU_MAZE_LEVELS, MEIKYUU_SIZES, mazeLevelsOfSize } from "../dist/levels.js";
 import { MEIKYUU_LEGACY_MAZE_LEVELS } from "../dist/levels-legacy.js";
 import { MEIKYUU_TALL_LEVELS, MEIKYUU_TALL_SIZES, tallLevelsOfSize } from "../dist/levels-tall.js";

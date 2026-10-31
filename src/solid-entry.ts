@@ -6,6 +6,10 @@
  * The game itself (drawing, undo, stones, steps) is the root entry's: it plays any maze, flat or not. The board to play in a page is
  * `@johnmorrisdotca/meikyuu/3d/play`, and the numbered levels are in `@johnmorrisdotca/meikyuu/3d/levels`.
  */
+
+export type { DrawSolidOptions } from "./solid/solidDraw.ts";
+export { drawSolid } from "./solid/solidDraw.ts";
+export type { SolidEdge, SolidGrid, SolidKind } from "./solid/solidGrid.ts";
 export { isSolidCut, MEIKYUU_MOST_SOLID_CELLS, SOLID_KINDS, solidCells, solidGridOf } from "./solid/solidGrid.ts";
 export {
   isSolidDie,
@@ -16,9 +20,7 @@ export {
   SOLID_MORE_SHAPES,
   SOLID_SHAPES,
 } from "./solid/solidKinds.ts";
-export { MEIKYUU_SOLID_PER_LIST, SOLID_CUTS, SOLID_SIZE_NAMES, solidCellsOf, solidCutOf } from "./solid/solidSizes.ts";
-export type { SolidSize } from "./solid/solidSizes.ts";
-export type { SolidEdge, SolidGrid, SolidKind } from "./solid/solidGrid.ts";
+export type { SolidAlgorithm, SolidMaze, SolidRecipe } from "./solid/solidMaze.ts";
 export {
   buildSolidMaze,
   cachedSolidGrid,
@@ -31,7 +33,9 @@ export {
   solidRecipeCode,
   solidSolutionOf,
 } from "./solid/solidMaze.ts";
-export type { SolidAlgorithm, SolidMaze, SolidRecipe } from "./solid/solidMaze.ts";
+export type { SolidSize } from "./solid/solidSizes.ts";
+export { MEIKYUU_SOLID_PER_LIST, SOLID_CUTS, SOLID_SIZE_NAMES, solidCellsOf, solidCutOf } from "./solid/solidSizes.ts";
+export type { SolidFrame } from "./solid/solidView.ts";
 export {
   cellsAlongDrag,
   createFrame,
@@ -52,7 +56,7 @@ export {
   stepTurn,
   trackballPoint,
 } from "./solid/solidView.ts";
-export type { SolidFrame } from "./solid/solidView.ts";
+export type { Quat, Vec3 } from "./solid/vec.ts";
 export {
   QUAT_IDENTITY,
   quatAngle,
@@ -63,6 +67,3 @@ export {
   quatSlerp,
   quatTurn,
 } from "./solid/vec.ts";
-export type { Quat, Vec3 } from "./solid/vec.ts";
-export { drawSolid } from "./solid/solidDraw.ts";
-export type { DrawSolidOptions } from "./solid/solidDraw.ts";

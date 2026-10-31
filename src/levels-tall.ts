@@ -1,5 +1,5 @@
 import { MEIKYUU_TALL_ROWS } from "./levels/tall.data.ts";
-import { parseRecipe, type MazeRecipe } from "./maze.ts";
+import { type MazeRecipe, parseRecipe } from "./maze.ts";
 import { ratingOf } from "./measure.ts";
 import { TALL_RATIO, TALL_WIDTHS } from "./tall.ts";
 

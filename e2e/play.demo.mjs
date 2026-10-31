@@ -204,7 +204,7 @@ test("a fast drag that skips cells still follows the corridors: cells between ar
   const svg = svgOf(page);
   // From the start straight to a cell some cells along the way, in one move: the line goes through the cells between, where it can.
   const straight = way.findIndex(
-    (cell, i) => i >= 3 && way.slice(0, i + 1).every((c, j) => j === 0 || maze.links[way[j - 1]].includes(c)),
+    (_cell, i) => i >= 3 && way.slice(0, i + 1).every((c, j) => j === 0 || maze.links[way[j - 1]].includes(c)),
   );
   expect(straight).toBeGreaterThan(2);
   const first = await cellPoint(svg, maze, way[0]);

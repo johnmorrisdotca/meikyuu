@@ -4,9 +4,8 @@
 import process from "node:process";
 
 import { expect, test } from "@playwright/test";
-
-import { buildMaze, solutionOf } from "../dist/index.js";
 import { linePath } from "../dist/draw-entry.js";
+import { buildMaze, solutionOf } from "../dist/index.js";
 import { MEIKYUU_COLOSSAL_LEVELS, MEIKYUU_COLOSSAL_TALL_LEVELS } from "../dist/levels-colossal.js";
 import { at, noSidewaysScroll, open } from "./demo.mjs";
 

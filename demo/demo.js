@@ -1,20 +1,20 @@
 // The demo page's own script: a Meikyuu board to play, any of the three lists and any level, played by the package's own
 // `mountMeikyuu` (the drawing, the line, the zoom, the arrows), with a chooser by shape, size and way to play, the options the
 // package has, a gallery of the shapes, kept on this device between visits, and spoken in the language the header's chooser picks.
-import { buildMaze, MEIKYUU_MODES, MEIKYUU_SHAPES } from "./dist/index.js";
+
 import {
   drawMaze,
-  meikyuuSay,
   MEIKYUU_BOARD_NAMES,
   MEIKYUU_BOARDS,
   MEIKYUU_TRAIL_NAMES,
   MEIKYUU_TRAILS,
+  meikyuuSay,
 } from "./dist/draw-entry.js";
-import { mountMeikyuu } from "./dist/play-entry.js";
+import { buildMaze, MEIKYUU_MODES, MEIKYUU_SHAPES } from "./dist/index.js";
 import { levelsOf, MEIKYUU_KINDS, MEIKYUU_LEVELS_PER_SIZE, MEIKYUU_SIZES } from "./dist/levels.js";
-import { MEIKYUU_TALL_LEVELS, MEIKYUU_TALL_SIZES, TALL_SHAPES } from "./dist/levels-tall.js";
 import { MEIKYUU_COLOSSAL_LEVELS, MEIKYUU_COLOSSAL_TALL_LEVELS } from "./dist/levels-colossal.js";
-import { mountSolid } from "./dist/solid-play-entry.js";
+import { MEIKYUU_TALL_LEVELS, MEIKYUU_TALL_SIZES, TALL_SHAPES } from "./dist/levels-tall.js";
+import { mountMeikyuu } from "./dist/play-entry.js";
 import {
   MEIKYUU_SOLID_PER_LIST,
   SOLID_DICE,
@@ -25,6 +25,7 @@ import {
   SOLID_SHAPES,
   SOLID_SIZE_NAMES,
 } from "./dist/solid-entry.js";
+import { mountSolid } from "./dist/solid-play-entry.js";
 
 /** The file a solid's levels are in: a page loads the one of the solid it shows, and no other. */
 const SOLID_FILES = {
@@ -733,7 +734,7 @@ document.getElementById("solid-previous").addEventListener("click", () => choose
 document.getElementById("solid-next").addEventListener("click", () => chooseSolid({ level: solid.level + 1 }));
 document.getElementById("solid-level-input").addEventListener("change", (event) => {
   const asked = Number(event.target.value);
-  if (Number.isInteger(asked)) chooseSolid({ level: asked });
+  if (Number.isInteger(asked)) void chooseSolid({ level: asked });
 });
 
 // The levels of the solid chosen are here before the first picture, which says what it is and how big.

@@ -1,5 +1,5 @@
 import { MEIKYUU_LEGACY_MAZE_ROWS } from "./levels/legacy.data.ts";
-import { MEIKYUU_LEVELS_PER_SIZE, MEIKYUU_MAZE_LEVELS, MEIKYUU_SIZES, sizeOf, type MeikyuuSize } from "./levels.ts";
+import { MEIKYUU_LEVELS_PER_SIZE, MEIKYUU_MAZE_LEVELS, MEIKYUU_SIZES, type MeikyuuSize, sizeOf } from "./levels.ts";
 
 /**
  * WHERE THE 1.0.0 MAZE LEVELS WENT. The first release numbered 1,000 maze levels in one list; this release has 1,024 in four lists of 256

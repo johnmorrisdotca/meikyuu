@@ -1,6 +1,6 @@
 import { coverageOf, type MazeCoverage } from "./coverage.ts";
-import { solutionOf, walk, type Maze, type MazeCore } from "./maze.ts";
-import { measureMaze, type MazeMeasure } from "./measure.ts";
+import { type Maze, type MazeCore, solutionOf, walk } from "./maze.ts";
+import { type MazeMeasure, measureMaze } from "./measure.ts";
 
 /**
  * HOW HARD A MAZE IS TO PLAY, ON ONE SCALE FROM 0 TO 100 (`difficultyOf`). It is a second measure beside

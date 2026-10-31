@@ -1,4 +1,4 @@
-import { solutionOf, walk, type MazeCore } from "./maze.ts";
+import { type MazeCore, solutionOf, walk } from "./maze.ts";
 
 /**
  * HOW HARD A MAZE IS, measured from the maze alone (docs/MAZES.md says why each number is here).

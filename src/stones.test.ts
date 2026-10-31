@@ -3,15 +3,15 @@ import { describe, expect, it } from "vitest";
 import {
   dragMaze,
   liftMaze,
+  type MazeGame,
   newMazeGame,
   playSolution,
   pressMaze,
   restartMaze,
   tapMaze,
   undoMaze,
-  type MazeGame,
 } from "./game.ts";
-import { buildMaze, solutionOf, walk, type MazeRecipe } from "./maze.ts";
+import { buildMaze, type MazeRecipe, solutionOf, walk } from "./maze.ts";
 import {
   canLayStone,
   clearStones,
@@ -19,13 +19,13 @@ import {
   encodeRun,
   hasStone,
   layStone,
+  type StoneRules,
   stoneLimitFor,
   stoneRulesOf,
   stonesLeft,
   takeStone,
   toggleStone,
   withStoneRules,
-  type StoneRules,
 } from "./stones.ts";
 
 const recipe: MazeRecipe = { shape: "square", w: 12, h: 12, algorithm: "wilson", mode: "to-goal", seed: 31 };

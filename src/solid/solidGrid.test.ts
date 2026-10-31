@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { SOLID_KINDS, solidCells, solidGridOf, type SolidGrid, type SolidKind } from "./solidGrid.ts";
+import { SOLID_KINDS, type SolidGrid, type SolidKind, solidCells, solidGridOf } from "./solidGrid.ts";
 import { cross, dot, length, sub } from "./vec.ts";
 
 const SIZES: Record<SolidKind, readonly number[]> = {
@@ -71,13 +71,13 @@ describe("the surface of a solid as a cell graph", () => {
         }
         // The surface is oriented: of the two cells at an edge, one goes along it from the lower corner to the higher and the other back.
         const along = new Map<string, number>();
-        grid.corners.forEach((loop) =>
+        grid.corners.forEach((loop) => {
           loop.forEach((v, k) => {
             const w = loop[(k + 1) % loop.length]!;
             const key = `${v},${w}`;
             along.set(key, (along.get(key) ?? 0) + 1);
-          }),
-        );
+          });
+        });
         for (const [key, count] of along) {
           const [v, w] = key.split(",").map(Number) as [number, number];
           expect(count, key).toBe(1);

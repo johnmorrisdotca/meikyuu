@@ -2,15 +2,17 @@ import { describe, expect, it } from "vitest";
 
 import { clearArrows, newArrowGame, tapArrow, unlockArrows } from "./arrowGame.ts";
 import { arrowRecipeCode, makeArrows, measureArrows } from "./arrows.ts";
+import { dragMaze, liftMaze, newMazeGame, pressMaze } from "./game.ts";
 import { MEIKYUU_ARROW_LEVELS, MEIKYUU_MIXED_LEVELS } from "./levels.ts";
 import { isPerfect, solutionOf } from "./maze.ts";
-import { dragMaze, liftMaze, newMazeGame, pressMaze } from "./game.ts";
 import { buildMixed, measureMixed, mixedRecipeCode, newMixedGame, withMaze } from "./mixed.ts";
 
 describe("the arrow levels", () => {
   it("are numbered from 1, each a different recipe, and never get easier", () => {
     expect(MEIKYUU_ARROW_LEVELS.length).toBeGreaterThanOrEqual(250);
-    MEIKYUU_ARROW_LEVELS.forEach((level, index) => expect(level.number).toBe(index + 1));
+    MEIKYUU_ARROW_LEVELS.forEach((level, index) => {
+      expect(level.number).toBe(index + 1);
+    });
     expect(new Set(MEIKYUU_ARROW_LEVELS.map((level) => level.code)).size).toBe(MEIKYUU_ARROW_LEVELS.length);
     for (let i = 1; i < MEIKYUU_ARROW_LEVELS.length; i += 1)
       expect(MEIKYUU_ARROW_LEVELS[i]!.effort, `level ${i + 1}`).toBeGreaterThanOrEqual(
@@ -49,7 +51,9 @@ describe("the arrow levels", () => {
 describe("the mixed levels", () => {
   it("are numbered from 1, each a different recipe, never get easier, and each has locks and a labyrinth", () => {
     expect(MEIKYUU_MIXED_LEVELS.length).toBeGreaterThanOrEqual(80);
-    MEIKYUU_MIXED_LEVELS.forEach((level, index) => expect(level.number).toBe(index + 1));
+    MEIKYUU_MIXED_LEVELS.forEach((level, index) => {
+      expect(level.number).toBe(index + 1);
+    });
     expect(new Set(MEIKYUU_MIXED_LEVELS.map((level) => level.code)).size).toBe(MEIKYUU_MIXED_LEVELS.length);
     for (let i = 1; i < MEIKYUU_MIXED_LEVELS.length; i += 1)
       expect(MEIKYUU_MIXED_LEVELS[i]!.effort).toBeGreaterThanOrEqual(MEIKYUU_MIXED_LEVELS[i - 1]!.effort);

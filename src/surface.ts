@@ -1,19 +1,19 @@
+import type { Box } from "./grid.ts";
 import {
   edgeNudge,
+  type FitMode,
   fitView,
   isFitted,
   keptView,
   pannedBy,
   pointAt,
   scaleLimits,
+  type View,
+  type ViewBox,
   viewBoxOf,
   visibleArea,
   zoomedAbout,
-  type FitMode,
-  type View,
-  type ViewBox,
 } from "./viewport.ts";
-import type { Box } from "./grid.ts";
 
 /**
  * A SURFACE: the box a board is looked at through, in a page. It owns the SVG's `viewBox` (the view), turns

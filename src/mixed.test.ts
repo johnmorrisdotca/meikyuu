@@ -6,6 +6,8 @@ import { levelOf } from "./levels.ts";
 import { solutionOf } from "./maze.ts";
 import {
   buildMixed,
+  type MixedGame,
+  type MixedRecipe,
   measureMixed,
   mixedRecipeCode,
   mixedSolved,
@@ -13,8 +15,6 @@ import {
   parseMixedRecipe,
   withArrows,
   withMaze,
-  type MixedGame,
-  type MixedRecipe,
 } from "./mixed.ts";
 
 const recipe: MixedRecipe = {

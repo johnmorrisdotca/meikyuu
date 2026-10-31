@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  ARROW_HEARTS,
   arrowsLeft,
   blockedBy,
   clearArrows,
@@ -12,19 +13,18 @@ import {
   tapArrow,
   undoArrow,
   unlockArrows,
-  ARROW_HEARTS,
 } from "./arrowGame.ts";
 import {
-  arrowRecipeCode,
   ARROW_SHAPES,
   ARROW_STEPS,
+  type ArrowRecipe,
+  arrowRecipeCode,
   blockersOf,
   makeArrows,
   measureArrows,
   parseArrowRecipe,
   peelRounds,
   rayOf,
-  type ArrowRecipe,
 } from "./arrows.ts";
 
 const recipes: ArrowRecipe[] = [

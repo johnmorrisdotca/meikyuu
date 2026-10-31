@@ -5,31 +5,31 @@ import {
   headOf,
   hintMaze,
   liftMaze,
+  type MazeGame,
   newMazeGame,
   pressMaze,
   restartMaze,
   tapMaze,
   undoMaze,
-  type MazeGame,
 } from "../game.ts";
-import { MEIKYUU_GUTTER, MEIKYUU_RESERVE, ensureMeikyuuPlayStyle } from "../mount.ts";
+import { ensureMeikyuuPlayStyle, MEIKYUU_GUTTER, MEIKYUU_RESERVE } from "../mount.ts";
 import { createMeikyuuSounds, type MeikyuuSoundKind, type MeikyuuSounds } from "../sound.ts";
 import {
   clearStones,
   decodeRun,
   encodeRun,
-  stonesLeft,
-  stoneRulesOf,
-  toggleStone,
-  withStoneRules,
   type StoneOption,
   type StoneVerdict,
+  stoneRulesOf,
+  stonesLeft,
+  toggleStone,
+  withStoneRules,
 } from "../stones.ts";
-import { meikyuuLanguageOf, meikyuuSay, type MeikyuuLanguage } from "../strings.ts";
+import { type MeikyuuLanguage, meikyuuLanguageOf, meikyuuSay } from "../strings.ts";
 import { applyLook, readColours } from "./solidColours.ts";
-import { SOLID_PLAY_STYLE } from "./solidStyle.ts";
-import { paintSolid, type PaintContext } from "./solidPaint.ts";
 import { buildSolidMaze, parseSolidRecipe, type SolidMaze, type SolidRecipe } from "./solidMaze.ts";
+import { type PaintContext, paintSolid } from "./solidPaint.ts";
+import { SOLID_PLAY_STYLE } from "./solidStyle.ts";
 import {
   cellSeen,
   cellsAlongDrag,
@@ -42,10 +42,10 @@ import {
   projectFrame,
   SOLID_ZOOM_LEAST,
   SOLID_ZOOM_MOST,
-  stepTurn,
   type SolidFrame,
+  stepTurn,
 } from "./solidView.ts";
-import { quatAxisAngle, quatMul, quatNormalize, quatSlerp, type Quat } from "./vec.ts";
+import { type Quat, quatAxisAngle, quatMul, quatNormalize, quatSlerp } from "./vec.ts";
 
 /**
  * A PLAYABLE MAZE OVER A SOLID IN ANY PAGE: `mountSolid(host, { recipe })` draws a cube, a globe or a solid of triangles with a maze over the whole of

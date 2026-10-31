@@ -1,14 +1,14 @@
 import { MEIKYUU_SOLID_ROWS } from "./levels/solid.data.ts";
-import { solidFinders, solidListsOf, type MeikyuuSolidLevel } from "./solid/solidLevelList.ts";
 import { SOLID_KINDS, type SolidKind } from "./solid/solidGrid.ts";
 import { SOLID_FIRST } from "./solid/solidKinds.ts";
+import { type MeikyuuSolidLevel, solidFinders, solidListsOf } from "./solid/solidLevelList.ts";
 import {
   MEIKYUU_SOLID_PER_LIST,
   SOLID_CUTS,
   SOLID_SIZE_NAMES,
+  type SolidSize,
   solidCellsOf,
   solidCutOf,
-  type SolidSize,
 } from "./solid/solidSizes.ts";
 
 /**
@@ -19,10 +19,8 @@ import {
  * recipe such as `cube:7:prim:48213`, and the maze is made from its seed where it is played (a few thousandths of a second), never stored. Play one with `mountSolid(host, { recipe: level.code })`.
  * A solid this entry holds no list for (`solidLevelsOf("heart", "small")` here) has none: an empty list.
  */
-export type { MeikyuuSolidLevel };
-
+export type { MeikyuuSolidLevel, SolidKind, SolidSize };
 export { MEIKYUU_SOLID_PER_LIST, SOLID_CUTS, SOLID_FIRST, SOLID_KINDS, SOLID_SIZE_NAMES, solidCellsOf, solidCutOf };
-export type { SolidKind, SolidSize };
 
 /** Every list this entry has: a solid, then a size.
  *

@@ -1,9 +1,8 @@
 import { describe, expect, it } from "vitest";
-
-import { legacyLevelOf, legacyLevelOfCode, MEIKYUU_LEGACY_MAZE_LEVELS } from "./levels-legacy.ts";
-import { MEIKYUU_MAZE_LEVELS, MEIKYUU_SIZES } from "./levels.ts";
-import { buildMaze, parseRecipe, recipeCode } from "./maze.ts";
 import { difficultyOf, isTooEasy } from "./difficulty.ts";
+import { MEIKYUU_MAZE_LEVELS, MEIKYUU_SIZES } from "./levels.ts";
+import { legacyLevelOf, legacyLevelOfCode, MEIKYUU_LEGACY_MAZE_LEVELS } from "./levels-legacy.ts";
+import { buildMaze, parseRecipe, recipeCode } from "./maze.ts";
 
 describe("where the 1.0.0 maze levels went", () => {
   it("keeps all 1,000, in the order the first release numbered them, each a recipe that builds", () => {

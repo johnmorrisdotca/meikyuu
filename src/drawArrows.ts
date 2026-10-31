@@ -1,8 +1,8 @@
+import { ARROW_STEPS, type Arrow, type ArrowBoard } from "./arrows.ts";
 import { MEIKYUU_ARROW_COLOURS } from "./boards.ts";
 import { lookAttributes, type MazeLook } from "./draw.ts";
 import { fixed } from "./geometry.ts";
-import { ARROW_STEPS, type Arrow, type ArrowBoard } from "./arrows.ts";
-import { meikyuuSay, type MeikyuuLanguage } from "./strings.ts";
+import { type MeikyuuLanguage, meikyuuSay } from "./strings.ts";
 import { MEIKYUU_STYLE } from "./style.ts";
 
 /**
@@ -32,7 +32,7 @@ export type DrawArrowsOptions = MazeLook & {
   standalone?: boolean;
 };
 
-const escape = (text: string): string =>
+const escapeHtml = (text: string): string =>
   text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
 /** The colour of arrow number `id`.
@@ -136,5 +136,5 @@ export function drawArrows(board: ArrowBoard, options: DrawArrowsOptions = {}): 
     });
   const style = options.standalone === true ? `<style>${MEIKYUU_STYLE}</style>` : "";
   const pad = 0.4;
-  return `<svg ${lookAttributes(options)} xmlns="http://www.w3.org/2000/svg" viewBox="${-pad} ${-pad} ${w + 2 * pad} ${h + 2 * pad}" role="img" aria-label="${escape(label)}" data-shape="${board.recipe.shape}" data-arrows="${board.arrows.length}">${style}<rect class="mk-paper" x="${-pad}" y="${-pad}" width="${w + 2 * pad}" height="${h + 2 * pad}"/>${dots.join("")}${arrows}</svg>`;
+  return `<svg ${lookAttributes(options)} xmlns="http://www.w3.org/2000/svg" viewBox="${-pad} ${-pad} ${w + 2 * pad} ${h + 2 * pad}" role="img" aria-label="${escapeHtml(label)}" data-shape="${board.recipe.shape}" data-arrows="${board.arrows.length}">${style}<rect class="mk-paper" x="${-pad}" y="${-pad}" width="${w + 2 * pad}" height="${h + 2 * pad}"/>${dots.join("")}${arrows}</svg>`;
 }

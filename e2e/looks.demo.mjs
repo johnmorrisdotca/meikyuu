@@ -18,7 +18,7 @@ for (const kind of ["maze", "arrows", "mixed"]) {
               el.getBoundingClientRect().right > window.innerWidth + 1 &&
               !el.closest("svg, pre, .fam-table-box, .mk-box"),
           )
-          .map((el) => el.tagName + "." + el.className)
+          .map((el) => `${el.tagName}.${el.className}`)
           .slice(0, 5),
       );
       expect(wide).toEqual([]);

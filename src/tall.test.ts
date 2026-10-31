@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-
+import { MEIKYUU_MAZE_LEVELS } from "./levels.ts";
 import {
   findTallLevels,
   MEIKYUU_TALL_LEVELS,
@@ -9,7 +9,6 @@ import {
   tallLevelOfSize,
   tallLevelsOfSize,
 } from "./levels-tall.ts";
-import { MEIKYUU_MAZE_LEVELS } from "./levels.ts";
 import { buildMaze } from "./maze.ts";
 import { gridOf } from "./shapes.ts";
 import { TALL_RATIO, TALL_SHAPES, TALL_WIDTHS, tallDimensions } from "./tall.ts";
@@ -35,7 +34,9 @@ describe("tall mazes", () => {
     expect(MEIKYUU_TALL_PER_SIZE).toBe(256);
     expect(MEIKYUU_TALL_LEVELS.length).toBe(1536);
     expect(MEIKYUU_TALL_SIZES.map((s) => s.label)).toEqual(["6×9", "8×12", "10×15", "12×18", "16×24", "20×30"]);
-    MEIKYUU_TALL_LEVELS.forEach((level, index) => expect(level.number).toBe(index + 1));
+    MEIKYUU_TALL_LEVELS.forEach((level, index) => {
+      expect(level.number).toBe(index + 1);
+    });
     expect(new Set(MEIKYUU_TALL_LEVELS.map((level) => level.code)).size).toBe(1536);
     for (const { size, width } of MEIKYUU_TALL_SIZES) {
       const levels = tallLevelsOfSize(size);

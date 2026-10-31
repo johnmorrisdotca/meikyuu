@@ -1,24 +1,23 @@
 import { describe, expect, it } from "vitest";
-
+import { MEIKYUU_ALGORITHMS } from "./algorithms.ts";
+import { difficultyOf, easyFloorAt, isTooEasy } from "./difficulty.ts";
+import { MEIKYUU_SHAPES } from "./grid.ts";
 import {
   bandOf,
   findMazeLevels,
   levelCount,
   levelOf,
   levelsOf,
-  mazeLevelOfSize,
-  mazeLevelsOfSize,
   MEIKYUU_ARROW_LEVELS,
   MEIKYUU_KINDS,
   MEIKYUU_LEVELS_PER_SIZE,
   MEIKYUU_MAZE_LEVELS,
   MEIKYUU_MIXED_LEVELS,
   MEIKYUU_SIZES,
+  mazeLevelOfSize,
+  mazeLevelsOfSize,
   sizeOf,
 } from "./levels.ts";
-import { MEIKYUU_ALGORITHMS } from "./algorithms.ts";
-import { difficultyOf, easyFloorAt, isTooEasy } from "./difficulty.ts";
-import { MEIKYUU_SHAPES } from "./grid.ts";
 import { buildMaze, MEIKYUU_MODES } from "./maze.ts";
 import { EFFORT_MOST, ratingOf } from "./measure.ts";
 
@@ -26,7 +25,9 @@ describe("the maze list", () => {
   it("has 256 levels to each of four sizes, numbered from 1, each a different recipe", () => {
     expect(MEIKYUU_LEVELS_PER_SIZE).toBe(256);
     expect(MEIKYUU_MAZE_LEVELS.length).toBe(1024);
-    MEIKYUU_MAZE_LEVELS.forEach((level, index) => expect(level.number).toBe(index + 1));
+    MEIKYUU_MAZE_LEVELS.forEach((level, index) => {
+      expect(level.number).toBe(index + 1);
+    });
     expect(new Set(MEIKYUU_MAZE_LEVELS.map((level) => level.code)).size).toBe(1024);
   });
 
@@ -125,7 +126,9 @@ describe("the maze list", () => {
       for (const pick of [(d: (typeof easy)[number]) => d.measure.decisions, (d: (typeof easy)[number]) => d.traps]) {
         expect(mean(57, 86, pick), size).toBeGreaterThan(mean(0, 29, pick));
       }
-      easy.forEach((d, i) => expect(isTooEasy(d), `${size} ${i + 1}`).toBe(false));
+      easy.forEach((d, i) => {
+        expect(isTooEasy(d), `${size} ${i + 1}`).toBe(false);
+      });
     }
   }, 60_000);
 

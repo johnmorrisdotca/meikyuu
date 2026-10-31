@@ -1,4 +1,5 @@
 import {
+  type ArrowGame,
   arrowsLeft,
   hintArrow,
   newArrowGame,
@@ -6,42 +7,41 @@ import {
   tapArrow,
   undoArrow,
   unlockArrows,
-  type ArrowGame,
 } from "./arrowGame.ts";
+import { type ArrowSurface, createArrowSurface } from "./arrowSurface.ts";
+import { type ArrowBoard, type ArrowRecipe, makeArrows, parseArrowRecipe } from "./arrows.ts";
 import { createBanner } from "./banner.ts";
-import { createArrowSurface, type ArrowSurface } from "./arrowSurface.ts";
-import { makeArrows, parseArrowRecipe, type ArrowBoard, type ArrowRecipe } from "./arrows.ts";
 import type { MazeLook } from "./draw.ts";
 import {
   dragMaze,
   headOf,
   hintMaze,
   liftMaze,
+  type MazeGame,
   newMazeGame,
   pressMaze,
   restartMaze,
   undoMaze,
-  type MazeGame,
 } from "./game.ts";
+import { levelOf, type MeikyuuKind } from "./levels.ts";
+import { buildMaze, type Maze, type MazeRecipe, parseRecipe } from "./maze.ts";
+import { createMazeSurface, type MazeSurface } from "./mazeSurface.ts";
+import { buildMixed, type MixedRecipe, parseMixedRecipe } from "./mixed.ts";
+import { type MeikyuuOrientation, resolveTurn, type Turn } from "./orientation.ts";
+import { MEIKYUU_PLAY_STYLE } from "./playStyle.ts";
+import { createMeikyuuSounds, type MeikyuuSoundKind, type MeikyuuSounds } from "./sound.ts";
 import {
   clearStones,
   decodeRun,
   encodeRun,
-  stonesLeft,
-  stoneRulesOf,
-  toggleStone,
-  withStoneRules,
   type StoneOption,
   type StoneVerdict,
+  stoneRulesOf,
+  stonesLeft,
+  toggleStone,
+  withStoneRules,
 } from "./stones.ts";
-import { levelOf, type MeikyuuKind } from "./levels.ts";
-import { resolveTurn, type MeikyuuOrientation, type Turn } from "./orientation.ts";
-import { createMazeSurface, type MazeSurface } from "./mazeSurface.ts";
-import { buildMaze, parseRecipe, type Maze, type MazeRecipe } from "./maze.ts";
-import { buildMixed, parseMixedRecipe, type MixedRecipe } from "./mixed.ts";
-import { MEIKYUU_PLAY_STYLE } from "./playStyle.ts";
-import { createMeikyuuSounds, type MeikyuuSoundKind, type MeikyuuSounds } from "./sound.ts";
-import { meikyuuLanguageOf, meikyuuSay, type MeikyuuLanguage } from "./strings.ts";
+import { type MeikyuuLanguage, meikyuuLanguageOf, meikyuuSay } from "./strings.ts";
 import type { FitMode } from "./viewport.ts";
 
 /**
@@ -734,7 +734,7 @@ export function mountMeikyuu(host: HTMLElement, options: MeikyuuMountOptions = {
           ? mixed
             ? say("mazeForButton")
             : say(`play_${maze.recipe.mode.replace(/-/g, "_")}`)
-          : `${say("arrowsHint")}${mixed && board !== null && board.locked.some(Boolean) && arrowGame?.unlocked !== true ? `${joiner}${say("lockedCount", { n: board.locked.filter(Boolean).length })}` : ""}`;
+          : `${say("arrowsHint")}${mixed && board?.locked.some(Boolean) === true && arrowGame?.unlocked !== true ? `${joiner}${say("lockedCount", { n: board.locked.filter(Boolean).length })}` : ""}`;
     if (onMaze && mazeGame !== null && maze !== null) {
       const parts: string[] = [];
       if (mazeGame.solved)
@@ -1149,7 +1149,8 @@ export function mountMeikyuu(host: HTMLElement, options: MeikyuuMountOptions = {
         refresh();
         stonesMoved(before);
         return;
-      } else if (arrowGame !== null) {
+      }
+      if (arrowGame !== null) {
         const next = undoArrow(arrowGame);
         if (next === arrowGame) return;
         arrowGame = next;
@@ -1173,7 +1174,8 @@ export function mountMeikyuu(host: HTMLElement, options: MeikyuuMountOptions = {
         refresh();
         stonesMoved(before);
         return;
-      } else if (arrowGame !== null) {
+      }
+      if (arrowGame !== null) {
         arrowGame = restartArrows(arrowGame);
         solveTold = false;
         moves = 0;

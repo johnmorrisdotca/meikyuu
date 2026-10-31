@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-
+import { MEIKYUU_MAZE_LEVELS } from "./levels.ts";
 import {
   COLOSSAL_CELLS,
   COLOSSAL_TALL_HEIGHT,
@@ -11,7 +11,6 @@ import {
   MEIKYUU_COLOSSAL_PER_LIST,
   MEIKYUU_COLOSSAL_TALL_LEVELS,
 } from "./levels-colossal.ts";
-import { MEIKYUU_MAZE_LEVELS } from "./levels.ts";
 import { MEIKYUU_TALL_LEVELS } from "./levels-tall.ts";
 import { buildMaze, layoutCells, MEIKYUU_MOST_CELLS, parseRecipe } from "./maze.ts";
 import { TALL_RATIO } from "./tall.ts";

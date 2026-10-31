@@ -5,15 +5,15 @@ import {
   headOf,
   hintMaze,
   liftMaze,
+  type MazeGame,
   newMazeGame,
   playSolution,
   pressMaze,
   restartMaze,
   tapMaze,
   undoMaze,
-  type MazeGame,
 } from "./game.ts";
-import { buildMaze, solutionOf, walk, type MazeRecipe } from "./maze.ts";
+import { buildMaze, type MazeRecipe, solutionOf, walk } from "./maze.ts";
 
 const recipe: MazeRecipe = { shape: "square", w: 8, h: 8, algorithm: "wilson", mode: "to-goal", seed: 12 };
 const maze = buildMaze(recipe);

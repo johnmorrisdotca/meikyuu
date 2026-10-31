@@ -1,4 +1,4 @@
-import { solutionOf, walk, type Maze, type MazeCore } from "./maze.ts";
+import { type Maze, type MazeCore, solutionOf, walk } from "./maze.ts";
 import type { StoneRules } from "./stones.ts";
 
 /**

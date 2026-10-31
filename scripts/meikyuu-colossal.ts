@@ -23,7 +23,7 @@ import { MEIKYUU_SHAPES } from "../src/grid.ts";
 import { layoutCells, type MazeRecipe, type MeikyuuMode } from "../src/maze.ts";
 import { below, seededRandom } from "../src/random.ts";
 import { tallDimensions } from "../src/tall.ts";
-import { candidateOf, candidates, keysFor, tooEasy, type Candidate } from "./levels-lib.ts";
+import { type Candidate, candidateOf, candidates, keysFor, tooEasy } from "./levels-lib.ts";
 import { chooseList } from "./levels-list.ts";
 
 const args = process.argv.slice(2);

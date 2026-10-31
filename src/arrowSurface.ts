@@ -1,8 +1,8 @@
-import { arrowMarkup } from "./drawArrows.ts";
-import { boardLookOf, lookAttributes, type MazeLook } from "./draw.ts";
-import { fixed } from "./geometry.ts";
-import { ARROW_STEPS, rayOf, type ArrowBoard } from "./arrows.ts";
 import type { ArrowGame } from "./arrowGame.ts";
+import { ARROW_STEPS, type ArrowBoard, rayOf } from "./arrows.ts";
+import { boardLookOf, lookAttributes, type MazeLook } from "./draw.ts";
+import { arrowMarkup } from "./drawArrows.ts";
+import { fixed } from "./geometry.ts";
 import { createSurface, type Surface } from "./surface.ts";
 import { viewBoxOf } from "./viewport.ts";
 
@@ -61,7 +61,11 @@ export function createArrowSurface(
   let owner: Int32Array = new Int32Array(0);
   const ownerOf = (next: ArrowBoard): Int32Array => {
     const out = new Int32Array(next.w * next.h).fill(-1);
-    next.arrows.forEach((arrow, id) => arrow.cells.forEach((cell) => (out[cell] = id)));
+    next.arrows.forEach((arrow, id) => {
+      arrow.cells.forEach((cell) => {
+        out[cell] = id;
+      });
+    });
     return out;
   };
   let present: readonly boolean[] = board.arrows.map(() => true);
@@ -112,7 +116,9 @@ export function createArrowSurface(
       const height = current.h + 2 * pad;
       svg.innerHTML = `<rect class="mk-paper" x="${-pad - 400}" y="${-pad - 400}" width="${width + 800}" height="${height + 800}"/>${dots.join("")}<g class="mk-arrows">${arrows}</g>`;
       elements.clear();
-      svg.querySelectorAll<SVGGElement>(".mk-arrow").forEach((el) => elements.set(Number(el.dataset.id), el));
+      svg.querySelectorAll<SVGGElement>(".mk-arrow").forEach((el) => {
+        elements.set(Number(el.dataset.id), el);
+      });
       svg.setAttribute("data-shape", current.recipe.shape);
       svg.setAttribute("data-arrows", String(current.arrows.length));
       applyLook();

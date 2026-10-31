@@ -4,12 +4,12 @@
 // what they are, their lines are drawn along their own way with the mouse, and motion is reduced. It waits on the board's own svg and on
 // the page saying how many cells are drawn, never on a clock. Output: docs/images/<subject>-<desk|phone>-<light|dark>.webp.
 // (The tall mazes' pictures for docs/LEVELS.md are made by scripts/levels-pictures.mjs.)
-import { takePictures } from "./readme-pictures-lib.mjs";
 
 import { buildMaze, solutionOf } from "../dist/index.js";
 import { MEIKYUU_MAZE_LEVELS } from "../dist/levels.js";
 import { MEIKYUU_TALL_LEVELS } from "../dist/levels-tall.js";
 import { dragCells } from "../e2e/demo.mjs";
+import { takePictures } from "./readme-pictures-lib.mjs";
 
 const BOARD = "#board .mk-box";
 const READY = '#board[data-ready="true"] .mk-box svg[viewBox]';

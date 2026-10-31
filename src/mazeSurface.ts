@@ -1,11 +1,11 @@
-import { boardLookOf, lookAttributes, marksOf, stonesOf, type MazeLook } from "./draw.ts";
+import { boardLookOf, lookAttributes, type MazeLook, marksOf, stonesOf } from "./draw.ts";
+import { dragMaze, headOf, liftMaze, type MazeGame, pressMaze, tapMaze } from "./game.ts";
 import { fixed, framed, linePath, standingWalls, wallPath } from "./geometry.ts";
-import { dragMaze, headOf, liftMaze, pressMaze, tapMaze, type MazeGame } from "./game.ts";
 import type { Box, Wall } from "./grid.ts";
 import type { Maze } from "./maze.ts";
-import { cellsAlong, toDisplay, toLogical, turnedBox, turnTransform, unturnedBox, type Turn } from "./orientation.ts";
+import { cellsAlong, type Turn, toDisplay, toLogical, turnedBox, turnTransform, unturnedBox } from "./orientation.ts";
 import { createSurface, type Surface, type SurfaceOptions } from "./surface.ts";
-import { viewBoxOf, type View } from "./viewport.ts";
+import { type View, viewBoxOf } from "./viewport.ts";
 
 /**
  * A MAZE IN A BOX: the maze drawn into an SVG whose `viewBox` is the view, so zooming and moving
@@ -331,7 +331,9 @@ export function createMazeSurface(
       turn = next;
       applyTurn();
       surface.setArea(turnedBox(turn, current.grid.box));
-      tiles.forEach((tile) => tile.path?.remove());
+      tiles.forEach((tile) => {
+        tile.path?.remove();
+      });
       draw(hooks.game(), null, false);
     },
     turned: () => turn,

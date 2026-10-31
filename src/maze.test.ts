@@ -5,12 +5,12 @@ import { MEIKYUU_SHAPES } from "./grid.ts";
 import {
   buildMaze,
   isPerfect,
+  type MazeRecipe,
   MEIKYUU_MODES,
   parseRecipe,
   recipeCode,
   solutionOf,
   walk,
-  type MazeRecipe,
 } from "./maze.ts";
 
 const SIZES: Record<(typeof MEIKYUU_SHAPES)[number], [number, number]> = {

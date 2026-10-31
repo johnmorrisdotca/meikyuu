@@ -1,21 +1,21 @@
 import { describe, expect, it } from "vitest";
 
-import { dragMaze, liftMaze, newMazeGame, pressMaze, playSolution } from "./game.ts";
+import { dragMaze, liftMaze, newMazeGame, playSolution, pressMaze } from "./game.ts";
 import { MEIKYUU_SHAPES, type MeikyuuShape } from "./grid.ts";
-import { MEIKYUU_TALL_LEVELS } from "./levels-tall.ts";
 import { MEIKYUU_MAZE_LEVELS } from "./levels.ts";
-import { MEIKYUU_MODES, buildMaze, solutionOf, type Maze } from "./maze.ts";
+import { MEIKYUU_TALL_LEVELS } from "./levels-tall.ts";
+import { buildMaze, type Maze, MEIKYUU_MODES, solutionOf } from "./maze.ts";
 import {
   autoTurn,
   cellsAlong,
   resolveTurn,
+  type Turn,
   toDisplay,
   toLogical,
   turnedBox,
   turnFor,
   turnTransform,
   unturnedBox,
-  type Turn,
 } from "./orientation.ts";
 import { lineToSteps, stepsToLine } from "./steps.ts";
 

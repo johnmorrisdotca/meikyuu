@@ -3,24 +3,25 @@
  * `src/levels/legacy.data.ts`) and prints Markdown, the tables of docs/LEVELS.md. With `--capacity` it also draws fresh mazes to say how many more
  * levels could be published (about three minutes). Nothing here is typed by hand: a number in the docs is one this printed.
  */
+
+import { MEIKYUU_ALGORITHMS } from "../src/algorithms.ts";
+import { difficultyOf } from "../src/difficulty.ts";
+import { MEIKYUU_SHAPES } from "../src/grid.ts";
+import { MEIKYUU_LEGACY_MAZE_ROWS } from "../src/levels/legacy.data.ts";
 import {
+  bandOf,
   MEIKYUU_ARROW_LEVELS,
   MEIKYUU_MAZE_LEVELS,
   MEIKYUU_MIXED_LEVELS,
   MEIKYUU_SIZES,
-  bandOf,
-  mazeLevelsOfSize,
-  sizeOf,
   type MeikyuuMazeLevel,
   type MeikyuuSize,
+  mazeLevelsOfSize,
+  sizeOf,
 } from "../src/levels.ts";
 import { MEIKYUU_TALL_LEVELS, MEIKYUU_TALL_SIZES, tallLevelsOfSize } from "../src/levels-tall.ts";
-import { MEIKYUU_LEGACY_MAZE_ROWS } from "../src/levels/legacy.data.ts";
-import { difficultyOf } from "../src/difficulty.ts";
-import { MEIKYUU_SHAPES } from "../src/grid.ts";
-import { buildMaze, MEIKYUU_MODES, parseRecipe, type MazeRecipe } from "../src/maze.ts";
-import { MEIKYUU_ALGORITHMS } from "../src/algorithms.ts";
-import { candidateOf, candidates, SIZE_CELLS, tooEasy, type SizeWord } from "./levels-lib.ts";
+import { buildMaze, type MazeRecipe, MEIKYUU_MODES, parseRecipe } from "../src/maze.ts";
+import { candidateOf, candidates, SIZE_CELLS, type SizeWord, tooEasy } from "./levels-lib.ts";
 
 type Row = {
   number: number;

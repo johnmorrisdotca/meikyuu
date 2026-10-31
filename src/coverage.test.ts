@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { COVERAGE_FLOOR, coverageOf, zonesAcross } from "./coverage.ts";
 import { difficultyOf } from "./difficulty.ts";
-import { buildMaze, parseRecipe, type Maze } from "./maze.ts";
+import { buildMaze, type Maze, parseRecipe } from "./maze.ts";
 import { squareGrid } from "./shapes.ts";
 
 /** A maze made by hand from the passages of a square grid. */

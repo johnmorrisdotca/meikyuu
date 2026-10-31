@@ -1,6 +1,4 @@
 import { describe, expect, it } from "vitest";
-
-import { checkSolidLevels } from "./solidLevelSuite.fixture.ts";
 import {
   findSolidLevels,
   MEIKYUU_SOLID_LEVELS,
@@ -11,6 +9,7 @@ import {
 } from "./levels-solid.ts";
 import {
   MEIKYUU_SOLID_LEVELS as EVERY,
+  solidLevelsOf as everyLevelsOf,
   findSolidLevels as findEvery,
   SOLID_DICE,
   SOLID_DIE_SIDES,
@@ -18,11 +17,11 @@ import {
   SOLID_MORE_DICE,
   SOLID_MORE_SHAPES,
   SOLID_SHAPES,
-  solidLevelsOf as everyLevelsOf,
 } from "./levels-solid-all.ts";
 import { MEIKYUU_SOLID_LEVELS as DICE, findSolidLevels as findDice } from "./levels-solid-dice.ts";
-import { MEIKYUU_SOLID_LEVELS as SHAPES, findSolidLevels as findShapes } from "./levels-solid-shapes.ts";
+import { findSolidLevels as findShapes, MEIKYUU_SOLID_LEVELS as SHAPES } from "./levels-solid-shapes.ts";
 import { SOLID_CUTS, SOLID_SIZE_NAMES, solidCellsOf } from "./solid/solidSizes.ts";
+import { checkSolidLevels } from "./solidLevelSuite.fixture.ts";
 
 describe("the solid levels", () => {
   it("are sixty-four to a size, five sizes to a solid, eighteen solids, in three files: the first five, the further dice and the shapes", () => {

@@ -18,12 +18,12 @@
 import { writeFileSync } from "node:fs";
 
 import { MEIKYUU_ALGORITHMS } from "../src/algorithms.ts";
-import type { MeikyuuShape } from "../src/grid.ts";
-import { type MazeRecipe, type MeikyuuMode } from "../src/maze.ts";
-import { below, seededRandom } from "../src/random.ts";
 import { MEIKYUU_EASY_PLACES } from "../src/difficulty.ts";
+import type { MeikyuuShape } from "../src/grid.ts";
+import type { MazeRecipe, MeikyuuMode } from "../src/maze.ts";
+import { below, seededRandom } from "../src/random.ts";
 import { TALL_WIDTHS, tallDimensions } from "../src/tall.ts";
-import { candidateOf, keysFor, tooEasy, type Candidate } from "./levels-lib.ts";
+import { type Candidate, candidateOf, keysFor, tooEasy } from "./levels-lib.ts";
 import { chooseList } from "./levels-list.ts";
 
 const args = process.argv.slice(2);

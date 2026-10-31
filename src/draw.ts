@@ -7,9 +7,9 @@ import {
 } from "./boards.ts";
 import { doorPlace, fixed, framed, linePath, standingWalls, wallPath } from "./geometry.ts";
 import type { Maze } from "./maze.ts";
-import { turnedBox, turnFor, turnTransform, type MeikyuuOrientation } from "./orientation.ts";
 import { solutionOf } from "./maze.ts";
-import { meikyuuSay, type MeikyuuLanguage } from "./strings.ts";
+import { type MeikyuuOrientation, turnedBox, turnFor, turnTransform } from "./orientation.ts";
+import { type MeikyuuLanguage, meikyuuSay } from "./strings.ts";
 import { MEIKYUU_STYLE } from "./style.ts";
 
 /**
@@ -80,7 +80,7 @@ export type DrawMazeOptions = MazeLook & {
   orientation?: MeikyuuOrientation;
 };
 
-const escape = (text: string): string =>
+const escapeHtml = (text: string): string =>
   text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
 /** The look a board name or board object means.
@@ -294,5 +294,5 @@ export function drawMaze(maze: Maze, options: DrawMazeOptions = {}): string {
   // Turned, everything of the maze is in one group that is turned, so the picture is the maze as made and only its place on the page changes.
   const inner =
     turn === 1 ? `<g class="mk-turn" transform="${turnTransform(turn)}">${parts.join("")}</g>` : parts.join("");
-  return `<svg ${lookAttributes(options)} xmlns="http://www.w3.org/2000/svg" viewBox="${fixed(view.x)} ${fixed(view.y)} ${fixed(view.w)} ${fixed(view.h)}" role="img" aria-label="${escape(label)}" data-shape="${maze.recipe.shape}" data-mode="${maze.recipe.mode}" data-cells="${grid.cells}"${turn === 1 ? ` data-turned="true"` : ""}${options.won === true ? ` data-won="true"` : ""}>${style}${inner}</svg>`;
+  return `<svg ${lookAttributes(options)} xmlns="http://www.w3.org/2000/svg" viewBox="${fixed(view.x)} ${fixed(view.y)} ${fixed(view.w)} ${fixed(view.h)}" role="img" aria-label="${escapeHtml(label)}" data-shape="${maze.recipe.shape}" data-mode="${maze.recipe.mode}" data-cells="${grid.cells}"${turn === 1 ? ` data-turned="true"` : ""}${options.won === true ? ` data-won="true"` : ""}>${style}${inner}</svg>`;
 }

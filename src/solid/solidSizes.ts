@@ -1,4 +1,4 @@
-import { SOLID_KINDS, solidCells, type SolidKind } from "./solidGrid.ts";
+import { SOLID_KINDS, type SolidKind, solidCells } from "./solidGrid.ts";
 
 /**
  * THE SIZES OF THE LEVELS OF A SOLID: three to each, small, medium and large, cut so that they come to about the same number of cells whichever solid

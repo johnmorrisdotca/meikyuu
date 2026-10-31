@@ -1,9 +1,8 @@
 // Choosing a level: the three kinds, the shapes, sizes and ways to play, the level number and its arrows, the gallery of shapes,
 // and what is kept between visits.
 import { expect, test } from "@playwright/test";
-
-import { at, mazeOf, noSidewaysScroll, open } from "./demo.mjs";
 import { findMazeLevels, levelCount } from "../dist/levels.js";
+import { at, mazeOf, noSidewaysScroll, open } from "./demo.mjs";
 
 const info = (page) => page.locator("#info");
 

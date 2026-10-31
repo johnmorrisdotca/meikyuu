@@ -1,6 +1,6 @@
+import { heartDirection } from "./solidHeart.ts";
 import type { Loop, Parts } from "./solidParts.ts";
 import { baseSolid, latticeOf, outward, PHI, trianglesOf } from "./solidParts.ts";
-import { heartDirection } from "./solidHeart.ts";
 import { cross, dot, mean, sub, unit, type Vec3 } from "./vec.ts";
 
 /**
@@ -266,7 +266,9 @@ function dodecahedron(n: number): Parts {
   for (const x of SIGNS) for (const z of SIGNS) normals.push([x, 0, z * phi]);
   for (const x of SIGNS) for (const y of SIGNS) normals.push([x * phi, y, 0]);
   const mesh = new Mesh(points);
-  facesAt(points, normals).forEach((face, f) => mesh.pentagon(f, face, n));
+  facesAt(points, normals).forEach((face, f) => {
+    mesh.pentagon(f, face, n);
+  });
   return convex("dodecahedron", n, mesh, points);
 }
 
@@ -278,9 +280,9 @@ function rhombicDodecahedron(n: number): Parts {
   const normals: Vec3[] = [];
   for (const a of SIGNS) for (const b of SIGNS) normals.push([a, b, 0], [a, 0, b], [0, a, b]);
   const mesh = new Mesh(points);
-  facesAt(points, normals).forEach((face, f) =>
-    mesh.quad(f, face as unknown as [number, number, number, number], n, n),
-  );
+  facesAt(points, normals).forEach((face, f) => {
+    mesh.quad(f, face as unknown as [number, number, number, number], n, n);
+  });
   return convex("rhombic-dodecahedron", n, mesh, points);
 }
 
@@ -306,9 +308,9 @@ function triacontahedron(n: number): Parts {
     }
   }
   const mesh = new Mesh(points);
-  facesAt(points, normals).forEach((face, f) =>
-    mesh.quad(f, face as unknown as [number, number, number, number], n, n),
-  );
+  facesAt(points, normals).forEach((face, f) => {
+    mesh.quad(f, face as unknown as [number, number, number, number], n, n);
+  });
   return convex("triacontahedron", n, mesh, points);
 }
 
@@ -325,9 +327,9 @@ function icositetrahedron(n: number): Parts {
   for (const a of SIGNS)
     for (const e of SIGNS) for (const f of SIGNS) normals.push([a * k, e, f], [e, a * k, f], [e, f, a * k]);
   const mesh = new Mesh(points);
-  facesAt(points, normals).forEach((face, f) =>
-    mesh.quad(f, face as unknown as [number, number, number, number], n, n),
-  );
+  facesAt(points, normals).forEach((face, f) => {
+    mesh.quad(f, face as unknown as [number, number, number, number], n, n);
+  });
   return convex("icositetrahedron", n, mesh, points);
 }
 

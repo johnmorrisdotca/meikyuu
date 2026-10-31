@@ -23,7 +23,7 @@ import { seededRandom } from "../src/random.ts";
 import { SOLID_KINDS, type SolidKind } from "../src/solid/solidGrid.ts";
 import { buildSolidMaze, SOLID_ALGORITHMS, solidDifficultyOf, solidRecipeCode } from "../src/solid/solidMaze.ts";
 import { MEIKYUU_SOLID_PER_LIST, SOLID_CUTS, SOLID_SIZE_NAMES } from "../src/solid/solidSizes.ts";
-import { SOLID_GROUPS, SOLID_GROUP_FILES } from "./solid-groups.ts";
+import { SOLID_GROUP_FILES, SOLID_GROUPS } from "./solid-groups.ts";
 
 const args = process.argv.slice(2);
 const flag = (name: string, fallback: string): string =>
@@ -68,8 +68,7 @@ function draw(
     if (isTooEasy(difficulty)) continue;
     // The same maze twice (a different seed that carves the same passages) is one level: told by the passages, for a solid small enough that it is cheap to.
     if (maze.grid.cells <= 1500) {
-      const same =
-        maze.links.map((open) => [...open].sort((a, b) => a - b).join(",")).join("|") + `@${maze.start}-${maze.goal}`;
+      const same = `${maze.links.map((open) => [...open].sort((a, b) => a - b).join(",")).join("|")}@${maze.start}-${maze.goal}`;
       if (seen.has(same)) continue;
       seen.add(same);
     }

@@ -1,10 +1,9 @@
-import { FAMILY, familyRepo } from "../scripts/family-template.mjs";
 // The documents and the demo, held to the source. Plain JavaScript, so that reading files needs no Node types.
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import process from "node:process";
-
 import { describe, expect, it } from "vitest";
+import { FAMILY, familyRepo } from "../scripts/family-template.mjs";
 
 import { MEIKYUU_ALGORITHMS } from "./algorithms.ts";
 import { ARROW_HEARTS } from "./arrowGame.ts";
@@ -13,13 +12,13 @@ import { MEIKYUU_BOARD_NAMES, MEIKYUU_TRAIL_NAMES } from "./boards.ts";
 import { MeikyuuBoard } from "./element.ts";
 import { MEIKYUU_SHAPES } from "./grid.ts";
 import { MEIKYUU_ARROW_LEVELS, MEIKYUU_MAZE_LEVELS, MEIKYUU_MIXED_LEVELS, MEIKYUU_SIZES, sizeOf } from "./levels.ts";
-import { MEIKYUU_MODES, MEIKYUU_MOST_CELLS, MEIKYUU_MOST_KEYS, layoutCells, parseRecipe } from "./maze.ts";
+import { layoutCells, MEIKYUU_MODES, MEIKYUU_MOST_CELLS, MEIKYUU_MOST_KEYS, parseRecipe } from "./maze.ts";
 import { EFFORT_LEAST, EFFORT_MOST } from "./measure.ts";
 import { MEIKYUU_PLAY_STYLE } from "./playStyle.ts";
 import { MEIKYUU_STRINGS } from "./strings.ts";
 import { MEIKYUU_STYLE } from "./style.ts";
-import { MOST_CELL_PIXELS } from "./viewport.ts";
 import { VERSION } from "./version.ts";
+import { MOST_CELL_PIXELS } from "./viewport.ts";
 
 const pkg = JSON.parse(readFileSync("package.json", "utf8"));
 // The README and the pages its long sections moved to: what the package says about itself is held to the code across all of them.

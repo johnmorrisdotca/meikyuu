@@ -1,6 +1,6 @@
 import { lookAttributes, type MazeLook } from "../draw.ts";
 import { fixed } from "../geometry.ts";
-import { meikyuuSay, type MeikyuuLanguage } from "../strings.ts";
+import { type MeikyuuLanguage, meikyuuSay } from "../strings.ts";
 import { MEIKYUU_STYLE } from "../style.ts";
 import type { SolidMaze } from "./solidMaze.ts";
 import { solidSolutionOf } from "./solidMaze.ts";

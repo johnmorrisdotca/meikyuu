@@ -1,16 +1,16 @@
-import { carveMaze, MEIKYUU_ALGORITHMS, type Links, type MeikyuuAlgorithm } from "../algorithms.ts";
+import { carveMaze, type Links, MEIKYUU_ALGORITHMS, type MeikyuuAlgorithm } from "../algorithms.ts";
 import { difficultyOfGraph, type MazeDifficulty, type MazeGeometry } from "../difficulty.ts";
-import { solutionOf, walk, type MazeCore } from "../maze.ts";
+import { type MazeCore, solutionOf, walk } from "../maze.ts";
 import { below, seededRandom } from "../random.ts";
 import { lineToSteps } from "../steps.ts";
 import {
   isSolidCut,
   MEIKYUU_MOST_SOLID_CELLS,
   SOLID_KINDS,
-  solidCells,
-  solidGridOf,
   type SolidGrid,
   type SolidKind,
+  solidCells,
+  solidGridOf,
 } from "./solidGrid.ts";
 import { distanceSquared, dot, length, sub, type Vec3 } from "./vec.ts";
 

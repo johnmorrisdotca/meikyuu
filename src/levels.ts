@@ -1,10 +1,10 @@
-import { parseArrowRecipe, type ArrowRecipe } from "./arrows.ts";
+import { type ArrowRecipe, parseArrowRecipe } from "./arrows.ts";
 import { MEIKYUU_ARROW_ROWS } from "./levels/arrows.data.ts";
 import { MEIKYUU_MAZE_ROWS } from "./levels/mazes.data.ts";
 import { MEIKYUU_MIXED_ROWS } from "./levels/mixed.data.ts";
-import { parseRecipe, type MazeRecipe } from "./maze.ts";
-import { parseMixedRecipe, type MixedRecipe } from "./mixed.ts";
+import { type MazeRecipe, parseRecipe } from "./maze.ts";
 import { ratingOf } from "./measure.ts";
+import { type MixedRecipe, parseMixedRecipe } from "./mixed.ts";
 
 /**
  * THE LEVELS: numbered lists of recipes, easiest first, never drawings. Flat maze lists are ordered by their geometry-aware score; arrow and mixed lists use their native

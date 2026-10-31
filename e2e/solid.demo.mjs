@@ -3,10 +3,16 @@
 // the goal in ONE stroke, the solid turning by itself to keep the end of the line in view; the answer is the list of cells and is the same however the solid is
 // turned; stones go beside the line; a point of the picture is on the cell the picture shows there; and turning holds the screen's rate on a phone slowed four times.
 import { expect, test } from "@playwright/test";
-
-import { buildSolidMaze, solidSolutionOf } from "../dist/solid-entry.js";
-import { isSolidDie, SOLID_DICE, SOLID_DIE_SIDES, SOLID_SHAPES, SOLID_SIZE_NAMES } from "../dist/solid-entry.js";
-import { solidLevelOf, SOLID_KINDS } from "../dist/levels-solid-all.js";
+import { SOLID_KINDS, solidLevelOf } from "../dist/levels-solid-all.js";
+import {
+  buildSolidMaze,
+  isSolidDie,
+  SOLID_DICE,
+  SOLID_DIE_SIDES,
+  SOLID_SHAPES,
+  SOLID_SIZE_NAMES,
+  solidSolutionOf,
+} from "../dist/solid-entry.js";
 import { at, noSidewaysScroll, open } from "./demo.mjs";
 
 const hostOf = (page) => page.locator(`${at("solid-board")}`);

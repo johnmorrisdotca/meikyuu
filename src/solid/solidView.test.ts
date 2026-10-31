@@ -1,14 +1,14 @@
 import { describe, expect, it } from "vitest";
 
 import { seededRandom } from "../random.ts";
-import { SOLID_KINDS, solidGridOf, type SolidGrid, type SolidKind } from "./solidGrid.ts";
+import { SOLID_KINDS, type SolidGrid, type SolidKind, solidGridOf } from "./solidGrid.ts";
 import {
   cellSeen,
   cellsAlongDrag,
   createFrame,
   dragTurn,
-  edgeTurn,
   EDGE_SAFE,
+  edgeTurn,
   faceCellTurn,
   openingTurn,
   pickCell,
@@ -16,7 +16,7 @@ import {
   stepTurn,
   trackballPoint,
 } from "./solidView.ts";
-import { dot, quatAxisAngle, quatBetween, quatMul, quatTurn, QUAT_IDENTITY, type Quat, type Vec3 } from "./vec.ts";
+import { dot, QUAT_IDENTITY, type Quat, quatAxisAngle, quatBetween, quatMul, quatTurn, type Vec3 } from "./vec.ts";
 
 const SIZES: Record<SolidKind, number> = {
   cube: 4,
@@ -284,7 +284,7 @@ describe("looking at a solid", () => {
     // The head faces the viewer squarely, and a passage leads over the edge to a cell that is edge-on: the case a facing test alone misses.
     const head = 2;
     const over = grid.neighbours[head]!.find((c) => grid.faceOf[c] !== grid.faceOf[head])!;
-    const links = grid.neighbours.map((row, cell) => (cell === head ? [over] : []));
+    const links = grid.neighbours.map((_row, cell) => (cell === head ? [over] : []));
     let q = faceCellTurn(grid, QUAT_IDENTITY, head);
     expect(quatTurn(q, grid.normals[over]!)[2]).toBeLessThan(0.01);
     let turns = 0;

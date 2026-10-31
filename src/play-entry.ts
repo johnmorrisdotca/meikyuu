@@ -4,6 +4,8 @@
  * `prefers-reduced-motion`, optional sounds, and the words in English and Japanese. A separate entry
  * (`@johnmorrisdotca/meikyuu/play`), so a server never loads any of it.
  */
+
+export type { MeikyuuEventDetail, MeikyuuMount, MeikyuuMountOptions, MeikyuuPuzzle } from "./mount.ts";
 export {
   ensureMeikyuuPlayStyle,
   MEIKYUU_GUTTER,
@@ -12,13 +14,16 @@ export {
   mountMeikyuu,
   puzzleOf,
 } from "./mount.ts";
-export type { MeikyuuEventDetail, MeikyuuMount, MeikyuuMountOptions, MeikyuuPuzzle } from "./mount.ts";
+export type { MeikyuuOrientation } from "./orientation.ts";
+export { MEIKYUU_ORIENTATIONS } from "./orientation.ts";
 export { MEIKYUU_PLAY_STYLE } from "./playStyle.ts";
-export { createMeikyuuSounds, MEIKYUU_SOUND_KINDS } from "./sound.ts";
 export type { MeikyuuSoundKind, MeikyuuSounds } from "./sound.ts";
+export { createMeikyuuSounds, MEIKYUU_SOUND_KINDS } from "./sound.ts";
+export type { FitMode, View, ViewBox } from "./viewport.ts";
 export {
   EDGE,
   EDGE_STEP,
+  edgeNudge,
   FIT_MODES,
   fitView,
   isFitted,
@@ -30,8 +35,4 @@ export {
   viewBoxOf,
   visibleArea,
   zoomedAbout,
-  edgeNudge,
 } from "./viewport.ts";
-export type { FitMode, View, ViewBox } from "./viewport.ts";
-export { MEIKYUU_ORIENTATIONS } from "./orientation.ts";
-export type { MeikyuuOrientation } from "./orientation.ts";

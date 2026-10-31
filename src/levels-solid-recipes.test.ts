@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
-
-import { MEIKYUU_SOLID_LEVELS } from "./levels-solid-all.ts";
 import { MEIKYUU_SOLID_RECIPE_TEXT } from "./levels/solid-recipes.data.ts";
+import { MEIKYUU_SOLID_LEVELS } from "./levels-solid-all.ts";
 import { solidLevelNumberOf, solidRecipesOf } from "./levels-solid-recipes.ts";
 import { SOLID_SIZE_NAMES } from "./solid/solidSizes.ts";
 

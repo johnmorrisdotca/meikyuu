@@ -3,19 +3,19 @@ import { describe, expect, it } from "vitest";
 import { dragMaze, hintMaze, liftMaze, newMazeGame, playSolution, pressMaze, restartMaze, undoMaze } from "../game.ts";
 import { isPerfect, walk } from "../maze.ts";
 import { measureMaze } from "../measure.ts";
-import { decodeRun, encodeRun, layStone, stoneRulesOf } from "../stones.ts";
 import { lineToSteps, stepsToLine } from "../steps.ts";
-import { SOLID_KINDS, solidCells, type SolidKind } from "./solidGrid.ts";
+import { decodeRun, encodeRun, layStone, stoneRulesOf } from "../stones.ts";
+import { SOLID_KINDS, type SolidKind, solidCells } from "./solidGrid.ts";
 import {
   buildSolidMaze,
   checkSolidAnswer,
   parseSolidRecipe,
   SOLID_ALGORITHMS,
+  type SolidRecipe,
   solidAnswerSteps,
   solidDifficultyOf,
   solidRecipeCode,
   solidSolutionOf,
-  type SolidRecipe,
 } from "./solidMaze.ts";
 
 const SIZE: Record<SolidKind, number> = {
@@ -48,9 +48,11 @@ describe("a maze over a solid", () => {
           expect(maze.links).toHaveLength(solidCells(kind, SIZE[kind]));
           expect(isPerfect(maze.grid, maze.links)).toBe(true);
           // The passages run only between cells that are beside each other, in both directions.
-          maze.links.forEach((open, cell) =>
-            open.forEach((next) => expect(maze.grid.neighbours[cell]).toContain(next)),
-          );
+          maze.links.forEach((open, cell) => {
+            open.forEach((next) => {
+              expect(maze.grid.neighbours[cell]).toContain(next);
+            });
+          });
         }
       });
     }
