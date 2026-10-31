@@ -43,7 +43,12 @@ export type MazeGame<M extends MazeCore = Maze> = {
   /** What stones may be laid (`StoneRules`), or null for a game that has none. */
   readonly rules: StoneRules | null;
   /** What each finished stroke (or each stone laid or taken up) started from, newest last, for Undo. */
-  readonly undo: readonly { readonly path: readonly number[]; readonly collected: readonly number[]; readonly solved: boolean; readonly stones: readonly number[] }[];
+  readonly undo: readonly {
+    readonly path: readonly number[];
+    readonly collected: readonly number[];
+    readonly solved: boolean;
+    readonly stones: readonly number[];
+  }[];
 };
 
 /** A game of the maze, with nothing drawn, and, if given, the rules of its stones (stones.ts).
@@ -84,7 +89,8 @@ export function headOf(game: MazeGame<MazeCore>): number | null {
   return game.path.length === 0 ? null : game.path[game.path.length - 1]!;
 }
 
-const finished = (game: MazeGame<MazeCore>, path: readonly number[], collected: readonly number[]): boolean => path.length > 0 && path[path.length - 1] === game.maze.goal && game.maze.keys.every((key) => collected.includes(key));
+const finished = (game: MazeGame<MazeCore>, path: readonly number[], collected: readonly number[]): boolean =>
+  path.length > 0 && path[path.length - 1] === game.maze.goal && game.maze.keys.every((key) => collected.includes(key));
 
 /** The line with the cell added or cut back to; the same game when the cell is not a step the line can take. */
 function step<M extends MazeCore>(game: MazeGame<M>, cell: number): MazeGame<M> {
@@ -101,7 +107,8 @@ function step<M extends MazeCore>(game: MazeGame<M>, cell: number): MazeGame<M> 
 
 function withLine<M extends MazeCore>(game: MazeGame<M>, path: readonly number[]): MazeGame<M> {
   const last = path[path.length - 1]!;
-  const collected = game.maze.keys.includes(last) && !game.collected.includes(last) ? [...game.collected, last] : game.collected;
+  const collected =
+    game.maze.keys.includes(last) && !game.collected.includes(last) ? [...game.collected, last] : game.collected;
   return { ...game, path, collected, solved: finished(game, path, collected) };
 }
 
@@ -125,7 +132,11 @@ export function pressMaze<M extends MazeCore>(game: MazeGame<M>, cell: number): 
   if (game.solved || game.drawing) return game;
   const onLine = game.path.includes(cell);
   if (!(game.path.length === 0 ? cell === game.maze.start : onLine)) return game;
-  const begun: MazeGame<M> = { ...game, drawing: true, undo: [...game.undo, { path: game.path, collected: game.collected, solved: game.solved, stones: game.stones }] };
+  const begun: MazeGame<M> = {
+    ...game,
+    drawing: true,
+    undo: [...game.undo, { path: game.path, collected: game.collected, solved: game.solved, stones: game.stones }],
+  };
   return step(begun, cell);
 }
 
@@ -168,8 +179,13 @@ export function dragMaze<M extends MazeCore>(game: MazeGame<M>, cell: number): M
 export function liftMaze<M extends MazeCore>(game: MazeGame<M>): MazeGame<M> {
   if (!game.drawing) return game;
   const last = game.undo[game.undo.length - 1]!;
-  const same = last.path.length === game.path.length && last.path.every((cell, i) => cell === game.path[i]) && last.collected.length === game.collected.length;
-  return same ? { ...game, drawing: false, undo: game.undo.slice(0, -1) } : { ...game, drawing: false, strokes: game.strokes + 1 };
+  const same =
+    last.path.length === game.path.length &&
+    last.path.every((cell, i) => cell === game.path[i]) &&
+    last.collected.length === game.collected.length;
+  return same
+    ? { ...game, drawing: false, undo: game.undo.slice(0, -1) }
+    : { ...game, drawing: false, strokes: game.strokes + 1 };
 }
 
 /** Put the whole line back as it was before the last stroke.
@@ -190,7 +206,15 @@ export function liftMaze<M extends MazeCore>(game: MazeGame<M>): MazeGame<M> {
 export function undoMaze<M extends MazeCore>(game: MazeGame<M>): MazeGame<M> {
   const last = game.undo[game.undo.length - 1];
   if (last === undefined) return game;
-  return { ...game, path: last.path, collected: last.collected, solved: last.solved, stones: last.stones, drawing: false, undo: game.undo.slice(0, -1) };
+  return {
+    ...game,
+    path: last.path,
+    collected: last.collected,
+    solved: last.solved,
+    stones: last.stones,
+    drawing: false,
+    undo: game.undo.slice(0, -1),
+  };
 }
 
 /** Everything off the maze again.
@@ -209,7 +233,9 @@ export function undoMaze<M extends MazeCore>(game: MazeGame<M>): MazeGame<M> {
  * ```
  */
 export function restartMaze<M extends MazeCore>(game: MazeGame<M>): MazeGame<M> {
-  return game.path.length === 0 && game.strokes === 0 && game.stones.length === 0 ? game : newMazeGame(game.maze, game.rules);
+  return game.path.length === 0 && game.strokes === 0 && game.stones.length === 0
+    ? game
+    : newMazeGame(game.maze, game.rules);
 }
 
 /**
@@ -267,7 +293,12 @@ export function tapMaze<M extends MazeCore>(game: MazeGame<M>, cell: number): Ma
  * console.log(mazeProgress(game));
  * ```
  */
-export function mazeProgress(game: MazeGame<MazeCore>): { cells: number; keys: number; keysOf: number; solved: boolean } {
+export function mazeProgress(game: MazeGame<MazeCore>): {
+  cells: number;
+  keys: number;
+  keysOf: number;
+  solved: boolean;
+} {
   return { cells: game.path.length, keys: game.collected.length, keysOf: game.maze.keys.length, solved: game.solved };
 }
 
@@ -298,7 +329,8 @@ export function hintMaze(game: MazeGame<MazeCore>, ahead = 8): { back: number; c
   // What the line needs: the tree that joins the start to every key not yet picked up and to the goal.
   const needed = new Uint8Array(maze.links.length);
   const { before } = walk(maze.links, maze.start);
-  for (const end of [maze.goal, ...maze.keys.filter((key) => !game.collected.includes(key))]) for (let cell = end; cell !== -1 && needed[cell] === 0; cell = before[cell]!) needed[cell] = 1;
+  for (const end of [maze.goal, ...maze.keys.filter((key) => !game.collected.includes(key))])
+    for (let cell = end; cell !== -1 && needed[cell] === 0; cell = before[cell]!) needed[cell] = 1;
   let keep = game.path.length;
   while (keep > 0 && needed[game.path[keep - 1]!] === 0) keep -= 1;
   const from = game.path[Math.max(keep, 1) - 1]!;

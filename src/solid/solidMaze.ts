@@ -3,7 +3,15 @@ import { difficultyOfGraph, type MazeDifficulty, type MazeGeometry } from "../di
 import { solutionOf, walk, type MazeCore } from "../maze.ts";
 import { below, seededRandom } from "../random.ts";
 import { lineToSteps } from "../steps.ts";
-import { isSolidCut, MEIKYUU_MOST_SOLID_CELLS, SOLID_KINDS, solidCells, solidGridOf, type SolidGrid, type SolidKind } from "./solidGrid.ts";
+import {
+  isSolidCut,
+  MEIKYUU_MOST_SOLID_CELLS,
+  SOLID_KINDS,
+  solidCells,
+  solidGridOf,
+  type SolidGrid,
+  type SolidKind,
+} from "./solidGrid.ts";
 import { distanceSquared, dot, length, sub, type Vec3 } from "./vec.ts";
 
 /**
@@ -27,7 +35,9 @@ import { distanceSquared, dot, length, sub, type Vec3 } from "./vec.ts";
  * console.log(SOLID_ALGORITHMS);
  * ```
  */
-export const SOLID_ALGORITHMS = MEIKYUU_ALGORITHMS.filter((algorithm): algorithm is Exclude<MeikyuuAlgorithm, "eller"> => algorithm !== "eller");
+export const SOLID_ALGORITHMS = MEIKYUU_ALGORITHMS.filter(
+  (algorithm): algorithm is Exclude<MeikyuuAlgorithm, "eller"> => algorithm !== "eller",
+);
 /** A maze-carving algorithm supported on a surface graph.
  *
  * @example
@@ -116,7 +126,11 @@ export function parseSolidRecipe(code: string): SolidRecipe | null {
   const parts = code.split(":");
   if (parts.length !== 4) return null;
   const [kind, size, algorithm, seed] = parts as [string, string, string, string];
-  if (!(SOLID_KINDS as readonly string[]).includes(kind) || !(SOLID_ALGORITHMS as readonly string[]).includes(algorithm)) return null;
+  if (
+    !(SOLID_KINDS as readonly string[]).includes(kind) ||
+    !(SOLID_ALGORITHMS as readonly string[]).includes(algorithm)
+  )
+    return null;
   if (!/^\d{1,4}$/.test(size) || !/^\d{1,10}$/.test(seed)) return null;
   const n = Number(size);
   if (!isSolidCut(kind as SolidKind, n) || solidCells(kind as SolidKind, n) > MEIKYUU_MOST_SOLID_CELLS) return null;

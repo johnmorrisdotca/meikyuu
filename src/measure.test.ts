@@ -38,17 +38,27 @@ describe("what a maze measures", () => {
   });
 
   it("a longer way through and more wrong turns cost more effort", () => {
-    const small = measureMaze(buildMaze({ shape: "square", w: 6, h: 6, algorithm: "wilson", mode: "to-goal", seed: 2 })).effort;
-    const big = measureMaze(buildMaze({ shape: "square", w: 40, h: 40, algorithm: "wilson", mode: "to-goal", seed: 2 })).effort;
+    const small = measureMaze(
+      buildMaze({ shape: "square", w: 6, h: 6, algorithm: "wilson", mode: "to-goal", seed: 2 }),
+    ).effort;
+    const big = measureMaze(
+      buildMaze({ shape: "square", w: 40, h: 40, algorithm: "wilson", mode: "to-goal", seed: 2 }),
+    ).effort;
     expect(big).toBeGreaterThan(small * 10);
   });
 
   it("keys add what fetching them costs, off the way, there and back", () => {
-    const plain = measureMaze(buildMaze({ shape: "square", w: 16, h: 16, algorithm: "wilson", mode: "keys", keys: 1, seed: 5 }));
-    const many = measureMaze(buildMaze({ shape: "square", w: 16, h: 16, algorithm: "wilson", mode: "keys", keys: 4, seed: 5 }));
+    const plain = measureMaze(
+      buildMaze({ shape: "square", w: 16, h: 16, algorithm: "wilson", mode: "keys", keys: 1, seed: 5 }),
+    );
+    const many = measureMaze(
+      buildMaze({ shape: "square", w: 16, h: 16, algorithm: "wilson", mode: "keys", keys: 4, seed: 5 }),
+    );
     expect(plain.detour).toBeGreaterThan(0);
     expect(many.detour).toBeGreaterThan(plain.detour);
-    expect(measureMaze(buildMaze({ shape: "square", w: 16, h: 16, algorithm: "wilson", mode: "to-goal", seed: 5 })).detour).toBe(0);
+    expect(
+      measureMaze(buildMaze({ shape: "square", w: 16, h: 16, algorithm: "wilson", mode: "to-goal", seed: 5 })).detour,
+    ).toBe(0);
   });
 
   it("gives a rating from 1 to 100 that never goes down as effort goes up", () => {

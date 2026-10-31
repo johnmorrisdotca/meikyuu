@@ -1,64 +1,243 @@
 /* Meikyuu's own look, after family.css: the choosers, the board on its table, the settings and the gallery of shapes. */
 :root {
-  --intro-room: 11rem; --intro-room-wide: 6rem;
+  --intro-room: 11rem;
+  --intro-room-wide: 6rem;
   /* The board's own colours on the felt, each named once: the gold of its marks, the mint of what is good, the cream banner and its ink,
      the shade its boxes sit in, and the pale edge of its buttons. */
-  --gold-mark: #ffd23f; --good-mark: #b9f1c9; --banner: #fff8dc; --banner-ink: #1f4135;
-  --shade: rgba(0,0,0,.28); --edge: rgba(255,255,255,.35); --swatch-edge: rgba(0,0,0,.25);
+  --gold-mark: #ffd23f;
+  --good-mark: #b9f1c9;
+  --banner: #fff8dc;
+  --banner-ink: #1f4135;
+  --shade: rgba(0, 0, 0, 0.28);
+  --edge: rgba(255, 255, 255, 0.35);
+  --swatch-edge: rgba(0, 0, 0, 0.25);
 }
-.setup { margin-top: 10px; }
-.setup .fam-seg { max-width: 100%; }
-.setup .fam-seg button { font-size: .85rem; }
-.of { color: var(--muted); font-weight: 500; }
-.level-input { width: 5.6rem; text-align: center; font-weight: 700; font-variant-numeric: tabular-nums; appearance: textfield; -moz-appearance: textfield; }
-.level-input::-webkit-inner-spin-button, .level-input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-.info { margin: 10px 0 0; color: var(--muted); font-size: .85rem; min-height: 2.6em; }
+.setup {
+  margin-top: 10px;
+}
+.setup .fam-seg {
+  max-width: 100%;
+}
+.setup .fam-seg button {
+  font-size: 0.85rem;
+}
+.of {
+  color: var(--muted);
+  font-weight: 500;
+}
+.level-input {
+  width: 5.6rem;
+  text-align: center;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+.level-input::-webkit-inner-spin-button,
+.level-input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.info {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+  min-height: 2.6em;
+}
 
 /* The board on its table: the play element on the family's felt, its words in the felt's ink. */
-#board { margin: 8px auto 0; max-width: min(100%, 640px); padding: 14px 14px 10px; min-width: 0;
-  --mkp-ink: var(--felt-ink); --mkp-surface: var(--shade); --mkp-rule: var(--edge); --mkp-muted: var(--felt-ink); --mkp-accent: var(--gold-mark); --mkp-good: var(--good-mark); }
-#solid-board { margin: 8px auto 0; max-width: min(100%, 560px); padding: 14px 14px 10px; min-width: 0;
-  --mkp-ink: var(--felt-ink); --mkp-surface: var(--shade); --mkp-rule: var(--edge); --mkp-muted: var(--felt-ink); --mkp-accent: var(--gold-mark); --mkp-good: var(--good-mark); }
-#solid-board .mk-box { border-radius: 10px; }
-#solid-board .mk-button { box-shadow: inset 0 0 0 1px var(--edge); border-color: transparent; }
-#solid-board .mk-says, #solid-board .mk-messages { opacity: .92; }
-#solid-board .mk-banner { color: var(--banner-ink); background: var(--banner); }
+#board {
+  margin: 8px auto 0;
+  max-width: min(100%, 640px);
+  padding: 14px 14px 10px;
+  min-width: 0;
+  --mkp-ink: var(--felt-ink);
+  --mkp-surface: var(--shade);
+  --mkp-rule: var(--edge);
+  --mkp-muted: var(--felt-ink);
+  --mkp-accent: var(--gold-mark);
+  --mkp-good: var(--good-mark);
+}
+#solid-board {
+  margin: 8px auto 0;
+  max-width: min(100%, 560px);
+  padding: 14px 14px 10px;
+  min-width: 0;
+  --mkp-ink: var(--felt-ink);
+  --mkp-surface: var(--shade);
+  --mkp-rule: var(--edge);
+  --mkp-muted: var(--felt-ink);
+  --mkp-accent: var(--gold-mark);
+  --mkp-good: var(--good-mark);
+}
+#solid-board .mk-box {
+  border-radius: 10px;
+}
+#solid-board .mk-button {
+  box-shadow: inset 0 0 0 1px var(--edge);
+  border-color: transparent;
+}
+#solid-board .mk-says,
+#solid-board .mk-messages {
+  opacity: 0.92;
+}
+#solid-board .mk-banner {
+  color: var(--banner-ink);
+  background: var(--banner);
+}
 /* A tall maze lies down on a wide screen, and wants a wider table to do it on. */
-body[data-kind="tall"] #board { max-width: min(100%, 960px); }
-#board .mk-box { border-radius: 10px; }
-#board .mk-button, #board .mk-tab { box-shadow: inset 0 0 0 1px var(--edge); border-color: transparent; }
-#board .mk-tab[aria-selected="true"] { background: var(--felt-ink); color: var(--felt-deep); }
-#board .mk-says, #board .mk-messages { opacity: .92; }
-#board .mk-banner { color: var(--banner-ink); background: var(--banner); }
+body[data-kind="tall"] #board {
+  max-width: min(100%, 960px);
+}
+#board .mk-box {
+  border-radius: 10px;
+}
+#board .mk-button,
+#board .mk-tab {
+  box-shadow: inset 0 0 0 1px var(--edge);
+  border-color: transparent;
+}
+#board .mk-tab[aria-selected="true"] {
+  background: var(--felt-ink);
+  color: var(--felt-deep);
+}
+#board .mk-says,
+#board .mk-messages {
+  opacity: 0.92;
+}
+#board .mk-banner {
+  color: var(--banner-ink);
+  background: var(--banner);
+}
 
-.settings { margin-top: 22px; display: grid; gap: 4px; }
-.settings h2 { margin: 12px 0 0; font-size: 1.05rem; }
-.settings h2:first-child { margin-top: 0; }
-.settings .fam-label { min-width: 6.2rem; }
-.patch { width: 18px; height: 18px; border-radius: 4px; border: 3px solid; display: inline-block; flex: none; }
-.swatch { width: 14px; height: 14px; border-radius: 50%; display: inline-block; flex: none; box-shadow: 0 0 0 1px var(--swatch-edge); }
+.settings {
+  margin-top: 22px;
+  display: grid;
+  gap: 4px;
+}
+.settings h2 {
+  margin: 12px 0 0;
+  font-size: 1.05rem;
+}
+.settings h2:first-child {
+  margin-top: 0;
+}
+.settings .fam-label {
+  min-width: 6.2rem;
+}
+.patch {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  border: 3px solid;
+  display: inline-block;
+  flex: none;
+}
+.swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  display: inline-block;
+  flex: none;
+  box-shadow: 0 0 0 1px var(--swatch-edge);
+}
 
 /* The shapes, each one a maze of its own, to choose by. */
-.more .shapes { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 8px; max-width: 1100px; }
-.shapes li { min-width: 0; }
-.shapes button { width: 100%; display: grid; gap: 4px; justify-items: center; background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; padding: 6px; min-height: 44px; font-size: .75rem; font-weight: 600; text-align: center; }
-.shapes button:hover { border-color: var(--ink); }
-.shapes button[aria-pressed="true"] { border-color: var(--ink); box-shadow: 0 0 0 2px var(--ink); }
-.shapes svg { display: block; width: 100%; max-width: 84px; height: auto; pointer-events: none; }
+.more .shapes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
+  gap: 8px;
+  max-width: 1100px;
+}
+.shapes li {
+  min-width: 0;
+}
+.shapes button {
+  width: 100%;
+  display: grid;
+  gap: 4px;
+  justify-items: center;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 12px;
+  padding: 6px;
+  min-height: 44px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-align: center;
+}
+.shapes button:hover {
+  border-color: var(--ink);
+}
+.shapes button[aria-pressed="true"] {
+  border-color: var(--ink);
+  box-shadow: 0 0 0 2px var(--ink);
+}
+.shapes svg {
+  display: block;
+  width: 100%;
+  max-width: 84px;
+  height: auto;
+  pointer-events: none;
+}
 
-.uses { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; }
-.uses code { font-family: var(--mono); font-size: .85rem; overflow-wrap: anywhere; }
-.more .uses { grid-template-columns: 1fr; }
-.tag meikyuu-board { display: block; max-width: 420px; }
+.uses {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 6px;
+}
+.uses code {
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  overflow-wrap: anywhere;
+}
+.more .uses {
+  grid-template-columns: 1fr;
+}
+.tag meikyuu-board {
+  display: block;
+  max-width: 420px;
+}
 @media (max-width: 520px) {
-  #board, #solid-board { padding: 10px 10px 8px; }
-  .settings .fam-label { min-width: 100%; }
+  #board,
+  #solid-board {
+    padding: 10px 10px 8px;
+  }
+  .settings .fam-label {
+    min-width: 100%;
+  }
 }
 
 /* The solids' picker: a row of dice, by their sides, and a row of shapes, each with its name. */
-.solid-kinds { display: flex; flex-direction: column; gap: 8px; min-width: 0; max-width: 100%; }
-.solid-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
-.solid-row-label { min-width: 4.5em; font-size: .78rem; letter-spacing: .06em; text-transform: uppercase; color: var(--muted, inherit); }
+.solid-kinds {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  max-width: 100%;
+}
+.solid-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+}
+.solid-row-label {
+  min-width: 4.5em;
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted, inherit);
+}
 
 /* Keep navigation width stable across languages. */
-header nav a[data-say="pageDocs"] { inline-size: 8rem; justify-content: center; flex: none; }
+header nav a[data-say="pageDocs"] {
+  inline-size: 8rem;
+  justify-content: center;
+  flex: none;
+}

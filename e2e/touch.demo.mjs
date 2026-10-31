@@ -11,7 +11,9 @@ const svgOf = (page) => page.locator(`${at("board")} .mk-box svg`);
 const GUTTER = 24;
 
 // These are about a phone held upright; the desk's own are in orientation.demo.mjs.
-test.beforeEach(({ browserName }, info) => test.skip(browserName === "chromium" && info.project.name === "chromium-desk", "a phone touch"));
+test.beforeEach(({ browserName }, info) =>
+  test.skip(browserName === "chromium" && info.project.name === "chromium-desk", "a phone touch"),
+);
 
 /** The tallest tall maze that has no keys and runs from near its top to near its bottom: the longest walk in the biggest size. */
 const tallest = findTall(({ level, maze, way }) => {
@@ -27,7 +29,8 @@ async function cdpDraw(page, points, { lift = true } = {}) {
   const client = await page.context().newCDPSession(page);
   const touch = (p) => [{ x: p.x, y: p.y, id: 1 }];
   await client.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: touch(points[0]) });
-  for (const p of points.slice(1)) await client.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: touch(p) });
+  for (const p of points.slice(1))
+    await client.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: touch(p) });
   if (lift) await client.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
   return client;
 }
@@ -42,7 +45,10 @@ async function swipeUp(page, x, y, distance) {
   const steps = 15;
   await client.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: touch(y) });
   for (let step = 1; step <= steps; step += 1) {
-    await client.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: touch(y - (distance * step) / steps) });
+    await client.send("Input.dispatchTouchEvent", {
+      type: "touchMove",
+      touchPoints: touch(y - (distance * step) / steps),
+    });
     await page.waitForTimeout(16);
   }
   await client.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
@@ -73,7 +79,7 @@ const scrolledToRest = (page) =>
       }),
     STILL_FRAMES,
   );
-const boxOf = async (page) => (await board(page).boundingBox());
+const boxOf = async (page) => await board(page).boundingBox();
 
 /** The cells of the way, as pixels now, for a finger to follow. */
 async function pointsOf(page, { maze, way }, cells = way) {
@@ -84,7 +90,9 @@ async function pointsOf(page, { maze, way }, cells = way) {
 }
 
 test.describe("the page beside the box", () => {
-  test("is always there: the box is never wider than the window less a gutter each side, and only the box keeps touches", async ({ page }) => {
+  test("is always there: the box is never wider than the window less a gutter each side, and only the box keeps touches", async ({
+    page,
+  }) => {
     await open(page, `?kind=tall&level=${tallest.level.number}`);
     const window_ = page.viewportSize();
     const box = await boxOf(page);
@@ -92,8 +100,16 @@ test.describe("the page beside the box", () => {
     expect(window_.width - (box.x + box.width)).toBeGreaterThanOrEqual(GUTTER - 0.5);
     // A touch beside the box is a touch on the page, and the box alone asks the browser to leave touches to it.
     expect(await board(page).evaluate((element) => getComputedStyle(element).touchAction)).toBe("none");
-    expect(await page.locator(at("board")).evaluate((element) => getComputedStyle(element).touchAction)).toContain("pan-y");
-    const beside = await page.evaluate(({ x, y }) => ({ found: document.elementFromPoint(x, y) !== null, inBox: Boolean(document.elementFromPoint(x, y)?.closest(".mk-box")) }), { x: GUTTER / 2, y: Math.min(box.y + box.height / 2, page.viewportSize().height - 10) });
+    expect(await page.locator(at("board")).evaluate((element) => getComputedStyle(element).touchAction)).toContain(
+      "pan-y",
+    );
+    const beside = await page.evaluate(
+      ({ x, y }) => ({
+        found: document.elementFromPoint(x, y) !== null,
+        inBox: Boolean(document.elementFromPoint(x, y)?.closest(".mk-box")),
+      }),
+      { x: GUTTER / 2, y: Math.min(box.y + box.height / 2, page.viewportSize().height - 10) },
+    );
     expect(beside).toEqual({ found: true, inBox: false });
     await noSidewaysScroll(page);
   });
@@ -128,7 +144,10 @@ test.describe("a line from the top to the bottom of the tallest tall maze", () =
     expect(await scrollY(page)).toBe(before);
   });
 
-  test("is drawn by one finger on a board whose box is the smallest the page makes (360 across)", async ({ page, browserName }) => {
+  test("is drawn by one finger on a board whose box is the smallest the page makes (360 across)", async ({
+    page,
+    browserName,
+  }) => {
     test.skip(browserName !== "chromium", "Chromium's touch protocol");
     await page.setViewportSize({ width: 360, height: 740 });
     await open(page, `?kind=tall&level=${tallest.level.number}`);
@@ -142,7 +161,9 @@ test.describe("a line from the top to the bottom of the tallest tall maze", () =
     expect(await scrollY(page)).toBe(before);
   });
 
-  test("is drawn zoomed in, a stretch at a time: one finger draws, two fingers move the view to the next stretch, and the page does not move", async ({ page }) => {
+  test("is drawn zoomed in, a stretch at a time: one finger draws, two fingers move the view to the next stretch, and the page does not move", async ({
+    page,
+  }) => {
     await open(page, `?kind=tall&level=${tallest.level.number}`);
     const svg = svgOf(page);
     await svg.scrollIntoViewIfNeeded();
@@ -154,11 +175,15 @@ test.describe("a line from the top to the bottom of the tallest tall maze", () =
     let drawn = 0;
     for (let guard = 0; guard < 120 && drawn < way.length; guard += 1) {
       const box = await boxOf(page);
-      const inside = (p) => p.x > box.x + 50 && p.x < box.x + box.width - 50 && p.y > box.y + 50 && p.y < box.y + box.height - 50;
+      const inside = (p) =>
+        p.x > box.x + 50 && p.x < box.x + box.width - 50 && p.y > box.y + 50 && p.y < box.y + box.height - 50;
       const first = Math.max(0, drawn - 1);
       const ahead = [];
       for (const cell of way.slice(first, first + 6)) ahead.push(await cellPoint(svg, maze, cell));
-      const focus = { x: ahead.reduce((a, p) => a + p.x, 0) / ahead.length, y: ahead.reduce((a, p) => a + p.y, 0) / ahead.length };
+      const focus = {
+        x: ahead.reduce((a, p) => a + p.x, 0) / ahead.length,
+        y: ahead.reduce((a, p) => a + p.y, 0) / ahead.length,
+      };
       const middle = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
       if (!ahead.every(inside)) {
         // Two fingers carry the view: the stretch about to be drawn is moved to the middle of the box (as far as the view may go).
@@ -166,7 +191,12 @@ test.describe("a line from the top to the bottom of the tallest tall maze", () =
         const dy = Math.max(-120, Math.min(120, middle.y - focus.y));
         const a = { x: middle.x - 40, y: middle.y };
         const b = { x: middle.x + 40, y: middle.y };
-        await twoTouches(page, board(page), along(a, { x: a.x + dx, y: a.y + dy }, 6), along(b, { x: b.x + dx, y: b.y + dy }, 6));
+        await twoTouches(
+          page,
+          board(page),
+          along(a, { x: a.x + dx, y: a.y + dy }, 6),
+          along(b, { x: b.x + dx, y: b.y + dy }, 6),
+        );
         await page.waitForTimeout(60);
         const again = [];
         for (const cell of way.slice(first, first + 6)) again.push(await cellPoint(svg, maze, cell));
@@ -191,7 +221,10 @@ test.describe("a line from the top to the bottom of the tallest tall maze", () =
     expect(await scrollY(page)).toBe(before);
   });
 
-  test("is drawn zoomed out as far as the page lets it be, with the gutters wide and the page still scrolling from them", async ({ page, browserName }) => {
+  test("is drawn zoomed out as far as the page lets it be, with the gutters wide and the page still scrolling from them", async ({
+    page,
+    browserName,
+  }) => {
     test.skip(browserName !== "chromium", "Chromium's touch protocol");
     await open(page, `?kind=tall&level=${tallest.level.number}`);
     await svgOf(page).scrollIntoViewIfNeeded();
@@ -224,22 +257,36 @@ test.describe("a line from the top to the bottom of the tallest tall maze", () =
   });
 });
 
-test("a pinch of two fingers coming together, with the whole maze in the box, widens the gutters; apart, narrows them", async ({ page }) => {
+test("a pinch of two fingers coming together, with the whole maze in the box, widens the gutters; apart, narrows them", async ({
+  page,
+}) => {
   await open(page, `?kind=tall&level=${tallest.level.number}`);
   await svgOf(page).scrollIntoViewIfNeeded();
   const box = await boxOf(page);
   const middle = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
-  await twoTouches(page, board(page), along({ x: middle.x - 110, y: middle.y }, { x: middle.x - 40, y: middle.y }, 8), along({ x: middle.x + 110, y: middle.y }, { x: middle.x + 40, y: middle.y }, 8));
+  await twoTouches(
+    page,
+    board(page),
+    along({ x: middle.x - 110, y: middle.y }, { x: middle.x - 40, y: middle.y }, 8),
+    along({ x: middle.x + 110, y: middle.y }, { x: middle.x + 40, y: middle.y }, 8),
+  );
   const widened = Number(await page.locator(at("board")).getAttribute("data-gutter"));
   expect(widened).toBeGreaterThan(GUTTER + 10);
   // Apart again: the gutters come in before the maze is zoomed.
   const wide = await boxOf(page);
   const centre = { x: wide.x + wide.width / 2, y: wide.y + wide.height / 2 };
-  await twoTouches(page, board(page), along({ x: centre.x - 40, y: centre.y }, { x: centre.x - 110, y: centre.y }, 8), along({ x: centre.x + 40, y: centre.y }, { x: centre.x + 110, y: centre.y }, 8));
+  await twoTouches(
+    page,
+    board(page),
+    along({ x: centre.x - 40, y: centre.y }, { x: centre.x - 110, y: centre.y }, 8),
+    along({ x: centre.x + 40, y: centre.y }, { x: centre.x + 110, y: centre.y }, 8),
+  );
   expect(Number(await page.locator(at("board")).getAttribute("data-gutter"))).toBeLessThan(widened);
 });
 
-test("two fingers move a zoomed maze and draw nothing; one finger on the end of the line carries on drawing, and one finger elsewhere moves the view too", async ({ page }) => {
+test("two fingers move a zoomed maze and draw nothing; one finger on the end of the line carries on drawing, and one finger elsewhere moves the view too", async ({
+  page,
+}) => {
   await open(page, `?kind=tall&level=${tallest.level.number}`);
   const svg = svgOf(page);
   await svg.scrollIntoViewIfNeeded();
@@ -250,7 +297,12 @@ test("two fingers move a zoomed maze and draw nothing; one finger on the end of 
   const middle = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
   const viewX = async () => Number((await svg.getAttribute("viewBox")).split(" ")[0]);
   const x0 = await viewX();
-  await twoTouches(page, board(page), along({ x: middle.x - 30, y: middle.y }, { x: middle.x - 130, y: middle.y }, 6), along({ x: middle.x + 30, y: middle.y }, { x: middle.x - 70, y: middle.y }, 6));
+  await twoTouches(
+    page,
+    board(page),
+    along({ x: middle.x - 30, y: middle.y }, { x: middle.x - 130, y: middle.y }, 6),
+    along({ x: middle.x + 30, y: middle.y }, { x: middle.x - 70, y: middle.y }, 6),
+  );
   await expect.poll(async () => Math.abs((await viewX()) - x0)).toBeGreaterThan(0.5);
   await expect(page.locator(at("board"))).toHaveAttribute("data-cells", "0");
   void start;
@@ -261,7 +313,9 @@ test("two fingers move a zoomed maze and draw nothing; one finger on the end of 
   await expect(page.locator(at("board"))).toHaveAttribute("data-cells", "0");
 });
 
-test("the Move button makes every one-finger drag move the view, even one that begins on the start; pressed again, it draws", async ({ page }) => {
+test("the Move button makes every one-finger drag move the view, even one that begins on the start; pressed again, it draws", async ({
+  page,
+}) => {
   await open(page, `?kind=tall&level=${tallest.level.number}`);
   const svg = svgOf(page);
   await svg.scrollIntoViewIfNeeded();
@@ -274,9 +328,14 @@ test("the Move button makes every one-finger drag move the view, even one that b
   const before = await viewBox();
   const start = await cellPoint(svg, maze, way[0]);
   const box = await boxOf(page);
-  const target = { x: Math.min(box.x + box.width - 30, start.x + 60), y: Math.min(box.y + box.height - 30, start.y + 60) };
+  const target = {
+    x: Math.min(box.x + box.width - 30, start.x + 60),
+    y: Math.min(box.y + box.height - 30, start.y + 60),
+  };
   await touchDrag(page, board(page), along(start, target, 6));
-  await expect.poll(async () => Math.abs((await viewBox())[0] - before[0]) + Math.abs((await viewBox())[1] - before[1])).toBeGreaterThan(0.3);
+  await expect
+    .poll(async () => Math.abs((await viewBox())[0] - before[0]) + Math.abs((await viewBox())[1] - before[1]))
+    .toBeGreaterThan(0.3);
   await expect(page.locator(at("board"))).toHaveAttribute("data-cells", "0");
   await move.click();
   await expect(move).toHaveAttribute("aria-pressed", "false");
@@ -297,7 +356,10 @@ test.describe("a line drawn to the edge of a zoomed box", () => {
 
   test("moves the view along, gently, and not when it is turned off", async ({ page }) => {
     const { maze, way } = tallest;
-    for (const [attributes, moves] of [["", true], ['edge-pan="off"', false]]) {
+    for (const [attributes, moves] of [
+      ["", true],
+      ['edge-pan="off"', false],
+    ]) {
       await zoomed(page, attributes);
       const svg = page.locator("#a .mk-box svg");
       const viewX = async () => Number((await svg.getAttribute("viewBox")).split(" ")[0]);
@@ -306,14 +368,40 @@ test.describe("a line drawn to the edge of a zoomed box", () => {
       // Draw the first cell, then carry the end of the line to a spot near the right edge of the box and hold it.
       await touchDrag(page, page.locator("#a .mk-box"), [start, await cellPoint(svg, maze, way[1])], { lift: false });
       const x0 = await viewX();
-      await page.locator("#a .mk-box").evaluate((element, { x, y }) => {
-        element.dispatchEvent(new PointerEvent("pointermove", { pointerId: 7, pointerType: "touch", isPrimary: true, buttons: 1, clientX: x, clientY: y, bubbles: true, cancelable: true }));
-      }, { x: box.x + box.width - 6, y: box.y + box.height / 2 });
+      await page.locator("#a .mk-box").evaluate(
+        (element, { x, y }) => {
+          element.dispatchEvent(
+            new PointerEvent("pointermove", {
+              pointerId: 7,
+              pointerType: "touch",
+              isPrimary: true,
+              buttons: 1,
+              clientX: x,
+              clientY: y,
+              bubbles: true,
+              cancelable: true,
+            }),
+          );
+        },
+        { x: box.x + box.width - 6, y: box.y + box.height / 2 },
+      );
       await page.waitForTimeout(400);
       const moved = (await viewX()) - x0;
       if (moves) expect(moved).toBeGreaterThan(0.2);
       else expect(Math.abs(moved)).toBeLessThan(0.01);
-      await page.locator("#a .mk-box").evaluate((element) => element.dispatchEvent(new PointerEvent("pointerup", { pointerId: 7, pointerType: "touch", isPrimary: true, bubbles: true, cancelable: true })));
+      await page
+        .locator("#a .mk-box")
+        .evaluate((element) =>
+          element.dispatchEvent(
+            new PointerEvent("pointerup", {
+              pointerId: 7,
+              pointerType: "touch",
+              isPrimary: true,
+              bubbles: true,
+              cancelable: true,
+            }),
+          ),
+        );
     }
   });
 });

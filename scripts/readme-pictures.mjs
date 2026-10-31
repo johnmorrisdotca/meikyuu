@@ -22,50 +22,94 @@ async function pixelOf(svg, [x, y]) {
 }
 
 /** A level's way drawn with the mouse, `share` of it, after zooming about its start by wheel steps. */
-const drawn = (recipe, share, zoom = 0) => async (page) => {
-  const maze = buildMaze(recipe);
-  const way = solutionOf(maze);
-  const svg = page.locator(`${BOARD} svg`);
-  await svg.scrollIntoViewIfNeeded();
-  if (zoom !== 0) {
-    const start = await pixelOf(svg, maze.grid.centres[way[0]]);
-    const whole = Number((await svg.getAttribute("viewBox")).split(" ")[2]);
-    await page.mouse.move(start.x, start.y);
-    await page.mouse.wheel(0, zoom);
-    await page.waitForFunction((before) => Number(document.querySelector("#board .mk-box svg").getAttribute("viewBox").split(" ")[2]) < before, whole * 0.5);
-  }
-  const first = await pixelOf(svg, maze.grid.centres[way[0]]);
-  await page.mouse.move(first.x, first.y);
-  await page.mouse.down();
-  let count = 0;
-  const box = await svg.boundingBox();
-  for (const cell of way.slice(1, Math.floor(way.length * share))) {
-    const p = await pixelOf(svg, maze.grid.centres[cell]);
-    if (p.x < box.x + 50 || p.x > box.x + box.width - 50 || p.y < box.y + 50 || p.y > box.y + box.height - 50) break;
-    await page.mouse.move(p.x, p.y, { steps: 2 });
-    count += 1;
-  }
-  await page.mouse.up();
-  await page.waitForFunction((n) => Number(document.getElementById("board").dataset.cells) >= n, Math.max(1, count - 1));
-};
+const drawn =
+  (recipe, share, zoom = 0) =>
+  async (page) => {
+    const maze = buildMaze(recipe);
+    const way = solutionOf(maze);
+    const svg = page.locator(`${BOARD} svg`);
+    await svg.scrollIntoViewIfNeeded();
+    if (zoom !== 0) {
+      const start = await pixelOf(svg, maze.grid.centres[way[0]]);
+      const whole = Number((await svg.getAttribute("viewBox")).split(" ")[2]);
+      await page.mouse.move(start.x, start.y);
+      await page.mouse.wheel(0, zoom);
+      await page.waitForFunction(
+        (before) => Number(document.querySelector("#board .mk-box svg").getAttribute("viewBox").split(" ")[2]) < before,
+        whole * 0.5,
+      );
+    }
+    const first = await pixelOf(svg, maze.grid.centres[way[0]]);
+    await page.mouse.move(first.x, first.y);
+    await page.mouse.down();
+    let count = 0;
+    const box = await svg.boundingBox();
+    for (const cell of way.slice(1, Math.floor(way.length * share))) {
+      const p = await pixelOf(svg, maze.grid.centres[cell]);
+      if (p.x < box.x + 50 || p.x > box.x + box.width - 50 || p.y < box.y + 50 || p.y > box.y + box.height - 50) break;
+      await page.mouse.move(p.x, p.y, { steps: 2 });
+      count += 1;
+    }
+    await page.mouse.up();
+    await page.waitForFunction(
+      (n) => Number(document.getElementById("board").dataset.cells) >= n,
+      Math.max(1, count - 1),
+    );
+  };
 
 const find = (test) => MEIKYUU_MAZE_LEVELS.find(test);
-const heart = find((level) => level.recipe.shape === "heart" && level.recipe.mode === "enter-leave" && level.cells > 500 && level.cells < 900);
-const huge = MEIKYUU_MAZE_LEVELS.filter((level) => level.recipe.mode === "centre-out" && level.cells > 5000 && level.recipe.shape === "square").at(-1);
-const pick = (shape, mode, low = 150, high = 450) => find((level) => level.recipe.shape === shape && (mode === undefined || level.recipe.mode === mode) && level.cells > low && level.cells < high);
+const heart = find(
+  (level) =>
+    level.recipe.shape === "heart" && level.recipe.mode === "enter-leave" && level.cells > 500 && level.cells < 900,
+);
+const huge = MEIKYUU_MAZE_LEVELS.filter(
+  (level) => level.recipe.mode === "centre-out" && level.cells > 5000 && level.recipe.shape === "square",
+).at(-1);
+const pick = (shape, mode, low = 150, high = 450) =>
+  find(
+    (level) =>
+      level.recipe.shape === shape &&
+      (mode === undefined || level.recipe.mode === mode) &&
+      level.cells > low &&
+      level.cells < high,
+  );
 const hex = pick("hex");
 const triangle = pick("triangle");
 const circle = pick("circle");
 const leaf = pick("leaf");
 const keys = pick("square", "keys");
-const tall = MEIKYUU_TALL_LEVELS.find((level) => level.size === 4 && level.recipe.shape === "square" && level.recipe.mode !== "keys");
+const tall = MEIKYUU_TALL_LEVELS.find(
+  (level) => level.size === 4 && level.recipe.shape === "square" && level.recipe.mode !== "keys",
+);
 
 /** One maze of a kind and level, drawn part of the way, its board cropped. */
-const maze = (subject, level, share = 0.5) => ({ subject, views: ["desk"], scale: 1, url: `/?kind=maze&level=${level.number}&lang=en&help=off`, ready: READY, target: BOARD, prepare: drawn(level.recipe, share) });
+const maze = (subject, level, share = 0.5) => ({
+  subject,
+  views: ["desk"],
+  scale: 1,
+  url: `/?kind=maze&level=${level.number}&lang=en&help=off`,
+  ready: READY,
+  target: BOARD,
+  prepare: drawn(level.recipe, share),
+});
 /** A puzzle of another kind, its board cropped. */
-const kind = (subject, query) => ({ subject, views: ["desk"], scale: 1, url: `/?${query}&lang=en&help=off`, ready: '#board[data-ready="true"]', target: "#board" });
+const kind = (subject, query) => ({
+  subject,
+  views: ["desk"],
+  scale: 1,
+  url: `/?${query}&lang=en&help=off`,
+  ready: '#board[data-ready="true"]',
+  target: "#board",
+});
 /** A maze over a solid, its board cropped. */
-const solid = (subject, name) => ({ subject, views: ["desk"], scale: 1, url: `/?solid=${name}&solidsize=medium&solidlevel=12&lang=en&help=off`, ready: '[data-testid="solid-board"][data-ready="true"] canvas.mk-solid', target: '[data-testid="solid-board"] .mk-box' });
+const solid = (subject, name) => ({
+  subject,
+  views: ["desk"],
+  scale: 1,
+  url: `/?solid=${name}&solidsize=medium&solidlevel=12&lang=en&help=off`,
+  ready: '[data-testid="solid-board"][data-ready="true"] canvas.mk-solid',
+  target: '[data-testid="solid-board"] .mk-box',
+});
 
 await takePictures({
   shots: [
@@ -82,7 +126,9 @@ await takePictures({
           await page.goto(`http://meikyuu.test/?kind=maze&level=${huge.number}&lang=ja&help=off`);
           await page.waitForSelector(READY);
           await drawn(huge.recipe, 1, -1400)(page);
-          await page.locator("#board").evaluate((element) => window.scrollTo(0, element.getBoundingClientRect().top + window.scrollY - 4));
+          await page
+            .locator("#board")
+            .evaluate((element) => window.scrollTo(0, element.getBoundingClientRect().top + window.scrollY - 4));
         } else {
           await drawn(heart.recipe, 0.45)(page);
           await page.evaluate(() => window.scrollTo(0, 0));
@@ -96,7 +142,23 @@ await takePictures({
     maze("keys", keys, 0.4),
     kind("arrows", "kind=arrows&level=40"),
     kind("mixed", "kind=mixed&level=1"),
-    { subject: "tall", views: ["phone"], url: `/?kind=tall&level=${tall.number}&lang=en&help=off`, ready: READY, target: BOARD, prepare: async (page) => { const made = buildMaze(tall.recipe); const way = solutionOf(made); const svg = page.locator(`${BOARD} svg`); await dragCells(page, svg, made, way.slice(0, Math.floor(way.length * 0.5)), { steps: 2 }); await page.waitForFunction((n) => Number(document.getElementById("board").dataset.cells) >= n, Math.floor(way.length * 0.5)); } },
+    {
+      subject: "tall",
+      views: ["phone"],
+      url: `/?kind=tall&level=${tall.number}&lang=en&help=off`,
+      ready: READY,
+      target: BOARD,
+      prepare: async (page) => {
+        const made = buildMaze(tall.recipe);
+        const way = solutionOf(made);
+        const svg = page.locator(`${BOARD} svg`);
+        await dragCells(page, svg, made, way.slice(0, Math.floor(way.length * 0.5)), { steps: 2 });
+        await page.waitForFunction(
+          (n) => Number(document.getElementById("board").dataset.cells) >= n,
+          Math.floor(way.length * 0.5),
+        );
+      },
+    },
     solid("dodecahedron", "dodecahedron"),
     solid("torus", "torus"),
     solid("heart", "heart"),

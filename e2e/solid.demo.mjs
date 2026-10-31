@@ -20,7 +20,10 @@ async function openSolid(page, kind = "cube", size = "small", level = 1) {
   return errors;
 }
 
-const call = (page, source, argument) => page.evaluate(`(async (argument) => { const s = document.querySelector('[data-testid="solid-board"]').meikyuuSolid; ${source} })(${JSON.stringify(argument ?? null)})`);
+const call = (page, source, argument) =>
+  page.evaluate(
+    `(async (argument) => { const s = document.querySelector('[data-testid="solid-board"]').meikyuuSolid; ${source} })(${JSON.stringify(argument ?? null)})`,
+  );
 
 /** Where the box is on the page. */
 const rectOf = async (page) => {
@@ -38,12 +41,21 @@ async function input(page, browserName, project) {
   if (browserName === "chromium" && touch) {
     const client = await page.context().newCDPSession(page);
     // Chromium hands a touch to the page with the next frame, so each move waits for it.
-    const frame = () => page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+    const frame = () =>
+      page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
     const send = async (type, x, y) => {
-      await client.send("Input.dispatchTouchEvent", { type, touchPoints: type === "touchEnd" ? [] : [{ x: rect.left + x, y: rect.top + y, id: 3 }] });
+      await client.send("Input.dispatchTouchEvent", {
+        type,
+        touchPoints: type === "touchEnd" ? [] : [{ x: rect.left + x, y: rect.top + y, id: 3 }],
+      });
       await frame();
     };
-    return { down: (x, y) => send("touchStart", x, y), move: (x, y) => send("touchMove", x, y), up: () => send("touchEnd", 0, 0), rect };
+    return {
+      down: (x, y) => send("touchStart", x, y),
+      move: (x, y) => send("touchMove", x, y),
+      up: () => send("touchEnd", 0, 0),
+      rect,
+    };
   }
   if (browserName === "chromium") {
     return {
@@ -56,11 +68,32 @@ async function input(page, browserName, project) {
       rect,
     };
   }
-  const send = (type, x, y) => boxOf(page).evaluate((box, [type, x, y]) => {
-    const r = box.getBoundingClientRect();
-    box.dispatchEvent(new PointerEvent(type, { pointerId: 9, pointerType: "touch", isPrimary: true, button: 0, buttons: type === "pointerup" ? 0 : 1, clientX: r.left + x, clientY: r.top + y, bubbles: true, cancelable: true }));
-  }, [type, x, y]);
-  return { down: (x, y) => send("pointerdown", x, y), move: (x, y) => send("pointermove", x, y), up: () => send("pointerup", 0, 0), rect };
+  const send = (type, x, y) =>
+    boxOf(page).evaluate(
+      (box, [type, x, y]) => {
+        const r = box.getBoundingClientRect();
+        box.dispatchEvent(
+          new PointerEvent(type, {
+            pointerId: 9,
+            pointerType: "touch",
+            isPrimary: true,
+            button: 0,
+            buttons: type === "pointerup" ? 0 : 1,
+            clientX: r.left + x,
+            clientY: r.top + y,
+            bubbles: true,
+            cancelable: true,
+          }),
+        );
+      },
+      [type, x, y],
+    );
+  return {
+    down: (x, y) => send("pointerdown", x, y),
+    move: (x, y) => send("pointermove", x, y),
+    up: () => send("pointerup", 0, 0),
+    rect,
+  };
 }
 
 const placeOf = (page, cell) => call(page, "return s.place(argument);", cell);
@@ -126,12 +159,20 @@ test.describe("the solids", () => {
     await expect(dice).toHaveCount(SOLID_DICE.length);
     await expect(shapes).toHaveCount(SOLID_SHAPES.length);
     expect(await dice.evaluateAll((buttons) => buttons.map((button) => button.dataset.value))).toEqual([...SOLID_DICE]);
-    expect(await shapes.evaluateAll((buttons) => buttons.map((button) => button.dataset.value))).toEqual([...SOLID_SHAPES]);
+    expect(await shapes.evaluateAll((buttons) => buttons.map((button) => button.dataset.value))).toEqual([
+      ...SOLID_SHAPES,
+    ]);
     // Each die says its sides.
-    expect(await dice.evaluateAll((buttons) => buttons.map((button) => /^d(\d+) /.exec(button.textContent)?.[1]))).toEqual(SOLID_DICE.map((kind) => String(SOLID_DIE_SIDES[kind])));
+    expect(
+      await dice.evaluateAll((buttons) => buttons.map((button) => /^d(\d+) /.exec(button.textContent)?.[1])),
+    ).toEqual(SOLID_DICE.map((kind) => String(SOLID_DIE_SIDES[kind])));
     for (const kind of SOLID_DICE) expect(isSolidDie(kind)).toBe(true);
     await expect(page.locator(`${at("solid-sizes")} button`)).toHaveCount(5);
-    expect(await page.locator(`${at("solid-sizes")} button`).evaluateAll((buttons) => buttons.map((button) => button.dataset.value))).toEqual([...SOLID_SIZE_NAMES]);
+    expect(
+      await page
+        .locator(`${at("solid-sizes")} button`)
+        .evaluateAll((buttons) => buttons.map((button) => button.dataset.value)),
+    ).toEqual([...SOLID_SIZE_NAMES]);
     // Choosing a shape and a size opens that list at its first level.
     await page.locator(`${at("solid-kinds")} button[data-value="heart"]`).click();
     await page.locator(`${at("solid-sizes")} button[data-value="colossal"]`).click();
@@ -142,7 +183,9 @@ test.describe("the solids", () => {
     await expect(page.locator(`${at("solid-info")}`)).toContainText(String(level.cells));
   });
 
-  test("a picture of a solid takes no input: it is not focusable, a touch passes through it to the page, and the keys and the wheel do nothing", async ({ page }) => {
+  test("a picture of a solid takes no input: it is not focusable, a touch passes through it to the page, and the keys and the wheel do nothing", async ({
+    page,
+  }) => {
     await openSolid(page);
     const result = await page.evaluate(async () => {
       const { mountSolid } = await import("./dist/solid-play-entry.js");
@@ -159,9 +202,26 @@ test.describe("the solids", () => {
       host.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowLeft", bubbles: true }));
       const rect = box.getBoundingClientRect();
       const style = getComputedStyle(box);
-      return { moved: JSON.stringify(picture.view()) !== before, still: box.dataset.still, role: box.getAttribute("role"), tab: box.tabIndex, events: getComputedStyle(box).pointerEvents, touch: style.touchAction, width: rect.width, cells: picture.maze().grid.cells };
+      return {
+        moved: JSON.stringify(picture.view()) !== before,
+        still: box.dataset.still,
+        role: box.getAttribute("role"),
+        tab: box.tabIndex,
+        events: getComputedStyle(box).pointerEvents,
+        touch: style.touchAction,
+        width: rect.width,
+        cells: picture.maze().grid.cells,
+      };
     });
-    expect(result).toMatchObject({ moved: false, still: "true", role: "img", tab: -1, events: "none", touch: "auto", cells: 72 });
+    expect(result).toMatchObject({
+      moved: false,
+      still: "true",
+      role: "img",
+      tab: -1,
+      events: "none",
+      touch: "auto",
+      cells: 72,
+    });
     expect(result.width).toBeGreaterThan(100);
   });
 
@@ -175,7 +235,10 @@ test.describe("the solids", () => {
     await noSidewaysScroll(page);
   });
 
-  test("a drag away from the line turns the solid and draws nothing; the arrows and Face me turn it too", async ({ page, browserName }, info) => {
+  test("a drag away from the line turns the solid and draws nothing; the arrows and Face me turn it too", async ({
+    page,
+    browserName,
+  }, info) => {
     await openSolid(page, "cube", "medium", 3);
     const finger = await input(page, browserName, info.project);
     const before = await call(page, "return { q: s.view().q, cells: s.mazeGame().path.length };");
@@ -199,7 +262,9 @@ test.describe("the solids", () => {
 
   test("a point of the picture is on the cell the picture shows there, at any turn", async ({ page }) => {
     await openSolid(page, "sphere", "medium", 2);
-    const result = await call(page, `
+    const result = await call(
+      page,
+      `
       let wrong = 0, tried = 0;
       for (let turn = 0; turn < 6; turn += 1) {
         s.view({ q: [Math.sin(turn), Math.cos(turn * 2) / 3, Math.sin(turn * 3) / 2, 1] });
@@ -211,7 +276,8 @@ test.describe("the solids", () => {
           if (s.pick(p.x, p.y) !== cell) wrong += 1;
         }
       }
-      return { wrong, tried };`);
+      return { wrong, tried };`,
+    );
     expect(result.tried).toBeGreaterThan(300);
     expect(result.wrong).toBe(0);
   });
@@ -220,15 +286,24 @@ test.describe("the solids", () => {
   test.describe("a finger follows the whole way", () => {
     test.describe.configure({ retries: 1 });
     for (const kind of SOLID_KINDS) {
-      test(`${kind}: the whole way is drawn in one stroke across the edges, the solid turning by itself, and the maze is solved`, async ({ page, browserName }, info) => {
+      test(`${kind}: the whole way is drawn in one stroke across the edges, the solid turning by itself, and the maze is solved`, async ({
+        page,
+        browserName,
+      }, info) => {
         const level = solidLevelOf(kind, "small", 7);
         await openSolid(page, kind, "small", 7);
         const maze = buildSolidMaze(level.recipe);
         const way = solidSolutionOf(maze);
         const finger = await input(page, browserName, info.project);
-        await call(page, "window.__solved = 0; s.host.addEventListener('meikyuu-solve', () => { window.__solved += 1; });");
+        await call(
+          page,
+          "window.__solved = 0; s.host.addEventListener('meikyuu-solve', () => { window.__solved += 1; });",
+        );
         await followWay(page, finger, way, { leastFacing: maze.grid.convex ? 0.4 : 0.25 });
-        const state = await call(page, "const g = s.mazeGame(); return { solved: g.solved, path: g.path, strokes: g.strokes, moves: s.host.dataset.moves, told: window.__solved };");
+        const state = await call(
+          page,
+          "const g = s.mazeGame(); return { solved: g.solved, path: g.path, strokes: g.strokes, moves: s.host.dataset.moves, told: window.__solved };",
+        );
         expect(state.solved).toBe(true);
         expect(state.path).toEqual(way);
         expect(state.strokes).toBe(1);
@@ -274,7 +349,10 @@ test.describe("the solids", () => {
     await expect.poll(() => call(page, "return s.view().zoom;")).toBeCloseTo(z0, 5);
   }
 
-  test("the solved message sits at the top of the box, covers little, and is closed by a click on it; turning and zooming work with it open and after", async ({ page, browserName }, info) => {
+  test("the solved message sits at the top of the box, covers little, and is closed by a click on it; turning and zooming work with it open and after", async ({
+    page,
+    browserName,
+  }, info) => {
     const { banner, finger } = await solveCube(page, browserName, info);
     const box = await rectOf(page);
     const pill = await banner.boundingBox();
@@ -304,9 +382,15 @@ test.describe("the solids", () => {
     await expect(hostOf(page)).toHaveAttribute("data-solved", "true");
   });
 
-  test("Escape closes the solved message and goes no further; the next Escape does", async ({ page, browserName }, info) => {
+  test("Escape closes the solved message and goes no further; the next Escape does", async ({
+    page,
+    browserName,
+  }, info) => {
     const { banner, finger } = await solveCube(page, browserName, info);
-    await call(page, "window.__escapes = 0; document.addEventListener('keydown', (e) => { if (e.key === 'Escape') window.__escapes += 1; });");
+    await call(
+      page,
+      "window.__escapes = 0; document.addEventListener('keydown', (e) => { if (e.key === 'Escape') window.__escapes += 1; });",
+    );
     await boxOf(page).focus();
     await page.keyboard.press("Escape");
     await expect(banner).toHaveAttribute("data-show", "false");
@@ -317,7 +401,10 @@ test.describe("the solids", () => {
     await expect(banner).toHaveAttribute("data-show", "false");
   });
 
-  test("the solved message comes back for the next win, and `banner: false` shows none", async ({ page, browserName }, info) => {
+  test("the solved message comes back for the next win, and `banner: false` shows none", async ({
+    page,
+    browserName,
+  }, info) => {
     const { banner, opened } = await solveCube(page, browserName, info);
     await banner.locator(".mk-banner-close").click();
     await expect(banner).toHaveAttribute("data-show", "false");
@@ -338,7 +425,10 @@ test.describe("the solids", () => {
     await expect(banner).toHaveAttribute("data-show", "true");
   });
 
-  test("the answer is the list of cells, whichever way the solid is turned: the run kept is the same text, and a fresh board takes it back", async ({ page, browserName }, info) => {
+  test("the answer is the list of cells, whichever way the solid is turned: the run kept is the same text, and a fresh board takes it back", async ({
+    page,
+    browserName,
+  }, info) => {
     await openSolid(page, "cube", "small", 12);
     const maze = buildSolidMaze(solidLevelOf("cube", "small", 12).recipe);
     const way = solidSolutionOf(maze);
@@ -354,13 +444,20 @@ test.describe("the solids", () => {
     // Another board takes it back, at whatever turn it is opened.
     await page.reload();
     await page.waitForSelector(`${at("solid-board")}[data-ready="true"] canvas.mk-solid`);
-    const taken = await call(page, "const ok = s.restore(argument); return { ok, cells: s.mazeGame().path.length };", run);
+    const taken = await call(
+      page,
+      "const ok = s.restore(argument); return { ok, cells: s.mazeGame().path.length };",
+      run,
+    );
     expect(taken.ok).toBe(true);
     expect(taken.cells).toBeGreaterThan(2);
     expect(await call(page, "return s.restore('zzzzzz');")).toBe(false);
   });
 
-  test("stones are laid beside the line and shut a passage; one Undo takes the line and the stones back", async ({ page, browserName }, info) => {
+  test("stones are laid beside the line and shut a passage; one Undo takes the line and the stones back", async ({
+    page,
+    browserName,
+  }, info) => {
     await open(page, "?stones=on&solid=octahedron&solidsize=small&solidlevel=4");
     await page.waitForSelector(`${at("solid-board")}[data-ready="true"] canvas.mk-solid`);
     await boxOf(page).scrollIntoViewIfNeeded();
@@ -368,7 +465,10 @@ test.describe("the solids", () => {
     const way = solidSolutionOf(maze);
     const finger = await input(page, browserName, info.project);
     await followWay(page, finger, way, { stopAt: 5 });
-    const side = way.slice(0, 4).flatMap((cell) => maze.links[cell]).find((cell) => !way.includes(cell));
+    const side = way
+      .slice(0, 4)
+      .flatMap((cell) => maze.links[cell])
+      .find((cell) => !way.includes(cell));
     expect(side).toBeDefined();
     expect(await call(page, "return s.stone(argument);", side)).toBe("ok");
     expect(await call(page, "return s.stones();")).toEqual([side]);
@@ -377,19 +477,42 @@ test.describe("the solids", () => {
     await expect(hostOf(page)).toHaveAttribute("data-stones", "1");
   });
 
-  test("turning holds the screen's rate on a phone slowed four times over, on the solids of the first five at large and a die and a shape at huge", async ({ page, browserName }, info) => {
-    test.skip(browserName !== "chromium" || info.project.use?.hasTouch !== true, "a phone's Chromium, through its protocol");
+  test("turning holds the screen's rate on a phone slowed four times over, on the solids of the first five at large and a die and a shape at huge", async ({
+    page,
+    browserName,
+  }, info) => {
+    test.skip(
+      browserName !== "chromium" || info.project.use?.hasTouch !== true,
+      "a phone's Chromium, through its protocol",
+    );
     test.setTimeout(120_000);
     const client = await page.context().newCDPSession(page);
     await client.send("Emulation.setCPUThrottlingRate", { rate: 4 });
-    for (const [kind, size, level] of [["cube", "large", 9], ["sphere", "large", 9], ["octahedron", "large", 9], ["icosahedron", "large", 9], ["dodecahedron", "huge", 9], ["torus", "huge", 9]]) {
+    for (const [kind, size, level] of [
+      ["cube", "large", 9],
+      ["sphere", "large", 9],
+      ["octahedron", "large", 9],
+      ["icosahedron", "large", 9],
+      ["dodecahedron", "huge", 9],
+      ["torus", "huge", 9],
+    ]) {
       await openSolid(page, kind, size, level);
       await client.send("Emulation.setCPUThrottlingRate", { rate: 4 });
       const result = await boxOf(page).evaluate(async (box) => {
         const rect = box.getBoundingClientRect();
         const frames = [];
         let last = performance.now();
-        const fire = (type, x, y) => box.dispatchEvent(new PointerEvent(type, { pointerId: 1, pointerType: "touch", clientX: rect.left + x, clientY: rect.top + y, bubbles: true, isPrimary: true }));
+        const fire = (type, x, y) =>
+          box.dispatchEvent(
+            new PointerEvent(type, {
+              pointerId: 1,
+              pointerType: "touch",
+              clientX: rect.left + x,
+              clientY: rect.top + y,
+              bubbles: true,
+              isPrimary: true,
+            }),
+          );
         fire("pointerdown", 5, 5);
         await new Promise((resolve) => {
           let t = 0;
@@ -398,7 +521,11 @@ test.describe("the solids", () => {
             last = now;
             t += 1;
             const a = (t / 20) * Math.PI;
-            fire("pointermove", 5 + (rect.width - 10) * (0.5 + 0.5 * Math.sin(a)), 5 + (rect.height - 10) * (0.5 + 0.5 * Math.cos(a * 0.7)));
+            fire(
+              "pointermove",
+              5 + (rect.width - 10) * (0.5 + 0.5 * Math.sin(a)),
+              5 + (rect.height - 10) * (0.5 + 0.5 * Math.cos(a * 0.7)),
+            );
             if (t < 120) requestAnimationFrame(step);
             else resolve();
           };
@@ -414,12 +541,25 @@ test.describe("the solids", () => {
     }
   });
 
-  test("a colossal solid, about four and a half thousand cells, turns at a good rate on a phone slowed four times over when it is zoomed in four times, which is how it is played", async ({ page, browserName }, info) => {
-    test.skip(browserName !== "chromium" || info.project.use?.hasTouch !== true, "a phone's Chromium, through its protocol");
+  test("a colossal solid, about four and a half thousand cells, turns at a good rate on a phone slowed four times over when it is zoomed in four times, which is how it is played", async ({
+    page,
+    browserName,
+  }, info) => {
+    test.skip(
+      browserName !== "chromium" || info.project.use?.hasTouch !== true,
+      "a phone's Chromium, through its protocol",
+    );
     test.setTimeout(120_000);
     const client = await page.context().newCDPSession(page);
     await client.send("Emulation.setCPUThrottlingRate", { rate: 4 });
-    for (const [kind, size, level] of [["cube", "colossal", 40], ["icosahedron", "colossal", 40], ["dodecahedron", "colossal", 40], ["torus", "colossal", 40], ["heart", "colossal", 40], ["cross", "colossal", 40]]) {
+    for (const [kind, size, level] of [
+      ["cube", "colossal", 40],
+      ["icosahedron", "colossal", 40],
+      ["dodecahedron", "colossal", 40],
+      ["torus", "colossal", 40],
+      ["heart", "colossal", 40],
+      ["cross", "colossal", 40],
+    ]) {
       await openSolid(page, kind, size, level);
       await call(page, "s.view({ zoom: 4 });");
       // Zoomed in four times, which the board allows (to six): a colossal cell is a finger wide at four.
@@ -429,7 +569,17 @@ test.describe("the solids", () => {
         const rect = box.getBoundingClientRect();
         const frames = [];
         let last = performance.now();
-        const fire = (type, x, y) => box.dispatchEvent(new PointerEvent(type, { pointerId: 1, pointerType: "touch", clientX: rect.left + x, clientY: rect.top + y, bubbles: true, isPrimary: true }));
+        const fire = (type, x, y) =>
+          box.dispatchEvent(
+            new PointerEvent(type, {
+              pointerId: 1,
+              pointerType: "touch",
+              clientX: rect.left + x,
+              clientY: rect.top + y,
+              bubbles: true,
+              isPrimary: true,
+            }),
+          );
         fire("pointerdown", 5, 5);
         await new Promise((resolve) => {
           let t = 0;
@@ -438,7 +588,11 @@ test.describe("the solids", () => {
             last = now;
             t += 1;
             const a = (t / 20) * Math.PI;
-            fire("pointermove", 5 + (rect.width - 10) * (0.5 + 0.5 * Math.sin(a)), 5 + (rect.height - 10) * (0.5 + 0.5 * Math.cos(a * 0.7)));
+            fire(
+              "pointermove",
+              5 + (rect.width - 10) * (0.5 + 0.5 * Math.sin(a)),
+              5 + (rect.height - 10) * (0.5 + 0.5 * Math.cos(a * 0.7)),
+            );
             if (t < 120) requestAnimationFrame(step);
             else resolve();
           };

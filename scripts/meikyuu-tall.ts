@@ -27,7 +27,8 @@ import { candidateOf, keysFor, tooEasy, type Candidate } from "./levels-lib.ts";
 import { chooseList } from "./levels-list.ts";
 
 const args = process.argv.slice(2);
-const flag = (name: string, fallback: string): string => (args.includes(name) ? args[args.indexOf(name) + 1]! : fallback);
+const flag = (name: string, fallback: string): string =>
+  args.includes(name) ? args[args.indexOf(name) + 1]! : fallback;
 const OUT = flag("--out", new URL("../src/levels/tall.data.ts", import.meta.url).pathname);
 const COUNT = 256;
 const POOL = 30_000;
@@ -48,7 +49,15 @@ for (const [index, width] of TALL_WIDTHS.entries()) {
     const algorithm = algorithms[below(random, algorithms.length)]!;
     const mode = MODES[below(random, MODES.length)]!;
     const seed = 1 + Math.floor(random() * 4_000_000_000);
-    const recipe: MazeRecipe = { shape, w, h, algorithm, mode, seed, ...(mode === "keys" ? { keys: keysFor(w * h) } : {}) };
+    const recipe: MazeRecipe = {
+      shape,
+      w,
+      h,
+      algorithm,
+      mode,
+      seed,
+      ...(mode === "keys" ? { keys: keysFor(w * h) } : {}),
+    };
     const made = candidateOf(recipe);
     if (made !== null) pool.push(made);
   }
@@ -58,9 +67,18 @@ for (const [index, width] of TALL_WIDTHS.entries()) {
   // every shape and way to play in every third.)
   const from = fit[Math.floor(fit.length * 0.03)]!.effort;
   const to = fit[Math.floor(fit.length * 0.97)]!.effort;
-  const listed = chooseList({ count: COUNT, pool: fit, allowed: (c) => c.effort >= from && c.effort <= to, okAt: (c) => !tooEasy(c, MEIKYUU_EASY_PLACES), from, to });
+  const listed = chooseList({
+    count: COUNT,
+    pool: fit,
+    allowed: (c) => c.effort >= from && c.effort <= to,
+    okAt: (c) => !tooEasy(c, MEIKYUU_EASY_PLACES),
+    from,
+    to,
+  });
   const range = `${listed.levels[0]!.effort} to ${listed.levels[COUNT - 1]!.effort}`;
-  report.push(`${width} across (${tallDimensions("square", width).join("x")}): ${fit.length} of ${pool.length} drawn were hard enough; efforts ${range}; steps ${listed.steps.mean.toFixed(2)} on average, ${listed.steps.biggest.toFixed(2)} at most (${((Date.now() - started) / 1000).toFixed(0)}s)`);
+  report.push(
+    `${width} across (${tallDimensions("square", width).join("x")}): ${fit.length} of ${pool.length} drawn were hard enough; efforts ${range}; steps ${listed.steps.mean.toFixed(2)} on average, ${listed.steps.biggest.toFixed(2)} at most (${((Date.now() - started) / 1000).toFixed(0)}s)`,
+  );
   for (const c of listed.levels) rows.push(`  ["${c.code}", ${c.effort}, ${c.cells}, ${c.score}],`);
 }
 

@@ -2,15 +2,37 @@
 // anywhere but on the line, fitted again, drawn on while zoomed, and kept smooth: only what is on screen is in the page.
 import { expect, test } from "@playwright/test";
 
-import { along, at, board, cellPoint, dragCells, findMaze, noSidewaysScroll, open, shownWidth, touchDrag, twoTouches } from "./demo.mjs";
+import {
+  along,
+  at,
+  board,
+  cellPoint,
+  dragCells,
+  findMaze,
+  noSidewaysScroll,
+  open,
+  shownWidth,
+  touchDrag,
+  twoTouches,
+} from "./demo.mjs";
 
 const svgOf = (page) => page.locator(`${at("board")} .mk-box svg`);
 /** A big maze whose start is near the middle of the shape, so that a zoom about the start leaves it well inside the box, away from the edges that move the view. */
-const centred = findMaze(({ maze, way, level }) => {
-  const [x, y] = maze.grid.centres[way[0]];
-  const { box } = maze.grid;
-  return level.cells > 900 && level.cells < 4000 && way.length >= 12 && Math.abs(x - (box.x + box.w / 2)) < box.w * 0.12 && Math.abs(y - (box.y + box.h / 2)) < box.h * 0.12 && way.slice(0, 6).every((cell, i) => i === 0 || maze.links[way[i - 1]].includes(cell));
-}, { from: 600, to: 900 });
+const centred = findMaze(
+  ({ maze, way, level }) => {
+    const [x, y] = maze.grid.centres[way[0]];
+    const { box } = maze.grid;
+    return (
+      level.cells > 900 &&
+      level.cells < 4000 &&
+      way.length >= 12 &&
+      Math.abs(x - (box.x + box.w / 2)) < box.w * 0.12 &&
+      Math.abs(y - (box.y + box.h / 2)) < box.h * 0.12 &&
+      way.slice(0, 6).every((cell, i) => i === 0 || maze.links[way[i - 1]].includes(cell))
+    );
+  },
+  { from: 600, to: 900 },
+);
 const hugeMaze = findMaze(() => true, { from: 1024, to: 1024 });
 const BIG = centred.level.number;
 const mazeOf = () => centred;
@@ -51,15 +73,32 @@ test("a pinch zooms, and two fingers moving together move the view", async ({ pa
   const box = await board(page).boundingBox();
   const middle = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
   const fitted = await shownWidth(svg);
-  await twoTouches(page, board(page), along({ x: middle.x - 20, y: middle.y }, { x: middle.x - 60, y: middle.y }), along({ x: middle.x + 20, y: middle.y }, { x: middle.x + 60, y: middle.y }));
+  await twoTouches(
+    page,
+    board(page),
+    along({ x: middle.x - 20, y: middle.y }, { x: middle.x - 60, y: middle.y }),
+    along({ x: middle.x + 20, y: middle.y }, { x: middle.x + 60, y: middle.y }),
+  );
   await expect.poll(() => shownWidth(svg)).toBeLessThan(fitted * 0.6);
   const [x0] = (await svg.getAttribute("viewBox")).split(" ").map(Number);
   // Two fingers moved left together: the maze slides under them, so the view moves.
-  await twoTouches(page, board(page), along({ x: middle.x + 20, y: middle.y }, { x: middle.x - 60, y: middle.y }), along({ x: middle.x + 60, y: middle.y }, { x: middle.x - 20, y: middle.y }));
-  await expect.poll(async () => Math.abs(Number((await svg.getAttribute("viewBox")).split(" ")[0]) - x0)).toBeGreaterThan(1);
+  await twoTouches(
+    page,
+    board(page),
+    along({ x: middle.x + 20, y: middle.y }, { x: middle.x - 60, y: middle.y }),
+    along({ x: middle.x + 60, y: middle.y }, { x: middle.x - 20, y: middle.y }),
+  );
+  await expect
+    .poll(async () => Math.abs(Number((await svg.getAttribute("viewBox")).split(" ")[0]) - x0))
+    .toBeGreaterThan(1);
   // And a pinch inward zooms back out, no further than the whole maze.
   const zoomed = await shownWidth(svg);
-  await twoTouches(page, board(page), along({ x: middle.x - 60, y: middle.y }, { x: middle.x - 20, y: middle.y }), along({ x: middle.x + 60, y: middle.y }, { x: middle.x + 20, y: middle.y }));
+  await twoTouches(
+    page,
+    board(page),
+    along({ x: middle.x - 60, y: middle.y }, { x: middle.x - 20, y: middle.y }),
+    along({ x: middle.x + 60, y: middle.y }, { x: middle.x + 20, y: middle.y }),
+  );
   await expect.poll(() => shownWidth(svg)).toBeGreaterThan(zoomed);
 });
 
@@ -84,7 +123,9 @@ test("a drag that starts anywhere but on the line moves the view, and draws noth
   await expect(page.locator(at("board"))).toHaveAttribute("data-cells", "0");
 });
 
-test("a line is drawn while zoomed in, and a line held near the edge of the box moves the view along", async ({ page }) => {
+test("a line is drawn while zoomed in, and a line held near the edge of the box moves the view along", async ({
+  page,
+}) => {
   await open(page, `?kind=maze&level=${BIG}`);
   const svg = svgOf(page);
   const { maze, way } = mazeOf();
@@ -107,7 +148,9 @@ test("a line is drawn while zoomed in, and a line held near the edge of the box 
   expect(x1).toBeGreaterThan(x0 + 0.5);
 });
 
-test("a huge maze stays smooth: only the walls on screen are in the page, and zooming it is quick", async ({ page }) => {
+test("a huge maze stays smooth: only the walls on screen are in the page, and zooming it is quick", async ({
+  page,
+}) => {
   const started = Date.now();
   await open(page, "?kind=maze&level=1024");
   expect(Date.now() - started).toBeLessThan(15000);
@@ -132,7 +175,15 @@ test("a huge maze stays smooth: only the walls on screen are in the page, and zo
     const rect = box.getBoundingClientRect();
     const t0 = performance.now();
     for (let i = 0; i < 20; i += 1) {
-      box.dispatchEvent(new WheelEvent("wheel", { deltaY: i % 2 === 0 ? 120 : -120, clientX: rect.x + rect.width / 2, clientY: rect.y + rect.height / 2, bubbles: true, cancelable: true }));
+      box.dispatchEvent(
+        new WheelEvent("wheel", {
+          deltaY: i % 2 === 0 ? 120 : -120,
+          clientX: rect.x + rect.width / 2,
+          clientY: rect.y + rect.height / 2,
+          bubbles: true,
+          cancelable: true,
+        }),
+      );
       await new Promise((resolve) => requestAnimationFrame(resolve));
     }
     return performance.now() - t0;
@@ -140,7 +191,9 @@ test("a huge maze stays smooth: only the walls on screen are in the page, and zo
   expect(took).toBeLessThan(1500);
 });
 
-test("a huge maze can be touched at the start: a finger within a thumb's width of the start draws", async ({ page }) => {
+test("a huge maze can be touched at the start: a finger within a thumb's width of the start draws", async ({
+  page,
+}) => {
   await open(page, "?kind=maze&level=1024");
   const svg = svgOf(page);
   const { maze, way } = hugeMaze;

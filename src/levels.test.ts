@@ -1,6 +1,21 @@
 import { describe, expect, it } from "vitest";
 
-import { bandOf, findMazeLevels, levelCount, levelOf, levelsOf, mazeLevelOfSize, mazeLevelsOfSize, MEIKYUU_ARROW_LEVELS, MEIKYUU_KINDS, MEIKYUU_LEVELS_PER_SIZE, MEIKYUU_MAZE_LEVELS, MEIKYUU_MIXED_LEVELS, MEIKYUU_SIZES, sizeOf } from "./levels.ts";
+import {
+  bandOf,
+  findMazeLevels,
+  levelCount,
+  levelOf,
+  levelsOf,
+  mazeLevelOfSize,
+  mazeLevelsOfSize,
+  MEIKYUU_ARROW_LEVELS,
+  MEIKYUU_KINDS,
+  MEIKYUU_LEVELS_PER_SIZE,
+  MEIKYUU_MAZE_LEVELS,
+  MEIKYUU_MIXED_LEVELS,
+  MEIKYUU_SIZES,
+  sizeOf,
+} from "./levels.ts";
 import { MEIKYUU_ALGORITHMS } from "./algorithms.ts";
 import { difficultyOf, easyFloorAt, isTooEasy } from "./difficulty.ts";
 import { MEIKYUU_SHAPES } from "./grid.ts";
@@ -45,11 +60,15 @@ describe("the maze list", () => {
   it("gets harder to play along each size, by the score, in thirds and in pages of sixteen, though one level can be a little easier than its neighbour", () => {
     for (const size of MEIKYUU_SIZES) {
       const levels = mazeLevelsOfSize(size);
-      const mean = (from: number, to: number): number => levels.slice(from, to).reduce((a, level) => a + level.score, 0) / (to - from);
+      const mean = (from: number, to: number): number =>
+        levels.slice(from, to).reduce((a, level) => a + level.score, 0) / (to - from);
       expect(mean(0, 86), size).toBeLessThan(mean(86, 171));
       expect(mean(86, 171), size).toBeLessThan(mean(171, 256));
       // Every page of sixteen is about as hard as the one before it, or harder.
-      for (let page = 1; page < 16; page += 1) expect(mean(page * 16, page * 16 + 16), `${size} page ${page + 1}`).toBeGreaterThan(mean(page * 16 - 16, page * 16) - 2.5);
+      for (let page = 1; page < 16; page += 1)
+        expect(mean(page * 16, page * 16 + 16), `${size} page ${page + 1}`).toBeGreaterThan(
+          mean(page * 16 - 16, page * 16) - 2.5,
+        );
     }
   });
 
@@ -75,18 +94,34 @@ describe("the maze list", () => {
   it("gives every shape, way to play and algorithm a place in every size, and keeps the easy third from being all one thing", () => {
     for (const size of MEIKYUU_SIZES) {
       const levels = mazeLevelsOfSize(size);
-      for (const shape of MEIKYUU_SHAPES) expect(levels.filter((level) => level.recipe.shape === shape).length, `${size} ${shape}`).toBeGreaterThanOrEqual(4);
-      for (const mode of MEIKYUU_MODES) expect(levels.filter((level) => level.recipe.mode === mode).length, `${size} ${mode}`).toBeGreaterThanOrEqual(20);
-      for (const algorithm of MEIKYUU_ALGORITHMS) expect(levels.filter((level) => level.recipe.algorithm === algorithm).length, `${size} ${algorithm}`).toBeGreaterThanOrEqual(3);
+      for (const shape of MEIKYUU_SHAPES)
+        expect(
+          levels.filter((level) => level.recipe.shape === shape).length,
+          `${size} ${shape}`,
+        ).toBeGreaterThanOrEqual(4);
+      for (const mode of MEIKYUU_MODES)
+        expect(levels.filter((level) => level.recipe.mode === mode).length, `${size} ${mode}`).toBeGreaterThanOrEqual(
+          20,
+        );
+      for (const algorithm of MEIKYUU_ALGORITHMS)
+        expect(
+          levels.filter((level) => level.recipe.algorithm === algorithm).length,
+          `${size} ${algorithm}`,
+        ).toBeGreaterThanOrEqual(3);
       const easy = levels.slice(0, 86);
-      expect(new Set(easy.map((level) => level.recipe.shape)).size, `${size} easy shapes`).toBeGreaterThanOrEqual(size === "small" ? 5 : 8);
+      expect(new Set(easy.map((level) => level.recipe.shape)).size, `${size} easy shapes`).toBeGreaterThanOrEqual(
+        size === "small" ? 5 : 8,
+      );
     }
   });
 
   it("makes the easy third a climb: more choices and more wrong turns as it goes, and never a maze the straight guess solves", () => {
     for (const size of MEIKYUU_SIZES) {
-      const easy = mazeLevelsOfSize(size).slice(0, 86).map((level) => difficultyOf(buildMaze(level.recipe)));
-      const mean = (from: number, to: number, pick: (d: (typeof easy)[number]) => number): number => easy.slice(from, to).reduce((a, d) => a + pick(d), 0) / (to - from);
+      const easy = mazeLevelsOfSize(size)
+        .slice(0, 86)
+        .map((level) => difficultyOf(buildMaze(level.recipe)));
+      const mean = (from: number, to: number, pick: (d: (typeof easy)[number]) => number): number =>
+        easy.slice(from, to).reduce((a, d) => a + pick(d), 0) / (to - from);
       for (const pick of [(d: (typeof easy)[number]) => d.measure.decisions, (d: (typeof easy)[number]) => d.traps]) {
         expect(mean(57, 86, pick), size).toBeGreaterThan(mean(0, 29, pick));
       }
@@ -102,7 +137,11 @@ describe("the maze list", () => {
     expect(sizeOf(5000)).toBe("huge");
     expect(sizeOf(149)).toBe("small");
     expect(sizeOf(4000)).toBe("huge");
-    expect(findMazeLevels({ shape: "heart", mode: "keys" }).every((level) => level.recipe.shape === "heart" && level.recipe.mode === "keys")).toBe(true);
+    expect(
+      findMazeLevels({ shape: "heart", mode: "keys" }).every(
+        (level) => level.recipe.shape === "heart" && level.recipe.mode === "keys",
+      ),
+    ).toBe(true);
   });
 
   it("asks more of a place as the easy third goes on: the least at level 1, and 3 traps, 5 forks and 8 wasted cells at level 86", () => {
@@ -118,7 +157,14 @@ describe("the maze list", () => {
     expect(bandOf(171)).toBe("medium");
     expect(bandOf(172)).toBe("hard");
     expect(bandOf(256)).toBe("hard");
-    expect([1, 2, 3].map((third) => Array.from({ length: 256 }, (_, i) => bandOf(i + 1)).filter((b) => b === (["easy", "medium", "hard"] as const)[third - 1]).length)).toEqual([86, 85, 85]);
+    expect(
+      [1, 2, 3].map(
+        (third) =>
+          Array.from({ length: 256 }, (_, i) => bandOf(i + 1)).filter(
+            (b) => b === (["easy", "medium", "hard"] as const)[third - 1],
+          ).length,
+      ),
+    ).toEqual([86, 85, 85]);
   });
 
   it("is found by kind and number", () => {
@@ -133,6 +179,7 @@ describe("the maze list", () => {
   });
 
   it("rates the effort of a level the same way every time", () => {
-    for (const level of MEIKYUU_MAZE_LEVELS.filter((_, i) => i % 7 === 0)) expect(level.rating).toBe(ratingOf(level.effort));
+    for (const level of MEIKYUU_MAZE_LEVELS.filter((_, i) => i % 7 === 0))
+      expect(level.rating).toBe(ratingOf(level.effort));
   });
 });

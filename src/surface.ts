@@ -1,4 +1,18 @@
-import { edgeNudge, fitView, isFitted, keptView, pannedBy, pointAt, scaleLimits, viewBoxOf, visibleArea, zoomedAbout, type FitMode, type View, type ViewBox } from "./viewport.ts";
+import {
+  edgeNudge,
+  fitView,
+  isFitted,
+  keptView,
+  pannedBy,
+  pointAt,
+  scaleLimits,
+  viewBoxOf,
+  visibleArea,
+  zoomedAbout,
+  type FitMode,
+  type View,
+  type ViewBox,
+} from "./viewport.ts";
 import type { Box } from "./grid.ts";
 
 /**
@@ -80,7 +94,13 @@ const TAP_TIME = 500;
 /** How long a pointer must stay where it went down, in milliseconds, to be a press-and-hold. A little over a tap's longest, so a tap is never both. */
 export const HOLD_TIME = 520;
 
-export function createSurface(box: HTMLElement, area: Box, hooks: SurfaceHooks, pad = 0.6, options: SurfaceOptions = {}): Surface {
+export function createSurface(
+  box: HTMLElement,
+  area: Box,
+  hooks: SurfaceHooks,
+  pad = 0.6,
+  options: SurfaceOptions = {},
+): Surface {
   let size: ViewBox = { width: Math.max(1, box.clientWidth), height: Math.max(1, box.clientHeight), area };
   let fitMode: FitMode = options.fit ?? "both";
   let edgePan = options.edgePan !== false;
@@ -112,7 +132,11 @@ export function createSurface(box: HTMLElement, area: Box, hooks: SurfaceHooks, 
     if (wasFitted) view = fitView(size, pad, fitMode);
     else {
       const scale = relative * fitView(size, pad).scale;
-      view = keptView({ scale, x: middleX - size.width / (2 * scale), y: middleY - size.height / (2 * scale) }, size, pad);
+      view = keptView(
+        { scale, x: middleX - size.width / (2 * scale), y: middleY - size.height / (2 * scale) },
+        size,
+        pad,
+      );
     }
     invalidate();
   };
@@ -143,7 +167,14 @@ export function createSurface(box: HTMLElement, area: Box, hooks: SurfaceHooks, 
     holdTimer = 0;
     const from = holdFrom;
     holdFrom = null;
-    if (from === null || pointers.size !== 1 || (mode !== "draw" && mode !== "pan") || panned || hooks.hold === undefined) return;
+    if (
+      from === null ||
+      pointers.size !== 1 ||
+      (mode !== "draw" && mode !== "pan") ||
+      panned ||
+      hooks.hold === undefined
+    )
+      return;
     if (!hooks.hold(pointAt(view, from[0], from[1]), from)) return;
     if (mode === "draw") hooks.lift();
     mode = "held";
@@ -201,7 +232,10 @@ export function createSurface(box: HTMLElement, area: Box, hooks: SurfaceHooks, 
         const factor = distance / previous;
         const { least } = scaleLimits(size, pad);
         // Fingers coming together with nothing left to zoom out of, or apart while the frame is shrunk: the frame takes the pinch.
-        const framed = options.frame !== undefined && ((factor < 1 && next.scale <= least + 1e-6) || factor > 1) ? options.frame.zoom(factor) : false;
+        const framed =
+          options.frame !== undefined && ((factor < 1 && next.scale <= least + 1e-6) || factor > 1)
+            ? options.frame.zoom(factor)
+            : false;
         if (!framed) next = zoomedAbout(next, factor, middle[0], middle[1], size, pad);
       }
       pinchFrom = { distance };
@@ -233,7 +267,8 @@ export function createSurface(box: HTMLElement, area: Box, hooks: SurfaceHooks, 
     pointers.delete(event.pointerId);
     stopHold();
     if (mode === "draw") hooks.lift();
-    else if (mode === "pan" && !panned && event.type === "pointerup" && event.timeStamp - started < TAP_TIME) hooks.tap(pointAt(view, pixel[0], pixel[1]), event);
+    else if (mode === "pan" && !panned && event.type === "pointerup" && event.timeStamp - started < TAP_TIME)
+      hooks.tap(pointAt(view, pixel[0], pixel[1]), event);
     if (pointers.size === 0) {
       mode = "none";
       last = null;
@@ -292,7 +327,11 @@ export function createSurface(box: HTMLElement, area: Box, hooks: SurfaceHooks, 
     zoom: (factor) => setView(zoomedAbout(view, factor, size.width / 2, size.height / 2, size, pad)),
     state: () => {
       const { least, most } = scaleLimits(size, pad);
-      return { fitted: isFitted(view, size, pad, fitMode), atMost: view.scale >= most - 1e-6, atLeast: view.scale <= least + 1e-6 };
+      return {
+        fitted: isFitted(view, size, pad, fitMode),
+        atMost: view.scale >= most - 1e-6,
+        atLeast: view.scale <= least + 1e-6,
+      };
     },
     view: () => view,
     invalidate,

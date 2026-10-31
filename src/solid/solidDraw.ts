@@ -62,13 +62,23 @@ export function drawSolid(maze: SolidMaze, options: DrawSolidOptions = {}): stri
   const size = options.size ?? 320;
   const frame = projectFrame(createFrame(grid), grid, options.turn ?? openingTurn(grid, maze.start), 1, size, size);
   const language = options.language ?? "en";
-  const label = options.label ?? meikyuuSay(language, "solidLabel", { shape: meikyuuSay(language, `solid_${maze.recipe.kind}`), n: grid.cells, play: meikyuuSay(language, "play_solid") });
+  const label =
+    options.label ??
+    meikyuuSay(language, "solidLabel", {
+      shape: meikyuuSay(language, `solid_${maze.recipe.kind}`),
+      n: grid.cells,
+      play: meikyuuSay(language, "play_solid"),
+    });
   const wallWidth = Math.max(0.8, Math.min(3, frame.cellPixels * (options.wall ?? 0.12) * 0.8));
   const lineWidth = Math.max(2, Math.min(14, frame.cellPixels * (options.line ?? 0.34) * 0.85));
   const parts: string[] = [];
-  parts.push(`<rect width="${size}" height="${size}" style="fill:color-mix(in srgb, var(--mk-paper) 90%, var(--mk-wall))"/>`);
-  const shadeOf = (cell: number): number => Math.min(SHADES - 1, Math.floor(Math.max(0, Math.min(1, frame.facing[cell]!)) ** 0.7 * SHADES));
-  const outline = (cell: number): string => `${grid.corners[cell]!.map((v, i) => `${i === 0 ? "M" : "L"}${fixed(frame.sx[v]!)} ${fixed(frame.sy[v]!)}`).join("")}Z`;
+  parts.push(
+    `<rect width="${size}" height="${size}" style="fill:color-mix(in srgb, var(--mk-paper) 90%, var(--mk-wall))"/>`,
+  );
+  const shadeOf = (cell: number): number =>
+    Math.min(SHADES - 1, Math.floor(Math.max(0, Math.min(1, frame.facing[cell]!)) ** 0.7 * SHADES));
+  const outline = (cell: number): string =>
+    `${grid.corners[cell]!.map((v, i) => `${i === 0 ? "M" : "L"}${fixed(frame.sx[v]!)} ${fixed(frame.sy[v]!)}`).join("")}Z`;
   const cellsPath = (paths: readonly string[], shade: number): string => {
     const share = Math.round((0.52 + 0.48 * ((shade + 0.5) / SHADES)) * 100);
     const fill = `color-mix(in srgb, var(--mk-paper) ${share}%, #000)`;
@@ -96,7 +106,8 @@ export function drawSolid(maze: SolidMaze, options: DrawSolidOptions = {}): stri
     // is nearer covers what is behind it, walls and all.
     const slabs = slabsOf(frame, grid);
     const slabOf = new Int32Array(grid.cells).fill(-1);
-    for (let k = 0; k + 1 < slabs.length; k += 1) for (let i = slabs[k]!; i < slabs[k + 1]!; i += 1) slabOf[frame.order[i]!] = k;
+    for (let k = 0; k + 1 < slabs.length; k += 1)
+      for (let i = slabs[k]!; i < slabs[k + 1]!; i += 1) slabOf[frame.order[i]!] = k;
     for (let k = 0; k + 1 < slabs.length; k += 1) {
       const buckets: string[][] = Array.from({ length: SHADES }, () => []);
       const inner: string[] = [];
@@ -117,8 +128,12 @@ export function drawSolid(maze: SolidMaze, options: DrawSolidOptions = {}): stri
       buckets.forEach((paths, shade) => {
         if (paths.length > 0) parts.push(cellsPath(paths, shade));
       });
-      if (inner.length > 0) parts.push(`<path class="mk-walls" d="${inner.join("")}" stroke-width="${fixed(wallWidth)}"/>`);
-      if (rim.length > 0) parts.push(`<path class="mk-walls" data-rim="true" d="${rim.join("")}" stroke-width="${fixed(wallWidth * 1.5)}"/>`);
+      if (inner.length > 0)
+        parts.push(`<path class="mk-walls" d="${inner.join("")}" stroke-width="${fixed(wallWidth)}"/>`);
+      if (rim.length > 0)
+        parts.push(
+          `<path class="mk-walls" data-rim="true" d="${rim.join("")}" stroke-width="${fixed(wallWidth * 1.5)}"/>`,
+        );
     }
   }
   const through = (cells: readonly number[]): string => {
@@ -130,27 +145,39 @@ export function drawSolid(maze: SolidMaze, options: DrawSolidOptions = {}): stri
         const edge = grid.edges[grid.sideEdge[from]![grid.neighbours[from]!.indexOf(to)]!]!;
         return `${fixed((frame.sx[edge.a]! + frame.sx[edge.b]!) / 2)} ${fixed((frame.sy[edge.a]! + frame.sy[edge.b]!) / 2)}`;
       };
-      if (drawnTo !== at - 1) out += `M${at === 0 ? `${fixed(frame.cx[cell]!)} ${fixed(frame.cy[cell]!)}` : cross(cells[at - 1]!, cell)}`;
+      if (drawnTo !== at - 1)
+        out += `M${at === 0 ? `${fixed(frame.cx[cell]!)} ${fixed(frame.cy[cell]!)}` : cross(cells[at - 1]!, cell)}`;
       out += `L${fixed(frame.cx[cell]!)} ${fixed(frame.cy[cell]!)}`;
       if (at < cells.length - 1) out += `L${cross(cell, cells[at + 1]!)}`;
       drawnTo = at;
     });
     return out;
   };
-  if (options.solution === true) parts.push(`<path class="mk-solution" d="${through(solidSolutionOf(maze))}" stroke-width="${fixed(lineWidth * 0.8)}"/>`);
-  if (options.path !== undefined && options.path.length > 0) parts.push(`<path class="mk-trail" d="${through(options.path)}" stroke-width="${fixed(lineWidth)}"/>`);
+  if (options.solution === true)
+    parts.push(
+      `<path class="mk-solution" d="${through(solidSolutionOf(maze))}" stroke-width="${fixed(lineWidth * 0.8)}"/>`,
+    );
+  if (options.path !== undefined && options.path.length > 0)
+    parts.push(`<path class="mk-trail" d="${through(options.path)}" stroke-width="${fixed(lineWidth)}"/>`);
   for (const cell of options.stones ?? []) {
     if (!cellSeen(frame, grid, cell)) continue;
     const r = grid.radii[cell]! * frame.scale * 0.55;
-    parts.push(`<circle class="mk-stone" data-mark="stone" data-cell="${cell}" cx="${fixed(frame.cx[cell]!)}" cy="${fixed(frame.cy[cell]!)}" r="${fixed(r)}" stroke-width="${fixed(Math.max(1, r * 0.18))}"/>`);
+    parts.push(
+      `<circle class="mk-stone" data-mark="stone" data-cell="${cell}" cx="${fixed(frame.cx[cell]!)}" cy="${fixed(frame.cy[cell]!)}" r="${fixed(r)}" stroke-width="${fixed(Math.max(1, r * 0.18))}"/>`,
+    );
   }
   const mark = (cell: number, name: "start" | "goal"): void => {
     if (!cellSeen(frame, grid, cell)) return;
     const r = grid.radii[cell]! * frame.scale * 0.55;
-    parts.push(`<circle class="mk-${name}" data-mark="${name}" cx="${fixed(frame.cx[cell]!)}" cy="${fixed(frame.cy[cell]!)}" r="${fixed(r)}" stroke-width="${fixed(Math.max(1, wallWidth * 0.8))}"/>`);
+    parts.push(
+      `<circle class="mk-${name}" data-mark="${name}" cx="${fixed(frame.cx[cell]!)}" cy="${fixed(frame.cy[cell]!)}" r="${fixed(r)}" stroke-width="${fixed(Math.max(1, wallWidth * 0.8))}"/>`,
+    );
   };
   mark(maze.start, "start");
   mark(maze.goal, "goal");
-  const style = options.standalone === true ? `<style>${MEIKYUU_STYLE}.meikyuu .mk-walls[data-rim]{stroke-linecap:round}</style>` : "";
+  const style =
+    options.standalone === true
+      ? `<style>${MEIKYUU_STYLE}.meikyuu .mk-walls[data-rim]{stroke-linecap:round}</style>`
+      : "";
   return `<svg ${lookAttributes(options)} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}" role="img" aria-label="${label.replace(/&/g, "&amp;").replace(/"/g, "&quot;")}" data-solid="${maze.recipe.kind}" data-cells="${grid.cells}">${style}${parts.join("")}</svg>`;
 }

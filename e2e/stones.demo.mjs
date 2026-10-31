@@ -3,7 +3,19 @@
 // a tap or Undo; kept with the run and brought back; never part of the answer. The rules themselves are in src/stones.test.ts.
 import { expect, test } from "@playwright/test";
 
-import { at, bare, board, cellPoint, dragCells, events, mazeOf, noSidewaysScroll, open, recordEvents, touchDrag } from "./demo.mjs";
+import {
+  at,
+  bare,
+  board,
+  cellPoint,
+  dragCells,
+  events,
+  mazeOf,
+  noSidewaysScroll,
+  open,
+  recordEvents,
+  touchDrag,
+} from "./demo.mjs";
 
 const svgOf = (page, selector = at("board")) => page.locator(`${selector} .mk-box svg`);
 const LEVEL = 40;
@@ -23,7 +35,20 @@ async function touchHold(page, target, point, ms) {
   await target.evaluate(
     (element, { point, ms }) =>
       new Promise((resolve) => {
-        const send = (type) => element.dispatchEvent(new PointerEvent(type, { pointerId: 9, pointerType: "touch", isPrimary: true, button: 0, buttons: type === "pointerup" ? 0 : 1, clientX: point.x, clientY: point.y, bubbles: true, cancelable: true }));
+        const send = (type) =>
+          element.dispatchEvent(
+            new PointerEvent(type, {
+              pointerId: 9,
+              pointerType: "touch",
+              isPrimary: true,
+              button: 0,
+              buttons: type === "pointerup" ? 0 : 1,
+              clientX: point.x,
+              clientY: point.y,
+              bubbles: true,
+              cancelable: true,
+            }),
+          );
         send("pointerdown");
         window.setTimeout(() => {
           send("pointerup");
@@ -34,7 +59,9 @@ async function touchHold(page, target, point, ms) {
   );
 }
 
-test("a board with stones has a Stone button, the progress says how many are left, and a board without them has neither", async ({ page }) => {
+test("a board with stones has a Stone button, the progress says how many are left, and a board without them has neither", async ({
+  page,
+}) => {
   await open(page, `?kind=maze&level=${LEVEL}`);
   await expect(page.locator(`${at("board")} [data-action="stone"]`)).toBeHidden();
   await expect(page.locator(`${at("board")} .mk-progress`)).not.toContainText("Stones");
@@ -55,7 +82,9 @@ test("a board with stones has a Stone button, the progress says how many are lef
   await expect(button).toHaveAttribute("aria-pressed", "false");
 });
 
-test("in the Stone mode a tap lays a stone beside the line, the line cannot enter it, a tap on it takes it up, and Undo puts it back", async ({ page }) => {
+test("in the Stone mode a tap lays a stone beside the line, the line cannot enter it, a tap on it takes it up, and Undo puts it back", async ({
+  page,
+}) => {
   await open(page, `?kind=maze&level=${LEVEL}&stones=on`);
   const { maze, way, at: place, into } = forkOf(LEVEL);
   const svg = svgOf(page);
@@ -94,7 +123,9 @@ test("in the Stone mode a tap lays a stone beside the line, the line cannot ente
   await expect(page.locator(at("board"))).toHaveAttribute("data-cells", "0");
 });
 
-test("a stone far from the line, on the line, or over the limit is refused, and the words say why", async ({ page }) => {
+test("a stone far from the line, on the line, or over the limit is refused, and the words say why", async ({
+  page,
+}) => {
   await open(page, `?kind=maze&level=${LEVEL}&stones=on&stonereach=1`);
   const { maze, way, at: place } = forkOf(LEVEL);
   const svg = svgOf(page);
@@ -114,7 +145,9 @@ test("a stone far from the line, on the line, or over the limit is refused, and 
   await expect(page.locator(`${at("board")} .mk-progress`)).toContainText("Stones left: 3.");
 });
 
-test("a finger held on a cell beside the line lays a stone with no mode on, by touch and by mouse; a held finger far away, or a plain tap, does nothing", async ({ page }) => {
+test("a finger held on a cell beside the line lays a stone with no mode on, by touch and by mouse; a held finger far away, or a plain tap, does nothing", async ({
+  page,
+}) => {
   await open(page, `?kind=maze&level=${LEVEL}&stones=on`);
   const { maze, way, at: place, into } = forkOf(LEVEL);
   const svg = svgOf(page);
@@ -144,7 +177,10 @@ test("a finger held on a cell beside the line lays a stone with no mode on, by t
   await noSidewaysScroll(page);
 });
 
-test("with the browser's own touch (Chromium), a finger held on a cell beside the line lays a stone, and one tapped does not", async ({ page, browserName }) => {
+test("with the browser's own touch (Chromium), a finger held on a cell beside the line lays a stone, and one tapped does not", async ({
+  page,
+  browserName,
+}) => {
   test.skip(browserName !== "chromium", "real touch is driven through Chromium's own protocol");
   await open(page, `?kind=maze&level=${LEVEL}&stones=on`);
   const { maze, way, at: place, into } = forkOf(LEVEL);
@@ -155,7 +191,8 @@ test("with the browser's own touch (Chromium), a finger held on a cell beside th
   const points = [];
   for (const cell of way.slice(0, place + 1)) points.push(await cellPoint(svg, maze, cell));
   await client.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: touch(points[0]) });
-  for (const p of points.slice(1)) await client.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: touch(p) });
+  for (const p of points.slice(1))
+    await client.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: touch(p) });
   await client.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
   await expect(page.locator(at("board"))).toHaveAttribute("data-cells", String(place + 1));
   const target = await cellPoint(svg, maze, into);
@@ -204,7 +241,9 @@ function forkReachedByAnArrow(from) {
   throw new Error("no level with a fork an arrow key reaches");
 }
 
-test("Shift and an arrow key lays a stone on the open cell of the line's end that lies that way, and again takes it up", async ({ page }) => {
+test("Shift and an arrow key lays a stone on the open cell of the line's end that lies that way, and again takes it up", async ({
+  page,
+}) => {
   const { number, maze, way, at: place, key } = forkReachedByAnArrow(LEVEL);
   await open(page, `?kind=maze&level=${number}&stones=on`);
   const svg = svgOf(page);
@@ -216,14 +255,20 @@ test("Shift and an arrow key lays a stone on the open cell of the line's end tha
   await expect(page.locator(at("board"))).toHaveAttribute("data-stones", "0");
 });
 
-test("a run is kept with its stones as one text, comes back as it was, and a stone is never part of the answer", async ({ page }) => {
-  const errors = await bare(page, `<meikyuu-board id="a" level="${LEVEL}" stones style="max-width:360px"></meikyuu-board>`);
+test("a run is kept with its stones as one text, comes back as it was, and a stone is never part of the answer", async ({
+  page,
+}) => {
+  const errors = await bare(
+    page,
+    `<meikyuu-board id="a" level="${LEVEL}" stones style="max-width:360px"></meikyuu-board>`,
+  );
   const { maze, way, at: place, into } = forkOf(LEVEL);
   await expect(page.locator("#a .mk-box svg")).toHaveAttribute("viewBox", /./);
-  const mounted = () => page.evaluate(() => {
-    const mount = document.getElementById("a").mount;
-    return { run: mount.run(), stones: [...mount.stones()], left: mount.stonesLeft() };
-  });
+  const mounted = () =>
+    page.evaluate(() => {
+      const mount = document.getElementById("a").mount;
+      return { run: mount.run(), stones: [...mount.stones()], left: mount.stonesLeft() };
+    });
   await dragCells(page, page.locator("#a .mk-box svg"), maze, way.slice(0, place + 1));
   const verdict = await page.evaluate((cell) => document.getElementById("a").mount.stone(cell), into);
   expect(verdict).toBe("ok");
@@ -232,7 +277,9 @@ test("a run is kept with its stones as one text, comes back as it was, and a sto
   expect(kept.left).toBe(2);
   expect(kept.run).toContain("~");
   // A far cell is refused by the method too, with the reason.
-  expect(await page.evaluate((cell) => document.getElementById("a").mount.stone(cell), way[way.length - 1])).toBe("end");
+  expect(await page.evaluate((cell) => document.getElementById("a").mount.stone(cell), way[way.length - 1])).toBe(
+    "end",
+  );
   // Restart, then bring the run back.
   await page.evaluate(() => document.getElementById("a").mount.restart());
   await expect(page.locator("#a")).toHaveAttribute("data-stones", "0");
@@ -251,12 +298,16 @@ test("a run is kept with its stones as one text, comes back as it was, and a sto
 });
 
 test("over the limit a stone is refused with the words for it, and taking one up gives it back", async ({ page }) => {
-  await bare(page, `<meikyuu-board id="a" level="${LEVEL}" stones stone-limit="1" style="max-width:360px"></meikyuu-board>`);
+  await bare(
+    page,
+    `<meikyuu-board id="a" level="${LEVEL}" stones stone-limit="1" style="max-width:360px"></meikyuu-board>`,
+  );
   const { maze, way, at: place } = forkOf(LEVEL);
   await expect(page.locator("#a .mk-box svg")).toHaveAttribute("viewBox", /./);
   await dragCells(page, page.locator("#a .mk-box svg"), maze, way.slice(0, place + 1));
   const beside = [];
-  for (const cell of way.slice(0, place + 1)) for (const next of maze.links[cell]) if (!way.includes(next) && !beside.includes(next)) beside.push(next);
+  for (const cell of way.slice(0, place + 1))
+    for (const next of maze.links[cell]) if (!way.includes(next) && !beside.includes(next)) beside.push(next);
   expect(beside.length).toBeGreaterThanOrEqual(2);
   expect(await page.evaluate((cell) => document.getElementById("a").mount.stone(cell), beside[0])).toBe("ok");
   expect(await page.evaluate((cell) => document.getElementById("a").mount.stone(cell), beside[1])).toBe("limit");
@@ -274,7 +325,10 @@ test("over the limit a stone is refused with the words for it, and taking one up
 });
 
 test("the tag has stones as attributes, a limit of none, and a reach of one", async ({ page }) => {
-  await bare(page, `<meikyuu-board id="a" level="${LEVEL}" stones stone-limit="none" stone-reach="1"></meikyuu-board><meikyuu-board id="b" level="${LEVEL}" stone-limit="2" stones></meikyuu-board><meikyuu-board id="c" level="${LEVEL}"></meikyuu-board>`);
+  await bare(
+    page,
+    `<meikyuu-board id="a" level="${LEVEL}" stones stone-limit="none" stone-reach="1"></meikyuu-board><meikyuu-board id="b" level="${LEVEL}" stone-limit="2" stones></meikyuu-board><meikyuu-board id="c" level="${LEVEL}"></meikyuu-board>`,
+  );
   await expect(page.locator("#a .mk-progress")).toContainText("Stones laid: 0.");
   await expect(page.locator("#b .mk-progress")).toContainText("Stones left: 2.");
   await expect(page.locator('#c [data-action="stone"]')).toBeHidden();

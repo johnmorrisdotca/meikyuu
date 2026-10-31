@@ -15,10 +15,17 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const site = join(root, "site");
 const docs = join(root, "docs");
 const host = "http://meikyuu.test";
-const TYPES = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css", ".json": "application/json", ".svg": "image/svg+xml" };
+const TYPES = {
+  ".html": "text/html",
+  ".js": "text/javascript",
+  ".css": "text/css",
+  ".json": "application/json",
+  ".svg": "image/svg+xml",
+};
 const QUALITY = 78;
 
-if (!existsSync(join(site, "index.html"))) throw new Error("site/ is not built: run `pnpm pictures:levels` (it builds the demo first)");
+if (!existsSync(join(site, "index.html")))
+  throw new Error("site/ is not built: run `pnpm pictures:levels` (it builds the demo first)");
 const browser = await chromium.launch();
 
 // A tall maze, 12 across, a good part of its way drawn: on a phone (by touch), zoomed out with wide gutters, in dark, and lying down on a desk.
@@ -26,18 +33,32 @@ const tall = MEIKYUU_TALL_LEVELS.find((level) => {
   if (level.size !== 4 || level.recipe.shape !== "square" || level.recipe.mode === "keys") return false;
   const maze = buildMaze(level.recipe);
   const way = solutionOf(maze);
-  return Math.abs(maze.grid.centres[way[0]][1] - maze.grid.centres[way[way.length - 1]][1]) > maze.grid.box.h * 0.6 && way.length > 45;
+  return (
+    Math.abs(maze.grid.centres[way[0]][1] - maze.grid.centres[way[way.length - 1]][1]) > maze.grid.box.h * 0.6 &&
+    way.length > 45
+  );
 });
 async function tallShot({ width, height, touch, dark, widen, path }) {
   const maze = buildMaze(tall.recipe);
   const way = solutionOf(maze);
-  const context = await browser.newContext({ viewport: { width, height }, hasTouch: touch, isMobile: touch, colorScheme: dark ? "dark" : "light", reducedMotion: "reduce", locale: "en-US", deviceScaleFactor: 2 });
+  const context = await browser.newContext({
+    viewport: { width, height },
+    hasTouch: touch,
+    isMobile: touch,
+    colorScheme: dark ? "dark" : "light",
+    reducedMotion: "reduce",
+    locale: "en-US",
+    deviceScaleFactor: 2,
+  });
   const page = await context.newPage();
   await page.route(`${host}/**`, (route) => {
     const { pathname } = new URL(route.request().url());
     const file = join(site, pathname === "/" ? "index.html" : pathname);
     if (!existsSync(file)) return route.fulfill({ status: 404, body: "" });
-    return route.fulfill({ body: readFileSync(file), contentType: TYPES[file.slice(file.lastIndexOf("."))] ?? "application/octet-stream" });
+    return route.fulfill({
+      body: readFileSync(file),
+      contentType: TYPES[file.slice(file.lastIndexOf("."))] ?? "application/octet-stream",
+    });
   });
   await page.goto(`${host}/?kind=tall&level=${tall.number}&help=off`);
   await page.waitForSelector('#board[data-ready="true"] .mk-box svg[viewBox]');

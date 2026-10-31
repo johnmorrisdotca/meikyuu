@@ -126,7 +126,10 @@ export const MOST_CELL_PIXELS = 72;
  */
 export function scaleLimits(box: ViewBox, pad = 0.6): { least: number; most: number } {
   const fit = fitView(box, pad).scale;
-  return { least: fit * 0.9, most: Math.max(fit * 2, MOST_CELL_PIXELS, fitView(box, pad, "width").scale, fitView(box, pad, "height").scale) };
+  return {
+    least: fit * 0.9,
+    most: Math.max(fit * 2, MOST_CELL_PIXELS, fitView(box, pad, "width").scale, fitView(box, pad, "height").scale),
+  };
 }
 
 /** A view kept where some of the board can be seen: its middle never leaves the area (with a margin).

@@ -47,7 +47,19 @@ export const SOLID_MORE_SHAPES = SOLID_SHAPES_MORE;
  * console.log(SOLID_DICE);
  * ```
  */
-export const SOLID_DICE = ["prism", "tetrahedron", "cube", "octahedron", "trapezohedron", "dodecahedron", "rhombic-dodecahedron", "bipyramid", "icosahedron", "icositetrahedron", "triacontahedron"] as const;
+export const SOLID_DICE = [
+  "prism",
+  "tetrahedron",
+  "cube",
+  "octahedron",
+  "trapezohedron",
+  "dodecahedron",
+  "rhombic-dodecahedron",
+  "bipyramid",
+  "icosahedron",
+  "icositetrahedron",
+  "triacontahedron",
+] as const;
 /** The shapes.
  *
  * @example

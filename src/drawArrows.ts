@@ -32,7 +32,8 @@ export type DrawArrowsOptions = MazeLook & {
   standalone?: boolean;
 };
 
-const escape = (text: string): string => text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+const escape = (text: string): string =>
+  text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
 /** The colour of arrow number `id`.
  *
@@ -65,7 +66,12 @@ export const arrowColour = (id: number): string => MEIKYUU_ARROW_COLOURS[id % ME
  * console.log(arrowMarkup(arrows,arrows.arrows[0],0,{locked:false}).length);
  * ```
  */
-export function arrowMarkup(board: Pick<ArrowBoard, "w">, arrow: Arrow, id: number, extra: { locked: boolean; gone?: boolean; hint?: boolean }): string {
+export function arrowMarkup(
+  board: Pick<ArrowBoard, "w">,
+  arrow: Arrow,
+  id: number,
+  extra: { locked: boolean; gone?: boolean; hint?: boolean },
+): string {
   const centre = (cell: number): [number, number] => [(cell % board.w) + 0.5, Math.floor(cell / board.w) + 0.5];
   const head = arrow.cells[arrow.cells.length - 1]!;
   const [hx, hy] = centre(head);
@@ -107,12 +113,27 @@ export function drawArrows(board: ArrowBoard, options: DrawArrowsOptions = {}): 
   const { w, h } = board;
   const dots: string[] = [];
   board.inShape.forEach((inside, cell) => {
-    if (inside) dots.push(`<circle class="mk-dot" cx="${fixed((cell % w) + 0.5)}" cy="${fixed(Math.floor(cell / w) + 0.5)}" r="0.07"/>`);
+    if (inside)
+      dots.push(
+        `<circle class="mk-dot" cx="${fixed((cell % w) + 0.5)}" cy="${fixed(Math.floor(cell / w) + 0.5)}" r="0.07"/>`,
+      );
   });
   const arrows = board.arrows
-    .map((arrow, id) => (options.present !== undefined && !options.present[id] ? "" : arrowMarkup(board, arrow, id, { locked: board.locked[id]! && options.unlocked !== true, hint: options.hint === id })))
+    .map((arrow, id) =>
+      options.present !== undefined && !options.present[id]
+        ? ""
+        : arrowMarkup(board, arrow, id, {
+            locked: board.locked[id]! && options.unlocked !== true,
+            hint: options.hint === id,
+          }),
+    )
     .join("");
-  const label = options.label ?? meikyuuSay(language, "arrowsLabel", { n: options.present === undefined ? board.arrows.length : options.present.filter(Boolean).length, shape: meikyuuSay(language, `shape_${board.recipe.shape}`) });
+  const label =
+    options.label ??
+    meikyuuSay(language, "arrowsLabel", {
+      n: options.present === undefined ? board.arrows.length : options.present.filter(Boolean).length,
+      shape: meikyuuSay(language, `shape_${board.recipe.shape}`),
+    });
   const style = options.standalone === true ? `<style>${MEIKYUU_STYLE}</style>` : "";
   const pad = 0.4;
   return `<svg ${lookAttributes(options)} xmlns="http://www.w3.org/2000/svg" viewBox="${-pad} ${-pad} ${w + 2 * pad} ${h + 2 * pad}" role="img" aria-label="${escape(label)}" data-shape="${board.recipe.shape}" data-arrows="${board.arrows.length}">${style}<rect class="mk-paper" x="${-pad}" y="${-pad}" width="${w + 2 * pad}" height="${h + 2 * pad}"/>${dots.join("")}${arrows}</svg>`;

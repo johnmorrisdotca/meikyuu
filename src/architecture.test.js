@@ -7,7 +7,7 @@ describe("the Architecture tree", () => {
     const doc = readFileSync("docs/ARCHITECTURE.md", "utf8");
     const tree = doc.slice(doc.indexOf("```text"), doc.indexOf("```", doc.indexOf("```text") + 7));
     const named = [...tree.matchAll(/[├└]── ([\w.-]+\.ts)\b/g)].map((match) => match[1]).sort();
-    const files = (readdirSync("src", { recursive: true }))
+    const files = readdirSync("src", { recursive: true })
       .filter((path) => path.endsWith(".ts") && !/\.(test|fixture)\./.test(path))
       .map((path) => path.split(/[\\/]/).at(-1))
       .sort();

@@ -6,7 +6,13 @@ import { MEIKYUU_SOLID_LEVELS } from "./levels-solid-all.ts";
 import { isPerfect } from "./maze.ts";
 import { measureMaze, ratingOf } from "./measure.ts";
 import type { SolidKind } from "./solid/solidGrid.ts";
-import { buildSolidMaze, checkSolidAnswer, solidDifficultyOf, solidRecipeCode, solidSolutionOf } from "./solid/solidMaze.ts";
+import {
+  buildSolidMaze,
+  checkSolidAnswer,
+  solidDifficultyOf,
+  solidRecipeCode,
+  solidSolutionOf,
+} from "./solid/solidMaze.ts";
 import { SOLID_SIZE_NAMES, solidCellsOf } from "./solid/solidSizes.ts";
 
 /**

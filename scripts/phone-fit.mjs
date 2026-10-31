@@ -11,21 +11,33 @@ const PHONES = [
 ];
 const CHROME = 284;
 const GUTTER = 24;
-const RATIOS = [["1:1", 1], ["4:5", 4 / 5], ["2:3", 2 / 3], ["3:5", 3 / 5], ["1:2", 1 / 2]];
+const RATIOS = [
+  ["1:1", 1],
+  ["4:5", 4 / 5],
+  ["2:3", 2 / 3],
+  ["3:5", 3 / 5],
+  ["1:2", 1 / 2],
+];
 const ACROSS = [12, 16, 20];
 
-const lines = [`| Phone (CSS px) | Left for the maze | ${RATIOS.map(([name]) => `${name} box`).join(" | ")} |`, `| --- | --- | ${RATIOS.map(() => "---").join(" | ")} |`];
+const lines = [
+  `| Phone (CSS px) | Left for the maze | ${RATIOS.map(([name]) => `${name} box`).join(" | ")} |`,
+  `| --- | --- | ${RATIOS.map(() => "---").join(" | ")} |`,
+];
 for (const [name, w, h] of PHONES) {
   const room = [w - 2 * GUTTER, h - CHROME];
   const cells = RATIOS.map(([, ratio]) => {
     const width = Math.min(room[0], room[1] * ratio);
-    return `${Math.round(width)} × ${Math.round(width / ratio)} (${Math.round(width / room[0] * 100)}%)`;
+    return `${Math.round(width)} × ${Math.round(width / ratio)} (${Math.round((width / room[0]) * 100)}%)`;
   });
   lines.push(`| ${name} ${w}×${h} | ${room[0]} × ${room[1]} | ${cells.join(" | ")} |`);
 }
 console.log(lines.join("\n"));
 console.log();
-const out = [`| Phone | Ratio | ${ACROSS.map((n) => `a cell with ${n} across`).join(" | ")} |`, `| --- | --- | ${ACROSS.map(() => "---:").join(" | ")} |`];
+const out = [
+  `| Phone | Ratio | ${ACROSS.map((n) => `a cell with ${n} across`).join(" | ")} |`,
+  `| --- | --- | ${ACROSS.map(() => "---:").join(" | ")} |`,
+];
 for (const [name, w, h] of PHONES.filter(([n]) => ["iPhone SE (2022)", "iPhone 15"].includes(n))) {
   for (const [rname, ratio] of RATIOS.filter(([n]) => ["1:1", "2:3", "1:2"].includes(n))) {
     const width = Math.min(w - 2 * GUTTER, (h - CHROME) * ratio);

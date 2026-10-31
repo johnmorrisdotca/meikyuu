@@ -29,7 +29,19 @@ export function outward(loop: Loop, vertices: readonly Vec3[]): Loop {
  * What a solid is made of before it is joined up: its corners, its polygons (as loops of corner numbers), which of the solid's own faces each polygon is part of, and how it is to be looked at.
  * `oriented` says the loops already run counter-clockwise seen from outside (a shape that is not convex cannot be told by looking from its middle); `convex` says no part of the solid can hide another.
  */
-export type Parts = { kind: SolidKind; n: number; vertices: Vec3[]; loops: Loop[]; faceOf: number[]; hull: Vec3[]; round: boolean; centre?: (corners: readonly Vec3[]) => Vec3; oriented?: boolean; convex?: boolean; upright?: boolean };
+export type Parts = {
+  kind: SolidKind;
+  n: number;
+  vertices: Vec3[];
+  loops: Loop[];
+  faceOf: number[];
+  hull: Vec3[];
+  round: boolean;
+  centre?: (corners: readonly Vec3[]) => Vec3;
+  oriented?: boolean;
+  convex?: boolean;
+  upright?: boolean;
+};
 
 /** Join the polygons into a graph: edges found by their corner numbers, the cell across each side, each polygon's middle, its facing and its room. */
 export function assemble(parts: Parts): SolidGrid {
@@ -63,7 +75,9 @@ export function assemble(parts: Parts): SolidGrid {
     sideEdge.push(row);
   }
   for (const edge of edges) if (edge.right < 0) throw new Error(`an edge of the ${kind} has only one cell beside it`);
-  const neighbours = sideEdge.map((row, cell) => row.map((id) => (edges[id]!.left === cell ? edges[id]!.right : edges[id]!.left)));
+  const neighbours = sideEdge.map((row, cell) =>
+    row.map((id) => (edges[id]!.left === cell ? edges[id]!.right : edges[id]!.left)),
+  );
   const centres: Vec3[] = [];
   const normals: Vec3[] = [];
   const radii: number[] = [];
@@ -72,7 +86,9 @@ export function assemble(parts: Parts): SolidGrid {
     const centre = parts.centre === undefined ? mean(corners) : parts.centre(corners);
     centres.push(centre);
     // The facing: round a globe it is the direction from the middle, and on a flat polygon the direction at right angles to it.
-    const normal = parts.round ? unit(centre) : unit(cross(sub(corners[1]!, corners[0]!), sub(corners[2]!, corners[1]!)));
+    const normal = parts.round
+      ? unit(centre)
+      : unit(cross(sub(corners[1]!, corners[0]!), sub(corners[2]!, corners[1]!)));
     normals.push(normal);
     let room = Infinity;
     for (let k = 0; k < corners.length; k += 1) {
@@ -82,16 +98,54 @@ export function assemble(parts: Parts): SolidGrid {
     radii.push(room);
   }
   const reach = Math.max(...vertices.map(length));
-  return { kind, n, shape: kind, w: n, h: n, cells, neighbours, corners: loops, vertices, centres, normals, radii, faceOf: parts.faceOf, edges, sideEdge, hull: parts.hull, reach, round: parts.round, convex: parts.convex !== false, upright: parts.upright === true };
+  return {
+    kind,
+    n,
+    shape: kind,
+    w: n,
+    h: n,
+    cells,
+    neighbours,
+    corners: loops,
+    vertices,
+    centres,
+    normals,
+    radii,
+    faceOf: parts.faceOf,
+    edges,
+    sideEdge,
+    hull: parts.hull,
+    reach,
+    round: parts.round,
+    convex: parts.convex !== false,
+    upright: parts.upright === true,
+  };
 }
 
 export const PHI = (1 + Math.sqrt(5)) / 2;
 
 /** The corners and triangular faces of a regular solid with triangles for faces, round the origin and of radius one. */
-export function baseSolid(kind: "tetrahedron" | "octahedron" | "icosahedron" | "sphere"): { points: Vec3[]; faces: [number, number, number][] } {
+export function baseSolid(kind: "tetrahedron" | "octahedron" | "icosahedron" | "sphere"): {
+  points: Vec3[];
+  faces: [number, number, number][];
+} {
   let points: Vec3[];
-  if (kind === "tetrahedron") points = [[1, 1, 1], [1, -1, -1], [-1, 1, -1], [-1, -1, 1]];
-  else if (kind === "octahedron") points = [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]];
+  if (kind === "tetrahedron")
+    points = [
+      [1, 1, 1],
+      [1, -1, -1],
+      [-1, 1, -1],
+      [-1, -1, 1],
+    ];
+  else if (kind === "octahedron")
+    points = [
+      [1, 0, 0],
+      [-1, 0, 0],
+      [0, 1, 0],
+      [0, -1, 0],
+      [0, 0, 1],
+      [0, 0, -1],
+    ];
   else {
     points = [];
     for (const a of [-1, 1]) for (const b of [-PHI, PHI]) points.push([0, a, b], [a, b, 0], [b, 0, a]);
@@ -99,20 +153,31 @@ export function baseSolid(kind: "tetrahedron" | "octahedron" | "icosahedron" | "
   points = points.map(unit);
   // The faces: every triple of corners that are all each other's nearest neighbours (the length of an edge is the shortest distance between two corners).
   let edge = Infinity;
-  for (let i = 0; i < points.length; i += 1) for (let j = i + 1; j < points.length; j += 1) edge = Math.min(edge, length(sub(points[i]!, points[j]!)));
+  for (let i = 0; i < points.length; i += 1)
+    for (let j = i + 1; j < points.length; j += 1) edge = Math.min(edge, length(sub(points[i]!, points[j]!)));
   const near = (i: number, j: number): boolean => Math.abs(length(sub(points[i]!, points[j]!)) - edge) < 1e-9;
   const faces: [number, number, number][] = [];
-  for (let i = 0; i < points.length; i += 1) for (let j = i + 1; j < points.length; j += 1) for (let k = j + 1; k < points.length; k += 1) if (near(i, j) && near(j, k) && near(i, k)) faces.push([i, j, k]);
+  for (let i = 0; i < points.length; i += 1)
+    for (let j = i + 1; j < points.length; j += 1)
+      for (let k = j + 1; k < points.length; k += 1) if (near(i, j) && near(j, k) && near(i, k)) faces.push([i, j, k]);
   return { points, faces };
 }
 
 /** Every point of a triangular face that is `n` cuts along its edges: corner `(i, j)` has weights `n - i - j`, `i`, `j` on the face's three corners. A point on an edge of the solid is the same point from either face. */
-export function latticeOf(points: readonly Vec3[], faces: readonly (readonly [number, number, number])[], n: number): { vertices: Vec3[]; at: (face: number, i: number, j: number) => number } {
+export function latticeOf(
+  points: readonly Vec3[],
+  faces: readonly (readonly [number, number, number])[],
+  n: number,
+): { vertices: Vec3[]; at: (face: number, i: number, j: number) => number } {
   const ids = new Map<string, number>();
   const vertices: Vec3[] = [];
   const at = (face: number, i: number, j: number): number => {
     const [a, b, c] = faces[face]!;
-    const weights = [[a, n - i - j], [b, i], [c, j]] as const;
+    const weights = [
+      [a, n - i - j],
+      [b, i],
+      [c, j],
+    ] as const;
     const key = weights
       .filter(([, w]) => w > 0)
       .sort((p, q) => p[0] - q[0])
@@ -125,7 +190,11 @@ export function latticeOf(points: readonly Vec3[], faces: readonly (readonly [nu
       const pa = points[a]!;
       const pb = points[b]!;
       const pc = points[c]!;
-      vertices.push([(pa[0] * (n - i - j) + pb[0] * i + pc[0] * j) / n, (pa[1] * (n - i - j) + pb[1] * i + pc[1] * j) / n, (pa[2] * (n - i - j) + pb[2] * i + pc[2] * j) / n]);
+      vertices.push([
+        (pa[0] * (n - i - j) + pb[0] * i + pc[0] * j) / n,
+        (pa[1] * (n - i - j) + pb[1] * i + pc[1] * j) / n,
+        (pa[2] * (n - i - j) + pb[2] * i + pc[2] * j) / n,
+      ]);
     }
     return id;
   };
@@ -133,7 +202,11 @@ export function latticeOf(points: readonly Vec3[], faces: readonly (readonly [nu
 }
 
 /** The `n * n` small triangles of each face of a solid with triangles for faces, as loops of lattice points. */
-export function trianglesOf(faces: number, n: number, at: (face: number, i: number, j: number) => number): { loops: Loop[]; faceOf: number[] } {
+export function trianglesOf(
+  faces: number,
+  n: number,
+  at: (face: number, i: number, j: number) => number,
+): { loops: Loop[]; faceOf: number[] } {
   const loops: Loop[] = [];
   const faceOf: number[] = [];
   for (let face = 0; face < faces; face += 1) {
@@ -150,4 +223,3 @@ export function trianglesOf(faces: number, n: number, at: (face: number, i: numb
   }
   return { loops, faceOf };
 }
-

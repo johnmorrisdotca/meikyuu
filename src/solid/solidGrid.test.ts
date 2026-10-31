@@ -94,14 +94,22 @@ describe("the surface of a solid as a cell graph", () => {
       return out;
     };
     expect([...degrees(solidGridOf("cube", 4))]).toEqual([[4, 96]]);
-    expect(degrees(solidGridOf("sphere", 3))).toEqual(new Map([[5, 12], [6, 80]]));
-    for (const kind of ["tetrahedron", "octahedron", "icosahedron"] as const) expect([...degrees(solidGridOf(kind, 3))]).toEqual([[3, solidCells(kind, 3)]]);
+    expect(degrees(solidGridOf("sphere", 3))).toEqual(
+      new Map([
+        [5, 12],
+        [6, 80],
+      ]),
+    );
+    for (const kind of ["tetrahedron", "octahedron", "icosahedron"] as const)
+      expect([...degrees(solidGridOf(kind, 3))]).toEqual([[3, solidCells(kind, 3)]]);
   });
 
   it("a cube's cells are joined across its edges: a cell on the top face's rim has the cell of the next face as a neighbour", () => {
     const grid = solidGridOf("cube", 3);
     const faces = new Set<number>();
-    for (let cell = 0; cell < grid.cells; cell += 1) for (const next of grid.neighbours[cell]!) if (grid.faceOf[next] !== grid.faceOf[cell]) faces.add(grid.faceOf[cell]! * 10 + grid.faceOf[next]!);
+    for (let cell = 0; cell < grid.cells; cell += 1)
+      for (const next of grid.neighbours[cell]!)
+        if (grid.faceOf[next] !== grid.faceOf[cell]) faces.add(grid.faceOf[cell]! * 10 + grid.faceOf[next]!);
     // Four faces round each face, and none across it.
     expect(faces.size).toBe(6 * 4);
     for (let face = 0; face < 6; face += 1) expect(faces.has(face * 10 + (face ^ 1))).toBe(false);

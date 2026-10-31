@@ -1,7 +1,31 @@
 import { describe, expect, it } from "vitest";
 
-import { arrowsLeft, blockedBy, clearArrows, heldByLocks, hintArrow, isFree, newArrowGame, restartArrows, tapArrow, undoArrow, unlockArrows, ARROW_HEARTS } from "./arrowGame.ts";
-import { arrowRecipeCode, ARROW_SHAPES, ARROW_STEPS, blockersOf, makeArrows, measureArrows, parseArrowRecipe, peelRounds, rayOf, type ArrowRecipe } from "./arrows.ts";
+import {
+  arrowsLeft,
+  blockedBy,
+  clearArrows,
+  heldByLocks,
+  hintArrow,
+  isFree,
+  newArrowGame,
+  restartArrows,
+  tapArrow,
+  undoArrow,
+  unlockArrows,
+  ARROW_HEARTS,
+} from "./arrowGame.ts";
+import {
+  arrowRecipeCode,
+  ARROW_SHAPES,
+  ARROW_STEPS,
+  blockersOf,
+  makeArrows,
+  measureArrows,
+  parseArrowRecipe,
+  peelRounds,
+  rayOf,
+  type ArrowRecipe,
+} from "./arrows.ts";
 
 const recipes: ArrowRecipe[] = [
   { shape: "square", w: 6, h: 6, longest: 3, seed: 1 },
@@ -34,12 +58,17 @@ describe("making arrows", () => {
           seen.add(cell);
           if (i > 0) {
             const before = arrow.cells[i - 1]!;
-            expect(Math.abs((cell % board.w) - (before % board.w)) + Math.abs(Math.floor(cell / board.w) - Math.floor(before / board.w))).toBe(1);
+            expect(
+              Math.abs((cell % board.w) - (before % board.w)) +
+                Math.abs(Math.floor(cell / board.w) - Math.floor(before / board.w)),
+            ).toBe(1);
           }
         }
         if (arrow.cells.length > 1) {
           const [a, b] = [arrow.cells[arrow.cells.length - 2]!, arrow.cells[arrow.cells.length - 1]!];
-          expect([(b % board.w) - (a % board.w), Math.floor(b / board.w) - Math.floor(a / board.w)]).toEqual([...ARROW_STEPS[arrow.dir]!]);
+          expect([(b % board.w) - (a % board.w), Math.floor(b / board.w) - Math.floor(a / board.w)]).toEqual([
+            ...ARROW_STEPS[arrow.dir]!,
+          ]);
         }
       }
       // The picture is mostly filled.
@@ -73,10 +102,14 @@ describe("making arrows", () => {
   });
 
   it("reads and writes its recipe code", () => {
-    for (const recipe of [...recipes, { ...recipes[0]!, locks: 2 }]) expect(parseArrowRecipe(arrowRecipeCode(recipe))).toEqual(recipe);
-    expect(arrowRecipeCode({ shape: "square", w: 9, h: 9, longest: 5, seed: 123, locks: 2 })).toBe("square:9x9:5:123:2");
+    for (const recipe of [...recipes, { ...recipes[0]!, locks: 2 }])
+      expect(parseArrowRecipe(arrowRecipeCode(recipe))).toEqual(recipe);
+    expect(arrowRecipeCode({ shape: "square", w: 9, h: 9, longest: 5, seed: 123, locks: 2 })).toBe(
+      "square:9x9:5:123:2",
+    );
     expect(arrowRecipeCode({ shape: "heart", w: 15, h: 15, longest: 6, seed: 77 })).toBe("heart:15:6:77");
-    for (const bad of ["", "square:9:5:1", "heart:9x9:5:1", "star2:9:5:1", "heart:9:0:1", "heart:9:5"]) expect(parseArrowRecipe(bad), bad).toBeNull();
+    for (const bad of ["", "square:9:5:1", "heart:9x9:5:1", "star2:9:5:1", "heart:9:0:1", "heart:9:5"])
+      expect(parseArrowRecipe(bad), bad).toBeNull();
     expect(ARROW_SHAPES).toContain("heart");
   });
 
@@ -220,7 +253,9 @@ describe("locks", () => {
   it("a blocked arrow that the player could clear first is still a mistake that costs a heart, locks or not", () => {
     const start = newArrowGame(board);
     const stuck = clearArrows(start);
-    const mistake = start.present.findIndex((_, id) => !board.locked[id] && !stuck.present[id] && blockedBy(start, id).length > 0);
+    const mistake = start.present.findIndex(
+      (_, id) => !board.locked[id] && !stuck.present[id] && blockedBy(start, id).length > 0,
+    );
     expect(mistake).toBeGreaterThanOrEqual(0);
     expect(heldByLocks(start, mistake)).toBe(false);
     const tap = tapArrow(start, mistake);

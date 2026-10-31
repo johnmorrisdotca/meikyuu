@@ -11,14 +11,25 @@ for (const kind of ["maze", "arrows", "mixed"]) {
     test(`${kind} in ${lang}: no sideways scroll, nothing wider than the page, no errors`, async ({ page }) => {
       const errors = await open(page, `?kind=${kind}&level=20&lang=${lang}`);
       await noSidewaysScroll(page);
-      const wide = await page.evaluate(() => [...document.querySelectorAll("main *")].filter((el) => el.getBoundingClientRect().right > window.innerWidth + 1 && !el.closest("svg, pre, .fam-table-box, .mk-box")).map((el) => el.tagName + "." + el.className).slice(0, 5));
+      const wide = await page.evaluate(() =>
+        [...document.querySelectorAll("main *")]
+          .filter(
+            (el) =>
+              el.getBoundingClientRect().right > window.innerWidth + 1 &&
+              !el.closest("svg, pre, .fam-table-box, .mk-box"),
+          )
+          .map((el) => el.tagName + "." + el.className)
+          .slice(0, 5),
+      );
       expect(wide).toEqual([]);
       expect(errors).toEqual([]);
     });
   }
 }
 
-test("Japanese: the buttons, the lines under the board and the shapes are in Japanese, and switching back and forth keeps the line drawn", async ({ page }) => {
+test("Japanese: the buttons, the lines under the board and the shapes are in Japanese, and switching back and forth keeps the line drawn", async ({
+  page,
+}) => {
   await open(page, "?kind=maze&level=40&lang=ja");
   await expect(page.locator("html")).toHaveAttribute("lang", "ja");
   await expect(page.locator(`${at("board")} [data-action="undo"]`)).toHaveText("もどす");
@@ -73,34 +84,58 @@ test.describe("a win with motion asked for", () => {
     const { maze, way } = mazeOf(40);
     await dragCells(page, svgOf(page), maze, way);
     await expect(page.locator(at("board"))).toHaveAttribute("data-solved", "true");
-    const animation = await page.locator(`${at("board")} .mk-trail`).evaluate((el) => getComputedStyle(el).animationName);
+    const animation = await page
+      .locator(`${at("board")} .mk-trail`)
+      .evaluate((el) => getComputedStyle(el).animationName);
     expect(animation).toBe("mk-ripple");
-    const transition = await page.locator(`${at("board")} .mk-banner`).evaluate((el) => getComputedStyle(el).transitionDuration);
+    const transition = await page
+      .locator(`${at("board")} .mk-banner`)
+      .evaluate((el) => getComputedStyle(el).transitionDuration);
     expect(transition).not.toBe("0s");
   });
 });
 
 test.describe("a win with reduced motion", () => {
   test.use({ reducedMotion: "reduce" });
-  test("nothing moves: no animation on the line, no transition on the banner, and an arrow just goes", async ({ page }) => {
+  test("nothing moves: no animation on the line, no transition on the banner, and an arrow just goes", async ({
+    page,
+  }) => {
     await open(page, "?kind=maze&level=40");
     const { maze, way } = mazeOf(40);
     await dragCells(page, svgOf(page), maze, way);
     await expect(page.locator(at("board"))).toHaveAttribute("data-solved", "true");
-    expect(await page.locator(`${at("board")} .mk-trail`).evaluate((el) => getComputedStyle(el).animationName)).toBe("none");
-    expect(await page.locator(`${at("board")} .mk-banner`).evaluate((el) => getComputedStyle(el).transitionDuration)).toBe("0s");
+    expect(await page.locator(`${at("board")} .mk-trail`).evaluate((el) => getComputedStyle(el).animationName)).toBe(
+      "none",
+    );
+    expect(
+      await page.locator(`${at("board")} .mk-banner`).evaluate((el) => getComputedStyle(el).transitionDuration),
+    ).toBe("0s");
   });
 });
 
-test("sound: a sound is made for a step only when Sound is on, from the browser's own audio, and never a recording", async ({ page }) => {
+test("sound: a sound is made for a step only when Sound is on, from the browser's own audio, and never a recording", async ({
+  page,
+}) => {
   await page.addInitScript(() => {
     window.__tones = 0;
     window.AudioContext = class {
-      constructor() { this.currentTime = 0; this.destination = {}; }
-      resume() { return Promise.resolve(); }
-      close() { return Promise.resolve(); }
-      createGain() { return { gain: { setValueAtTime() {}, exponentialRampToValueAtTime() {} }, connect: (to) => to }; }
-      createOscillator() { window.__tones += 1; return { frequency: {}, connect: (to) => to, start() {}, stop() {} }; }
+      constructor() {
+        this.currentTime = 0;
+        this.destination = {};
+      }
+      resume() {
+        return Promise.resolve();
+      }
+      close() {
+        return Promise.resolve();
+      }
+      createGain() {
+        return { gain: { setValueAtTime() {}, exponentialRampToValueAtTime() {} }, connect: (to) => to };
+      }
+      createOscillator() {
+        window.__tones += 1;
+        return { frequency: {}, connect: (to) => to, start() {}, stop() {} };
+      }
     };
   });
   await open(page, "?kind=maze&level=40&sound=off");
@@ -113,9 +148,14 @@ test("sound: a sound is made for a step only when Sound is on, from the browser'
   expect(await page.evaluate(() => window.__tones)).toBeGreaterThan(0);
 });
 
-test("the cloth patches in the family's header change the table the board sits on, and the choice stays", async ({ page }) => {
+test("the cloth patches in the family's header change the table the board sits on, and the choice stays", async ({
+  page,
+}) => {
   await open(page, "?kind=maze&level=40");
-  const felt = () => page.locator(at("board")).evaluate((el) => getComputedStyle(el.ownerDocument.documentElement).getPropertyValue("--felt").trim());
+  const felt = () =>
+    page
+      .locator(at("board"))
+      .evaluate((el) => getComputedStyle(el.ownerDocument.documentElement).getPropertyValue("--felt").trim());
   const before = await felt();
   await page.locator('button[data-cloth="blue"]').click();
   expect(await felt()).not.toBe(before);

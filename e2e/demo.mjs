@@ -11,16 +11,26 @@ import { levelOf } from "../dist/levels.js";
 import { MEIKYUU_TALL_LEVELS } from "../dist/levels-tall.js";
 
 const site = join(dirname(fileURLToPath(import.meta.url)), "..", "site");
-const TYPES = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css", ".json": "application/json", ".svg": "image/svg+xml" };
+const TYPES = {
+  ".html": "text/html",
+  ".js": "text/javascript",
+  ".css": "text/css",
+  ".json": "application/json",
+  ".svg": "image/svg+xml",
+};
 
 /** Serve `site/` to a page at http://meikyuu.test/. */
 export async function serve(page) {
-  if (!existsSync(join(site, "index.html"))) throw new Error("site/ is not built: run `pnpm site` first (`pnpm test:demo` does)");
+  if (!existsSync(join(site, "index.html")))
+    throw new Error("site/ is not built: run `pnpm site` first (`pnpm test:demo` does)");
   await page.route("http://meikyuu.test/**", (route) => {
     const { pathname } = new URL(route.request().url());
     const file = join(site, pathname.endsWith("/") ? `${pathname}index.html` : pathname);
     if (!existsSync(file)) return route.fulfill({ status: 404, body: "" });
-    return route.fulfill({ body: readFileSync(file), contentType: TYPES[file.slice(file.lastIndexOf("."))] ?? "application/octet-stream" });
+    return route.fulfill({
+      body: readFileSync(file),
+      contentType: TYPES[file.slice(file.lastIndexOf("."))] ?? "application/octet-stream",
+    });
   });
 }
 
@@ -49,7 +59,10 @@ export async function bare(page, html, { lang = "en" } = {}) {
   const errors = listen(page);
   await serve(page);
   await page.route("http://meikyuu.test/bare.html", (route) =>
-    route.fulfill({ contentType: "text/html", body: `<!doctype html><html lang="${lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>body{margin:12px;background:#2f5d4a;color:#fff;font-family:system-ui}</style></head><body>${html}<script type="module">import "./dist/element-define.js";</script></body></html>` }),
+    route.fulfill({
+      contentType: "text/html",
+      body: `<!doctype html><html lang="${lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>body{margin:12px;background:#2f5d4a;color:#fff;font-family:system-ui}</style></head><body>${html}<script type="module">import "./dist/element-define.js";</script></body></html>`,
+    }),
   );
   await page.goto("http://meikyuu.test/bare.html");
   await page.waitForFunction(() => customElements.get("meikyuu-board") !== undefined);
@@ -120,7 +133,21 @@ export async function touchDrag(page, target, points, { id = 7, lift = true } = 
   const [first, ...rest] = points;
   await target.evaluate(
     (element, { first, rest, id, lift }) => {
-      const send = (type, p, extra = {}) => element.dispatchEvent(new PointerEvent(type, { pointerId: id, pointerType: "touch", isPrimary: true, button: 0, buttons: type === "pointerup" ? 0 : 1, clientX: p.x, clientY: p.y, bubbles: true, cancelable: true, ...extra }));
+      const send = (type, p, extra = {}) =>
+        element.dispatchEvent(
+          new PointerEvent(type, {
+            pointerId: id,
+            pointerType: "touch",
+            isPrimary: true,
+            button: 0,
+            buttons: type === "pointerup" ? 0 : 1,
+            clientX: p.x,
+            clientY: p.y,
+            bubbles: true,
+            cancelable: true,
+            ...extra,
+          }),
+        );
       send("pointerdown", first);
       for (const p of rest) send("pointermove", p);
       if (lift) send("pointerup", rest.length > 0 ? rest[rest.length - 1] : first);
@@ -133,7 +160,20 @@ export async function touchDrag(page, target, points, { id = 7, lift = true } = 
 export async function twoTouches(page, target, a, b, { lift = true } = {}) {
   await target.evaluate(
     (element, { a, b, lift }) => {
-      const send = (type, id, p) => element.dispatchEvent(new PointerEvent(type, { pointerId: id, pointerType: "touch", isPrimary: id === 1, button: 0, buttons: type === "pointerup" ? 0 : 1, clientX: p.x, clientY: p.y, bubbles: true, cancelable: true }));
+      const send = (type, id, p) =>
+        element.dispatchEvent(
+          new PointerEvent(type, {
+            pointerId: id,
+            pointerType: "touch",
+            isPrimary: id === 1,
+            button: 0,
+            buttons: type === "pointerup" ? 0 : 1,
+            clientX: p.x,
+            clientY: p.y,
+            bubbles: true,
+            cancelable: true,
+          }),
+        );
       send("pointerdown", 1, a[0]);
       send("pointerdown", 2, b[0]);
       for (let i = 1; i < a.length; i += 1) {
@@ -166,7 +206,8 @@ export async function recordEvents(page, selector, names) {
     ({ selector, names }) => {
       window.__events = [];
       const host = document.querySelector(selector);
-      for (const name of names) host.addEventListener(name, (event) => window.__events.push({ name, detail: event.detail }));
+      for (const name of names)
+        host.addEventListener(name, (event) => window.__events.push({ name, detail: event.detail }));
     },
     { selector, names },
   );
@@ -185,7 +226,11 @@ export async function recordFlashes(page, selector) {
     new MutationObserver((records) => {
       for (const record of records) {
         const el = record.target;
-        if (el.getAttribute("data-by") === "true") window.__flashes.push({ id: Number(el.getAttribute("data-id")), locked: el.getAttribute("data-locked") === "true" });
+        if (el.getAttribute("data-by") === "true")
+          window.__flashes.push({
+            id: Number(el.getAttribute("data-id")),
+            locked: el.getAttribute("data-locked") === "true",
+          });
       }
     }).observe(document.querySelector(selector), { subtree: true, attributes: true, attributeFilter: ["data-by"] });
   }, selector);
@@ -195,7 +240,10 @@ export const flashes = (page) => page.evaluate(() => window.__flashes);
 
 /** Points from one pixel to another in even steps, both ends included: a finger's way for `touchDrag` and `twoTouches`. */
 export function along(from, to, steps = 12) {
-  return Array.from({ length: steps + 1 }, (_, i) => ({ x: from.x + ((to.x - from.x) * i) / steps, y: from.y + ((to.y - from.y) * i) / steps }));
+  return Array.from({ length: steps + 1 }, (_, i) => ({
+    x: from.x + ((to.x - from.x) * i) / steps,
+    y: from.y + ((to.y - from.y) * i) / steps,
+  }));
 }
 
 /** An arrow level as the package has it: its board, and the arrows that block each. */
@@ -232,7 +280,8 @@ export async function tapArrowOnPage(page, svg, board, id) {
  * that never bumps; `mistake` an arrow that is blocked now by one the player could clear first; and `way` the labyrinth's one way to its button.
  */
 export async function mixedPlan(number) {
-  const { arrowsLeft, buildMixed, hintArrow, newArrowGame, solutionOf, tapArrow, unlockArrows, heldByLocks } = await import("../dist/index.js");
+  const { arrowsLeft, buildMixed, hintArrow, newArrowGame, solutionOf, tapArrow, unlockArrows, heldByLocks } =
+    await import("../dist/index.js");
   const level = levelOf("mixed", number);
   const board = buildMixed(level.recipe);
   const start = newArrowGame(board.arrows);
@@ -245,10 +294,27 @@ export async function mixedPlan(number) {
   };
   const before = [];
   const stuck = take(start, before);
-  const held = stuck.present.flatMap((here, id) => (here && !board.arrows.locked[id] && heldByLocks(start, id) ? [id] : []));
+  const held = stuck.present.flatMap((here, id) =>
+    here && !board.arrows.locked[id] && heldByLocks(start, id) ? [id] : [],
+  );
   const after = [];
   const done = take(unlockArrows(stuck), after);
   if (arrowsLeft(done) !== 0) throw new Error(`mixed level ${number} cannot be cleared`);
-  const mistake = start.present.findIndex((_, id) => !board.arrows.locked[id] && !stuck.present[id] && !heldByLocks(start, id) && tapArrow(start, id).result === "blocked");
-  return { level, board, way: solutionOf(board.maze), before, held, after, mistake, locked: board.arrows.locked.flatMap((on, id) => (on ? [id] : [])) };
+  const mistake = start.present.findIndex(
+    (_, id) =>
+      !board.arrows.locked[id] &&
+      !stuck.present[id] &&
+      !heldByLocks(start, id) &&
+      tapArrow(start, id).result === "blocked",
+  );
+  return {
+    level,
+    board,
+    way: solutionOf(board.maze),
+    before,
+    held,
+    after,
+    mistake,
+    locked: board.arrows.locked.flatMap((on, id) => (on ? [id] : [])),
+  };
 }

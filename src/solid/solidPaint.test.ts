@@ -6,7 +6,18 @@ import { drawSolid } from "./solidDraw.ts";
 import { paintSolid, shadeAt, shadeOf, type PaintContext, type SolidColours } from "./solidPaint.ts";
 import { createFrame, openingTurn, projectFrame, stepTurn } from "./solidView.ts";
 
-const COLOURS: SolidColours = { paper: [251, 248, 241], ground: "rgb(230,227,220)", wall: "#1f2320", trail: "#2e8b57", start: "#2f7a4f", goal: "#e0b43b", hint: "#f2a900", bad: "#b5452c", stone: "#4b5d8f", stoneEdge: "#161c33" };
+const COLOURS: SolidColours = {
+  paper: [251, 248, 241],
+  ground: "rgb(230,227,220)",
+  wall: "#1f2320",
+  trail: "#2e8b57",
+  start: "#2f7a4f",
+  goal: "#e0b43b",
+  hint: "#f2a900",
+  bad: "#b5452c",
+  stone: "#4b5d8f",
+  stoneEdge: "#161c33",
+};
 
 /** A drawing surface that counts what it is asked to do. */
 function recorder(): { ctx: PaintContext; calls: Record<string, number>; styles: Set<string> } {
@@ -43,7 +54,26 @@ function recorder(): { ctx: PaintContext; calls: Record<string, number>; styles:
   return { ctx, calls, styles };
 }
 
-const SIZE: Record<SolidKind, number> = { cube: 10, sphere: 8, tetrahedron: 12, octahedron: 9, icosahedron: 6, prism: 9, trapezohedron: 8, dodecahedron: 3, "rhombic-dodecahedron": 7, bipyramid: 6, icositetrahedron: 5, triacontahedron: 5, box: 5, cross: 5, ring: 5, torus: 15, star: 6, heart: 6 };
+const SIZE: Record<SolidKind, number> = {
+  cube: 10,
+  sphere: 8,
+  tetrahedron: 12,
+  octahedron: 9,
+  icosahedron: 6,
+  prism: 9,
+  trapezohedron: 8,
+  dodecahedron: 3,
+  "rhombic-dodecahedron": 7,
+  bipyramid: 6,
+  icositetrahedron: 5,
+  triacontahedron: 5,
+  box: 5,
+  cross: 5,
+  ring: 5,
+  torus: 15,
+  star: 6,
+  heart: 6,
+};
 
 describe("painting a solid", () => {
   for (const kind of SOLID_KINDS) {
@@ -53,7 +83,14 @@ describe("painting a solid", () => {
       projectFrame(frame, maze.grid, stepTurn(openingTurn(maze.grid, maze.start), 0.4, -0.2), 1, 330, 330);
       const way = solidSolutionOf(maze);
       const { ctx, calls } = recorder();
-      paintSolid(ctx, maze, frame, COLOURS, { path: way.slice(0, 20), stones: [way[5]!], hint: { back: 2, cells: way.slice(20, 26) }, won: false, wall: 0.12, line: 0.34 });
+      paintSolid(ctx, maze, frame, COLOURS, {
+        path: way.slice(0, 20),
+        stones: [way[5]!],
+        hint: { back: 2, cells: way.slice(20, 26) },
+        won: false,
+        wall: 0.12,
+        line: 0.34,
+      });
       expect(maze.grid.cells).toBeGreaterThan(kind === "dodecahedron" ? 500 : 250);
       // A solid whose parts can hide parts is painted from the back to the front, a few fills for every dozen cells; the others in a few dozen fills in all.
       if (maze.grid.convex) expect((calls["fill"] ?? 0) + (calls["stroke"] ?? 0)).toBeLessThan(60);
@@ -80,7 +117,14 @@ describe("painting a solid", () => {
     const strokes: string[] = [];
     const { ctx } = recorder();
     Object.defineProperty(ctx, "strokeStyle", { set: (v: string) => strokes.push(v), get: () => "" });
-    paintSolid(ctx, maze, frame, COLOURS, { path: solidSolutionOf(maze), stones: [], hint: null, won: true, wall: 0.12, line: 0.34 });
+    paintSolid(ctx, maze, frame, COLOURS, {
+      path: solidSolutionOf(maze),
+      stones: [],
+      hint: null,
+      won: true,
+      wall: 0.12,
+      line: 0.34,
+    });
     expect(strokes).toContain(COLOURS.goal);
   });
 });
@@ -102,7 +146,13 @@ describe("a still picture of a solid as SVG text", () => {
   it("draws the line and the solution when asked, and a stone", () => {
     const maze = buildSolidMaze({ kind: "cube", n: 4, algorithm: "prim", seed: 1 });
     const way = solidSolutionOf(maze);
-    const svg = drawSolid(maze, { path: way.slice(0, 6), solution: true, stones: [way[2]!], standalone: true, board: "wood" });
+    const svg = drawSolid(maze, {
+      path: way.slice(0, 6),
+      solution: true,
+      stones: [way[2]!],
+      standalone: true,
+      board: "wood",
+    });
     expect(svg).toContain('class="mk-trail"');
     expect(svg).toContain('class="mk-solution"');
     expect(svg).toContain("<style>");

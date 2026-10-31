@@ -62,7 +62,17 @@ export const MEIKYUU_TALL_PER_SIZE = 256;
  * console.log(MEIKYUU_TALL_SIZES);
  * ```
  */
-export const MEIKYUU_TALL_SIZES: readonly { readonly size: number; readonly width: number; readonly height: number; readonly label: string }[] = TALL_WIDTHS.map((width, index) => ({ size: index + 1, width, height: Math.round(width * 1.5), label: `${width}×${Math.round(width * 1.5)}` }));
+export const MEIKYUU_TALL_SIZES: readonly {
+  readonly size: number;
+  readonly width: number;
+  readonly height: number;
+  readonly label: string;
+}[] = TALL_WIDTHS.map((width, index) => ({
+  size: index + 1,
+  width,
+  height: Math.round(width * 1.5),
+  label: `${width}×${Math.round(width * 1.5)}`,
+}));
 
 /** The fixed numbered tall-maze recipes, dimensions and difficulty metadata.
  *
@@ -72,12 +82,28 @@ export const MEIKYUU_TALL_SIZES: readonly { readonly size: number; readonly widt
  * console.log(MEIKYUU_TALL_LEVELS.length);
  * ```
  */
-export const MEIKYUU_TALL_LEVELS: readonly MeikyuuTallLevel[] = MEIKYUU_TALL_ROWS.map(([code, effort, cells, score], index) => {
-  const recipe = parseRecipe(code);
-  if (recipe === null) throw new Error(`${code} is not a recipe`);
-  const size = Math.floor(index / MEIKYUU_TALL_PER_SIZE) + 1;
-  return { kind: "maze", list: "tall", number: index + 1, size, width: TALL_WIDTHS[size - 1]!, inSize: (index % MEIKYUU_TALL_PER_SIZE) + 1, code, recipe, cells, effort, rating: ratingOf(effort), score, ratio: TALL_RATIO };
-});
+export const MEIKYUU_TALL_LEVELS: readonly MeikyuuTallLevel[] = MEIKYUU_TALL_ROWS.map(
+  ([code, effort, cells, score], index) => {
+    const recipe = parseRecipe(code);
+    if (recipe === null) throw new Error(`${code} is not a recipe`);
+    const size = Math.floor(index / MEIKYUU_TALL_PER_SIZE) + 1;
+    return {
+      kind: "maze",
+      list: "tall",
+      number: index + 1,
+      size,
+      width: TALL_WIDTHS[size - 1]!,
+      inSize: (index % MEIKYUU_TALL_PER_SIZE) + 1,
+      code,
+      recipe,
+      cells,
+      effort,
+      rating: ratingOf(effort),
+      score,
+      ratio: TALL_RATIO,
+    };
+  },
+);
 
 /** Tall level `n` (from 1) of the whole list, or null when there is none.
  *
@@ -106,7 +132,9 @@ export function tallLevelOf(n: number): MeikyuuTallLevel | null {
  * ```
  */
 export function tallLevelsOfSize(size: number): readonly MeikyuuTallLevel[] {
-  return Number.isInteger(size) && size >= 1 && size <= TALL_WIDTHS.length ? MEIKYUU_TALL_LEVELS.slice((size - 1) * MEIKYUU_TALL_PER_SIZE, size * MEIKYUU_TALL_PER_SIZE) : [];
+  return Number.isInteger(size) && size >= 1 && size <= TALL_WIDTHS.length
+    ? MEIKYUU_TALL_LEVELS.slice((size - 1) * MEIKYUU_TALL_PER_SIZE, size * MEIKYUU_TALL_PER_SIZE)
+    : [];
 }
 
 /** Level `n` (from 1) of a size, or null.
@@ -136,8 +164,15 @@ export function tallLevelOfSize(size: number, n: number): MeikyuuTallLevel | nul
  * console.log(findTallLevels({shape:"square"}).length);
  * ```
  */
-export function findTallLevels(filter: { shape?: MazeRecipe["shape"]; mode?: MazeRecipe["mode"]; size?: number } = {}): MeikyuuTallLevel[] {
-  return MEIKYUU_TALL_LEVELS.filter((level) => (filter.shape === undefined || level.recipe.shape === filter.shape) && (filter.mode === undefined || level.recipe.mode === filter.mode) && (filter.size === undefined || level.size === filter.size));
+export function findTallLevels(
+  filter: { shape?: MazeRecipe["shape"]; mode?: MazeRecipe["mode"]; size?: number } = {},
+): MeikyuuTallLevel[] {
+  return MEIKYUU_TALL_LEVELS.filter(
+    (level) =>
+      (filter.shape === undefined || level.recipe.shape === filter.shape) &&
+      (filter.mode === undefined || level.recipe.mode === filter.mode) &&
+      (filter.size === undefined || level.size === filter.size),
+  );
 }
 
 export { TALL_RATIO, TALL_SHAPES, TALL_WIDTHS, tallDimensions } from "./tall.ts";

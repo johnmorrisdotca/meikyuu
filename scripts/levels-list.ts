@@ -36,7 +36,8 @@ export function chooseList(options: ListOptions): Listed {
     seen.add(c.same);
     all.push(c);
   }
-  const order = (a: Candidate, b: Candidate): number => a.effort - b.effort || a.cells - b.cells || (a.code < b.code ? -1 : 1);
+  const order = (a: Candidate, b: Candidate): number =>
+    a.effort - b.effort || a.cells - b.cells || (a.code < b.code ? -1 : 1);
   all.sort(order);
   const quantile = (p: number): number => all[Math.min(all.length - 1, Math.floor(all.length * p))]!.effort;
   const from = options.from ?? quantile(0.01);
@@ -63,7 +64,9 @@ export function chooseList(options: ListOptions): Listed {
         if (taken[i] === 1) continue;
         const c = all[i]!;
         if (options.okAt !== undefined && !options.okAt(c, place + 10)) continue;
-        let cost = (Math.abs(c.effort - target) / step) + REPEAT * (used.get(`${c.recipe.shape}:${c.recipe.w}x${c.recipe.h}`) ?? 0);
+        let cost =
+          Math.abs(c.effort - target) / step +
+          REPEAT * (used.get(`${c.recipe.shape}:${c.recipe.w}x${c.recipe.h}`) ?? 0);
         for (const r of recent) {
           if (r.recipe.shape === c.recipe.shape) cost += CROWD.shape;
           if (r.recipe.mode === c.recipe.mode) cost += CROWD.mode;
@@ -84,5 +87,8 @@ export function chooseList(options: ListOptions): Listed {
   }
   picked.sort(order);
   const steps = picked.slice(1).map((c, i) => c.effort - picked[i]!.effort);
-  return { levels: picked, steps: { biggest: Math.max(...steps), mean: steps.reduce((a, b) => a + b, 0) / steps.length } };
+  return {
+    levels: picked,
+    steps: { biggest: Math.max(...steps), mean: steps.reduce((a, b) => a + b, 0) / steps.length },
+  };
 }

@@ -5,7 +5,14 @@ import { MEIKYUU_SOLID_RECIPE_TEXT } from "./levels/solid-recipes.data.ts";
  * solid and size, and has no use for the effort, the cells and the score that make the files of levels (`3d/levels`, `/dice`, `/shapes`) several times the size. All 5,760 recipes are about fifty
  * kilobytes here, with no code beside them, whatever the solid. A page that shows a level reads the file of its solid; the server that checks an answer reads this.
  */
-const ALGORITHMS: Readonly<Record<string, string>> = { b: "backtracker", h: "hunt", g: "growing", p: "prim", k: "kruskal", w: "wilson" };
+const ALGORITHMS: Readonly<Record<string, string>> = {
+  b: "backtracker",
+  h: "hunt",
+  g: "growing",
+  p: "prim",
+  k: "kruskal",
+  w: "wilson",
+};
 
 const KEPT = new Map<string, readonly string[]>();
 

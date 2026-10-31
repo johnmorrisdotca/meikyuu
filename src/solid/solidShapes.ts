@@ -24,7 +24,15 @@ import { cross, dot, mean, sub, unit, type Vec3 } from "./vec.ts";
  */
 
 /** The shapes dice are made in (as well as the cube, the tetrahedron, the octahedron and the icosahedron, which are the first five solids). */
-export const SOLID_DICE_MORE = ["prism", "trapezohedron", "dodecahedron", "rhombic-dodecahedron", "bipyramid", "icositetrahedron", "triacontahedron"] as const;
+export const SOLID_DICE_MORE = [
+  "prism",
+  "trapezohedron",
+  "dodecahedron",
+  "rhombic-dodecahedron",
+  "bipyramid",
+  "icositetrahedron",
+  "triacontahedron",
+] as const;
 /** The shapes that are not dice. */
 export const SOLID_SHAPES_MORE = ["box", "cross", "ring", "torus", "star", "heart"] as const;
 export const SOLID_SHAPE_KINDS = [...SOLID_DICE_MORE, ...SOLID_SHAPES_MORE] as const;
@@ -80,7 +88,11 @@ export function solidShapeCells(kind: SolidShapeKind, n: number): number {
 
 // ---- A MESH: the lattice points of faces, found by keys ----
 
-const lerp = (a: Vec3, b: Vec3, t: number): Vec3 => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
+const lerp = (a: Vec3, b: Vec3, t: number): Vec3 => [
+  a[0] + (b[0] - a[0]) * t,
+  a[1] + (b[1] - a[1]) * t,
+  a[2] + (b[2] - a[2]) * t,
+];
 
 class Mesh {
   readonly vertices: Vec3[] = [];
@@ -130,7 +142,11 @@ class Mesh {
       if (j === 0) return this.edge(a, b, i, m);
       if (i === 0) return this.edge(a, c, j, m);
       if (i + j === m) return this.edge(b, c, j, m);
-      return this.at(`f${face}:${i},${j}`, () => [(pa[0] * (m - i - j) + pb[0] * i + pc[0] * j) / m, (pa[1] * (m - i - j) + pb[1] * i + pc[1] * j) / m, (pa[2] * (m - i - j) + pb[2] * i + pc[2] * j) / m]);
+      return this.at(`f${face}:${i},${j}`, () => [
+        (pa[0] * (m - i - j) + pb[0] * i + pc[0] * j) / m,
+        (pa[1] * (m - i - j) + pb[1] * i + pc[1] * j) / m,
+        (pa[2] * (m - i - j) + pb[2] * i + pc[2] * j) / m,
+      ]);
     };
     for (let j = 0; j < m; j += 1) {
       for (let i = 0; i + j < m; i += 1) {
@@ -150,7 +166,8 @@ class Mesh {
       if (i === p) return this.edge(b, c, j, q);
       return this.at(`f${face}:${i},${j}`, () => bilinear(pa, pb, pc, pd, i / p, j / q));
     };
-    for (let j = 0; j < q; j += 1) for (let i = 0; i < p; i += 1) this.add([id(i, j), id(i + 1, j), id(i + 1, j + 1), id(i, j + 1)], face);
+    for (let j = 0; j < q; j += 1)
+      for (let i = 0; i < p; i += 1) this.add([id(i, j), id(i + 1, j), id(i + 1, j + 1), id(i, j + 1)], face);
   }
 
   /** A pentagonal face (corners in order) cut into five quadrilaterals from its middle to the middles of its sides, each `k` by `k`: a side has `2 k` cuts. */
@@ -163,12 +180,19 @@ class Mesh {
     const ray = (s: number, step: number): number => {
       if (step === 0) return centre();
       if (step === k) return mid(s);
-      return this.at(`f${face}:r${s}:${step}`, () => lerp(middle, midpoint(this.base[v[s]!]!, this.base[v[(s + 1) % 5]!]!), step / k));
+      return this.at(`f${face}:r${s}:${step}`, () =>
+        lerp(middle, midpoint(this.base[v[s]!]!, this.base[v[(s + 1) % 5]!]!), step / k),
+      );
     };
     for (let s = 0; s < 5; s += 1) {
       const before = (s + 4) % 5;
       const after = (s + 1) % 5;
-      const [pa, pb, pc, pd] = [middle, midpoint(this.base[v[before]!]!, this.base[v[s]!]!), this.base[v[s]!]!, midpoint(this.base[v[s]!]!, this.base[v[after]!]!)];
+      const [pa, pb, pc, pd] = [
+        middle,
+        midpoint(this.base[v[before]!]!, this.base[v[s]!]!),
+        this.base[v[s]!]!,
+        midpoint(this.base[v[s]!]!, this.base[v[after]!]!),
+      ];
       const id = (i: number, j: number): number => {
         if (i === k) return this.edge(v[before]!, v[s]!, k + j, m);
         if (j === k) return this.edge(v[s]!, v[after]!, k - i, m);
@@ -176,7 +200,8 @@ class Mesh {
         if (i === 0) return ray(s, j);
         return this.at(`f${face}:s${s}:${i},${j}`, () => bilinear(pa, pb, pc, pd, i / k, j / k));
       };
-      for (let j = 0; j < k; j += 1) for (let i = 0; i < k; i += 1) this.add([id(i, j), id(i + 1, j), id(i + 1, j + 1), id(i, j + 1)], face);
+      for (let j = 0; j < k; j += 1)
+        for (let i = 0; i < k; i += 1) this.add([id(i, j), id(i + 1, j), id(i + 1, j + 1), id(i, j + 1)], face);
     }
   }
 }
@@ -190,7 +215,11 @@ function bilinear(a: Vec3, b: Vec3, c: Vec3, d: Vec3, u: number, w: number): Vec
   const k1 = u * (1 - w);
   const k2 = u * w;
   const k3 = (1 - u) * w;
-  return [k0 * a[0] + k1 * b[0] + k2 * c[0] + k3 * d[0], k0 * a[1] + k1 * b[1] + k2 * c[1] + k3 * d[1], k0 * a[2] + k1 * b[2] + k2 * c[2] + k3 * d[2]];
+  return [
+    k0 * a[0] + k1 * b[0] + k2 * c[0] + k3 * d[0],
+    k0 * a[1] + k1 * b[1] + k2 * c[1] + k3 * d[1],
+    k0 * a[2] + k1 * b[2] + k2 * c[2] + k3 * d[2],
+  ];
 }
 
 /** The corners that lie on the face a normal points at (the ones farthest along it), in order round the face and starting at the lowest numbered. */
@@ -249,7 +278,9 @@ function rhombicDodecahedron(n: number): Parts {
   const normals: Vec3[] = [];
   for (const a of SIGNS) for (const b of SIGNS) normals.push([a, b, 0], [a, 0, b], [0, a, b]);
   const mesh = new Mesh(points);
-  facesAt(points, normals).forEach((face, f) => mesh.quad(f, face as unknown as [number, number, number, number], n, n));
+  facesAt(points, normals).forEach((face, f) =>
+    mesh.quad(f, face as unknown as [number, number, number, number], n, n),
+  );
   return convex("rhombic-dodecahedron", n, mesh, points);
 }
 
@@ -260,18 +291,24 @@ function triacontahedron(n: number): Parts {
   for (const y of SIGNS) for (const z of SIGNS) icosa.push([0, y, z * phi], [z * phi, 0, y], [y, z * phi, 0]);
   const dodeca: Vec3[] = [];
   for (const x of SIGNS) for (const y of SIGNS) for (const z of SIGNS) dodeca.push([x, y, z]);
-  for (const y of SIGNS) for (const z of SIGNS) dodeca.push([0, y * phi, z / phi], [z / phi, 0, y * phi], [y * phi, z / phi, 0]);
+  for (const y of SIGNS)
+    for (const z of SIGNS) dodeca.push([0, y * phi, z / phi], [z / phi, 0, y * phi], [y * phi, z / phi, 0]);
   const points = [...icosa, ...dodeca];
   // A rhombus for each edge of the icosahedron (two corners two apart): its normal is their sum.
   const normals: Vec3[] = [];
   for (let i = 0; i < icosa.length; i += 1) {
     for (let j = i + 1; j < icosa.length; j += 1) {
-      const d = Math.sqrt((icosa[i]![0] - icosa[j]![0]) ** 2 + (icosa[i]![1] - icosa[j]![1]) ** 2 + (icosa[i]![2] - icosa[j]![2]) ** 2);
-      if (Math.abs(d - 2) < 1e-9) normals.push([icosa[i]![0] + icosa[j]![0], icosa[i]![1] + icosa[j]![1], icosa[i]![2] + icosa[j]![2]]);
+      const d = Math.sqrt(
+        (icosa[i]![0] - icosa[j]![0]) ** 2 + (icosa[i]![1] - icosa[j]![1]) ** 2 + (icosa[i]![2] - icosa[j]![2]) ** 2,
+      );
+      if (Math.abs(d - 2) < 1e-9)
+        normals.push([icosa[i]![0] + icosa[j]![0], icosa[i]![1] + icosa[j]![1], icosa[i]![2] + icosa[j]![2]]);
     }
   }
   const mesh = new Mesh(points);
-  facesAt(points, normals).forEach((face, f) => mesh.quad(f, face as unknown as [number, number, number, number], n, n));
+  facesAt(points, normals).forEach((face, f) =>
+    mesh.quad(f, face as unknown as [number, number, number, number], n, n),
+  );
   return convex("triacontahedron", n, mesh, points);
 }
 
@@ -285,9 +322,12 @@ function icositetrahedron(n: number): Parts {
   for (const x of SIGNS) for (const y of SIGNS) points.push([x * c, y * c, 0], [x * c, 0, y * c], [0, x * c, y * c]);
   for (const x of SIGNS) for (const y of SIGNS) for (const z of SIGNS) points.push([x * b, y * b, z * b]);
   const normals: Vec3[] = [];
-  for (const a of SIGNS) for (const e of SIGNS) for (const f of SIGNS) normals.push([a * k, e, f], [e, a * k, f], [e, f, a * k]);
+  for (const a of SIGNS)
+    for (const e of SIGNS) for (const f of SIGNS) normals.push([a * k, e, f], [e, a * k, f], [e, f, a * k]);
   const mesh = new Mesh(points);
-  facesAt(points, normals).forEach((face, f) => mesh.quad(f, face as unknown as [number, number, number, number], n, n));
+  facesAt(points, normals).forEach((face, f) =>
+    mesh.quad(f, face as unknown as [number, number, number, number], n, n),
+  );
   return convex("icositetrahedron", n, mesh, points);
 }
 
@@ -303,7 +343,10 @@ const SIN36 = [0, S36, S72, S72, S36, 0, -S36, -S72, -S72, -S36] as const;
 function trapezohedron(n: number): Parts {
   const top = 1.1;
   const ring = (top * (1 - C36)) / (1 + C36);
-  const points: Vec3[] = [[0, 0, top], [0, 0, -top]];
+  const points: Vec3[] = [
+    [0, 0, top],
+    [0, 0, -top],
+  ];
   for (let k = 0; k < 5; k += 1) points.push([COS36[2 * k]!, SIN36[2 * k]!, ring]);
   for (let k = 0; k < 5; k += 1) points.push([COS36[2 * k + 1]!, SIN36[2 * k + 1]!, -ring]);
   const upper = (k: number): number => 2 + (k % 5);
@@ -317,7 +360,16 @@ function trapezohedron(n: number): Parts {
 /** The octagonal bipyramid, the sixteen-sided die: sixteen triangles, each cut `n` ways (16 n^2 cells). */
 function bipyramid(n: number): Parts {
   const s = S2 / 2;
-  const ring: [number, number][] = [[1, 0], [s, s], [0, 1], [-s, s], [-1, 0], [-s, -s], [0, -1], [s, -s]];
+  const ring: [number, number][] = [
+    [1, 0],
+    [s, s],
+    [0, 1],
+    [-s, s],
+    [-1, 0],
+    [-s, -s],
+    [0, -1],
+    [s, -s],
+  ];
   const height = 0.8;
   const points: Vec3[] = [[0, 0, height], [0, 0, -height], ...ring.map(([x, y]): Vec3 => [x, y, 0])];
   const mesh = new Mesh(points);
@@ -328,7 +380,11 @@ function bipyramid(n: number): Parts {
 
 /** The triangular prism, the long die of three: two triangles cut `n` ways and three rectangles `n` by `PRISM_LENGTH n` (8 n^2 cells). */
 function prism(n: number): Parts {
-  const ring: [number, number][] = [[0, 1], [-S3 / 2, -0.5], [S3 / 2, -0.5]];
+  const ring: [number, number][] = [
+    [0, 1],
+    [-S3 / 2, -0.5],
+    [S3 / 2, -0.5],
+  ];
   const half = S3;
   const points: Vec3[] = [...ring.map(([x, y]): Vec3 => [x, y, half]), ...ring.map(([x, y]): Vec3 => [x, y, -half])];
   const mesh = new Mesh(points);
@@ -359,7 +415,14 @@ function box(n: number): Parts {
 
 type Voxel = readonly [number, number, number];
 
-const DIRECTIONS: readonly Voxel[] = [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]];
+const DIRECTIONS: readonly Voxel[] = [
+  [1, 0, 0],
+  [-1, 0, 0],
+  [0, 1, 0],
+  [0, -1, 0],
+  [0, 0, 1],
+  [0, 0, -1],
+];
 
 /** The surface of a heap of unit cubes, each unit face cut `n` by `n`: whole-number corners, so two faces meeting at an edge find the same points. */
 function voxels(kind: SolidShapeKind, n: number, filled: readonly Voxel[], origin: Voxel): Parts {
@@ -410,13 +473,27 @@ function voxels(kind: SolidShapeKind, n: number, filled: readonly Voxel[], origi
 
 /** The cross: a cube with a cube on each of its six faces, a plus in three dimensions (30 n^2 cells). */
 function crossOfCubes(n: number): Parts {
-  return voxels("cross", n, [[0, 0, 0], [1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]], [0.5, 0.5, 0.5]);
+  return voxels(
+    "cross",
+    n,
+    [
+      [0, 0, 0],
+      [1, 0, 0],
+      [-1, 0, 0],
+      [0, 1, 0],
+      [0, -1, 0],
+      [0, 0, 1],
+      [0, 0, -1],
+    ],
+    [0.5, 0.5, 0.5],
+  );
 }
 
 /** The ring: eight cubes in a square round a hole of one, a torus with square corners (32 n^2 cells). */
 function ring(n: number): Parts {
   const filled: Voxel[] = [];
-  for (let z = 0; z < 1; z += 1) for (let y = 0; y < 3; y += 1) for (let x = 0; x < 3; x += 1) if (!(x === 1 && y === 1)) filled.push([x, y, z]);
+  for (let z = 0; z < 1; z += 1)
+    for (let y = 0; y < 3; y += 1) for (let x = 0; x < 3; x += 1) if (!(x === 1 && y === 1)) filled.push([x, y, z]);
   return voxels("ring", n, filled, [1.5, 1.5, 0.5]);
 }
 
@@ -441,8 +518,19 @@ function torus(n: number): Parts {
       return [rho * Math.cos(theta), rho * Math.sin(theta), TORUS_TUBE * Math.sin(phi)];
     });
   };
-  for (let j = 0; j < n; j += 1) for (let i = 0; i < around; i += 1) mesh.add([at(i, j), at(i + 1, j), at(i + 1, j + 1), at(i, j + 1)], 0);
-  return { kind: "torus", n, vertices: mesh.vertices, loops: mesh.loops, faceOf: mesh.faceOf, hull: [], round: false, oriented: true, convex: false };
+  for (let j = 0; j < n; j += 1)
+    for (let i = 0; i < around; i += 1) mesh.add([at(i, j), at(i + 1, j), at(i + 1, j + 1), at(i, j + 1)], 0);
+  return {
+    kind: "torus",
+    n,
+    vertices: mesh.vertices,
+    loops: mesh.loops,
+    faceOf: mesh.faceOf,
+    hull: [],
+    round: false,
+    oriented: true,
+    convex: false,
+  };
 }
 
 /** The star: a five pointed star, tips up, as thick as a little over half the length of a side of its outline (10 n^2 + 10 n h cells for h = `starRows(n)`). */
@@ -457,7 +545,12 @@ function star(n: number): Parts {
   const side = Math.sqrt((outline[0]![0] - outline[1]![0]) ** 2 + (outline[0]![1] - outline[1]![1]) ** 2);
   const half = (h * side) / (2 * n);
   // Corner numbers: 0 to 9 the outline in front (toward the viewer, z positive), 10 to 19 behind, 20 and 21 the middles of the two faces.
-  const points: Vec3[] = [...outline.map(([x, y]): Vec3 => [x, y, half]), ...outline.map(([x, y]): Vec3 => [x, y, -half]), [0, 0, half], [0, 0, -half]];
+  const points: Vec3[] = [
+    ...outline.map(([x, y]): Vec3 => [x, y, half]),
+    ...outline.map(([x, y]): Vec3 => [x, y, -half]),
+    [0, 0, half],
+    [0, 0, -half],
+  ];
   const mesh = new Mesh(points);
   for (let tip = 0; tip < 5; tip += 1) {
     const t = 2 * tip;
@@ -465,7 +558,17 @@ function star(n: number): Parts {
     mesh.quad(5 + tip, [21, 10 + ((t + 9) % 10), 10 + t, 10 + t + 1], n, n);
   }
   for (let t = 0; t < 10; t += 1) mesh.quad(10 + t, [t, (t + 1) % 10, 10 + ((t + 1) % 10), 10 + t], n, h);
-  return { kind: "star", n, vertices: mesh.vertices, loops: mesh.loops, faceOf: mesh.faceOf, hull: [], round: false, convex: false, upright: true };
+  return {
+    kind: "star",
+    n,
+    vertices: mesh.vertices,
+    loops: mesh.loops,
+    faceOf: mesh.faceOf,
+    hull: [],
+    round: false,
+    convex: false,
+    upright: true,
+  };
 }
 
 /** The heart: a geodesic globe (an icosahedron cut `n` ways, 20 n^2 triangles) pushed out to the surface of a puffed heart, tips down, cleft up. */
@@ -477,7 +580,18 @@ function heart(n: number): Parts {
   const oriented = loops.map((loop) => outward(loop, sphere));
   // Out to the heart along each direction, then into the screen's own axes: x across, y down, z toward the viewer.
   const vertices = sphere.map((d) => heartDirection(d));
-  return { kind: "heart", n, vertices, loops: oriented, faceOf, hull: [], round: false, oriented: true, convex: false, upright: true };
+  return {
+    kind: "heart",
+    n,
+    vertices,
+    loops: oriented,
+    faceOf,
+    hull: [],
+    round: false,
+    oriented: true,
+    convex: false,
+    upright: true,
+  };
 }
 
 /** The cells and corners of a shape cut `n` ways. */

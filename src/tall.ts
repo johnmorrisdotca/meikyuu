@@ -46,7 +46,8 @@ export const TALL_WIDTHS = [6, 8, 10, 12, 16, 20] as const;
 export function tallDimensions(shape: MeikyuuShape, width: number): [number, number] {
   if (shape === "square") return [width, Math.round(width * 1.5)];
   const make = shape === "hex" ? hexGrid : shape === "triangle" ? triangleGrid : null;
-  if (make === null) throw new Error(`${shape} has no columns and rows: only squares, hexagons and triangles are made tall`);
+  if (make === null)
+    throw new Error(`${shape} has no columns and rows: only squares, hexagons and triangles are made tall`);
   const target = width * Math.round(width * 1.5);
   let best: [number, number] = [width, Math.round(width * 1.5)];
   let bestOff = Infinity;

@@ -7,7 +7,17 @@ import type { Rgb, SolidColours } from "./solidPaint.ts";
  * custom property, so each is resolved to a colour by the browser (through an element's own `color`) and kept until the look or the page's theme changes.
  */
 
-const PROPERTIES = { paper: "--mk-paper", wall: "--mk-wall", trail: "--mk-trail", start: "--mk-start", goal: "--mk-goal", hint: "--mk-hint", bad: "--mk-bad", stone: "--mk-stone", stoneEdge: "--mk-stone-edge" } as const;
+const PROPERTIES = {
+  paper: "--mk-paper",
+  wall: "--mk-wall",
+  trail: "--mk-trail",
+  start: "--mk-start",
+  goal: "--mk-goal",
+  hint: "--mk-hint",
+  bad: "--mk-bad",
+  stone: "--mk-stone",
+  stoneEdge: "--mk-stone-edge",
+} as const;
 
 /** What the canvas wears so that the stylesheet's custom properties apply to it: the look's attributes, as a maze's own svg has them. */
 export function applyLook(canvas: HTMLElement, look: MazeLook): void {
@@ -39,11 +49,13 @@ export function readColours(canvas: HTMLElement): SolidColours {
   const probe = document.createElement("span");
   probe.style.display = "none";
   canvas.parentElement?.append(probe);
-  const get = (name: keyof typeof PROPERTIES, fallback: string): { rgb: Rgb; css: string } => resolve(probe, style.getPropertyValue(PROPERTIES[name]), fallback);
+  const get = (name: keyof typeof PROPERTIES, fallback: string): { rgb: Rgb; css: string } =>
+    resolve(probe, style.getPropertyValue(PROPERTIES[name]), fallback);
   const paper = get("paper", "#fbf8f1");
   const wall = get("wall", "#1f2320");
   probe.remove();
-  const mix = (k: number): string => `rgb(${[0, 1, 2].map((i) => Math.round(paper.rgb[i]! + (wall.rgb[i]! - paper.rgb[i]!) * k)).join(",")})`;
+  const mix = (k: number): string =>
+    `rgb(${[0, 1, 2].map((i) => Math.round(paper.rgb[i]! + (wall.rgb[i]! - paper.rgb[i]!) * k)).join(",")})`;
   const probe2 = document.createElement("span");
   probe2.style.display = "none";
   canvas.parentElement?.append(probe2);

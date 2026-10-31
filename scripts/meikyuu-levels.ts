@@ -30,24 +30,37 @@ import { MEIKYUU_SHAPES } from "../src/grid.ts";
 import { MEIKYUU_LEGACY_MAZE_ROWS } from "../src/levels/legacy.data.ts";
 import { layoutCells, parseRecipe } from "../src/maze.ts";
 import { EFFORT_MOST } from "../src/measure.ts";
-import { arrivedAt, candidateOf, candidates, SIZE_CELLS, tooEasy, type Candidate, type SizeWord } from "./levels-lib.ts";
+import {
+  arrivedAt,
+  candidateOf,
+  candidates,
+  SIZE_CELLS,
+  tooEasy,
+  type Candidate,
+  type SizeWord,
+} from "./levels-lib.ts";
 
 const args = process.argv.slice(2);
-const flag = (name: string, fallback: string): string => (args.includes(name) ? args[args.indexOf(name) + 1]! : fallback);
+const flag = (name: string, fallback: string): string =>
+  args.includes(name) ? args[args.indexOf(name) + 1]! : fallback;
 const OUT = flag("--out", new URL("../src/levels/mazes.data.ts", import.meta.url).pathname);
 const COUNT = 256;
 /** No level lays out more cells than the 1.0.0 list's biggest did (a heart cut from a raster 139 across), so `MEIKYUU_MOST_CELLS` is still a little over twice what a level lays out. */
 const BIGGEST_LAYOUT = 19_321;
 const POOL: Record<SizeWord, number> = { small: 60_000, medium: 30_000, large: 0, huge: 0 };
 const SIZES: readonly SizeWord[] = ["small", "medium", "large", "huge"];
-const sizeOfCells = (cells: number): SizeWord => (cells < 150 ? "small" : cells < 800 ? "medium" : cells < 4000 ? "large" : "huge");
+const sizeOfCells = (cells: number): SizeWord =>
+  cells < 150 ? "small" : cells < 800 ? "medium" : cells < 4000 ? "large" : "huge";
 const WINDING: readonly MeikyuuAlgorithm[] = ["backtracker", "hunt", "growing"];
 
-const legacy: Candidate[] = MEIKYUU_LEGACY_MAZE_ROWS.map(([code], index) => candidateOf(parseRecipe(code)!, index + 1)!);
+const legacy: Candidate[] = MEIKYUU_LEGACY_MAZE_ROWS.map(
+  ([code], index) => candidateOf(parseRecipe(code)!, index + 1)!,
+);
 const started = Date.now();
 const rows: string[] = [];
 const report: string[] = [];
-const allowed = (c: Candidate): boolean => c.effort <= EFFORT_MOST && layoutCells(c.recipe.shape, c.recipe.w, c.recipe.h) <= BIGGEST_LAYOUT;
+const allowed = (c: Candidate): boolean =>
+  c.effort <= EFFORT_MOST && layoutCells(c.recipe.shape, c.recipe.w, c.recipe.h) <= BIGGEST_LAYOUT;
 
 /** How alike the recent places a maze would sit among are, in the log of the effort it is worth: a shape, a way to play or a size seen lately costs a little. */
 function crowd(recent: readonly Candidate[], c: Candidate): number {
@@ -99,7 +112,14 @@ for (const [index, size] of SIZES.entries()) {
       for (const slack of [0, 4]) {
         let bestCost = Infinity;
         for (const c of fresh) {
-          if (taken.has(c.same) || c.effort < floor || c.effort > ceiling || tooEasy(c, place) || !arrivedAt(c, here.effort + slack)) continue;
+          if (
+            taken.has(c.same) ||
+            c.effort < floor ||
+            c.effort > ceiling ||
+            tooEasy(c, place) ||
+            !arrivedAt(c, here.effort + slack)
+          )
+            continue;
           const cost = Math.abs(Math.log(c.effort / Math.max(here.effort, 1))) + crowd(level.slice(-8), c);
           if (cost < bestCost) {
             bestCost = cost;
@@ -151,8 +171,12 @@ for (const [index, size] of SIZES.entries()) {
       level.push(best);
     }
   }
-  for (let i = 1; i < level.length; i += 1) if (level[i]!.effort < level[i - 1]!.effort) throw new Error(`${size} place ${i + 1} is easier than the one before`);
-  report.push(`${size}: ${old.length} were published; ${level.filter((c) => c.old !== undefined).length} stay at their number, ${replaced} places have a new maze (the old one was too easy), ${added} are added at the end, ${cutOff} cut off the end (${((Date.now() - started) / 1000).toFixed(0)}s)`);
+  for (let i = 1; i < level.length; i += 1)
+    if (level[i]!.effort < level[i - 1]!.effort)
+      throw new Error(`${size} place ${i + 1} is easier than the one before`);
+  report.push(
+    `${size}: ${old.length} were published; ${level.filter((c) => c.old !== undefined).length} stay at their number, ${replaced} places have a new maze (the old one was too easy), ${added} are added at the end, ${cutOff} cut off the end (${((Date.now() - started) / 1000).toFixed(0)}s)`,
+  );
   for (const c of level) rows.push(`  ["${c.code}", ${c.effort}, ${c.cells}, ${c.score}],`);
 }
 

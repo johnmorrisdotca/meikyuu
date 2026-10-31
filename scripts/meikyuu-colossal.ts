@@ -27,7 +27,8 @@ import { candidateOf, candidates, keysFor, tooEasy, type Candidate } from "./lev
 import { chooseList } from "./levels-list.ts";
 
 const args = process.argv.slice(2);
-const flag = (name: string, fallback: string): string => (args.includes(name) ? args[args.indexOf(name) + 1]! : fallback);
+const flag = (name: string, fallback: string): string =>
+  args.includes(name) ? args[args.indexOf(name) + 1]! : fallback;
 const OUT = flag("--out", new URL("../src/levels/colossal.data.ts", import.meta.url).pathname);
 const COUNT = MEIKYUU_COLOSSAL_PER_LIST;
 const POOL = Number(flag("--pool", "4000"));
@@ -45,8 +46,17 @@ function ramp(pool: readonly Candidate[]): Candidate[] {
   const fit = pool.filter((c) => !tooEasy(c)).sort((a, b) => a.effort - b.effort);
   const from = fit[Math.floor(fit.length * 0.03)]!.effort;
   const to = fit[Math.floor(fit.length * 0.97)]!.effort;
-  const listed = chooseList({ count: COUNT, pool: fit, allowed: (c) => c.effort >= from && c.effort <= to, okAt: (c) => !tooEasy(c), from, to });
-  console.log(`  ${fit.length} of ${pool.length} drawn were good enough; efforts ${listed.levels[0]!.effort} to ${listed.levels[COUNT - 1]!.effort}; steps ${listed.steps.mean.toFixed(1)} on average, ${listed.steps.biggest.toFixed(1)} at most (${seconds()})`);
+  const listed = chooseList({
+    count: COUNT,
+    pool: fit,
+    allowed: (c) => c.effort >= from && c.effort <= to,
+    okAt: (c) => !tooEasy(c),
+    from,
+    to,
+  });
+  console.log(
+    `  ${fit.length} of ${pool.length} drawn were good enough; efforts ${listed.levels[0]!.effort} to ${listed.levels[COUNT - 1]!.effort}; steps ${listed.steps.mean.toFixed(1)} on average, ${listed.steps.biggest.toFixed(1)} at most (${seconds()})`,
+  );
   return listed.levels;
 }
 
@@ -72,13 +82,22 @@ while (tall.length < POOL) {
   const algorithm = algorithms[below(random, algorithms.length)]!;
   const mode = MODES[below(random, MODES.length)]!;
   const seed = 1 + Math.floor(random() * 4_000_000_000);
-  const recipe: MazeRecipe = { shape, w, h, algorithm, mode, seed, ...(mode === "keys" ? { keys: keysFor(w * h) } : {}) };
+  const recipe: MazeRecipe = {
+    shape,
+    w,
+    h,
+    algorithm,
+    mode,
+    seed,
+    ...(mode === "keys" ? { keys: keysFor(w * h) } : {}),
+  };
   const made = candidateOf(recipe);
   if (made !== null) tall.push(made);
 }
 const tallList = ramp(tall);
 
-const rowsOf = (list: readonly Candidate[]): string => list.map((c) => `  ["${c.code}", ${c.effort}, ${c.cells}, ${c.score}],`).join("\n");
+const rowsOf = (list: readonly Candidate[]): string =>
+  list.map((c) => `  ["${c.code}", ${c.effort}, ${c.cells}, ${c.score}],`).join("\n");
 writeFileSync(
   OUT,
   `// THE COLOSSAL LEVELS: ${COUNT} recipes in each of two lists, the square ones (${COLOSSAL_CELLS[0]} to ${COLOSSAL_CELLS[1]} cells, in every shape) and the tall ones (${COLOSSAL_TALL_WIDTH} cells across, 2:3), each in the order of the effort it measures\n// (never easier to draw than the one before), each with that effort, its cells and its score (see difficulty.ts). Made by scripts/meikyuu-colossal.ts and never edited by\n// hand: a recipe rebuilds its maze exactly, and levels.colossal.test.ts rebuilds every one and checks all of it, so a change to a generator or to the stream fails the build.\nexport const MEIKYUU_COLOSSAL_ROWS: readonly (readonly [string, number, number, number])[] = [\n${rowsOf(squareList)}\n];\nexport const MEIKYUU_COLOSSAL_TALL_ROWS: readonly (readonly [string, number, number, number])[] = [\n${rowsOf(tallList)}\n];\n`,

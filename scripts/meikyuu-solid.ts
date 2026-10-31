@@ -26,7 +26,8 @@ import { MEIKYUU_SOLID_PER_LIST, SOLID_CUTS, SOLID_SIZE_NAMES } from "../src/sol
 import { SOLID_GROUPS, SOLID_GROUP_FILES } from "./solid-groups.ts";
 
 const args = process.argv.slice(2);
-const flag = (name: string, fallback: string): string => (args.includes(name) ? args[args.indexOf(name) + 1]! : fallback);
+const flag = (name: string, fallback: string): string =>
+  args.includes(name) ? args[args.indexOf(name) + 1]! : fallback;
 const CACHE = flag("--cache", new URL("../node_modules/.cache/meikyuu-solid", import.meta.url).pathname);
 const POOL = Number(flag("--pool", "1500"));
 const ELITE = Number(flag("--elite", "1500"));
@@ -43,13 +44,21 @@ async function existing(): Promise<Record<string, Record<string, readonly Row[]>
     const path = new URL(`../src/levels/${file.name}`, import.meta.url);
     if (!existsSync(path)) continue;
     const module = (await import(path.href)) as Record<string, Record<string, Record<string, readonly Row[]>>>;
-    for (const [kind, sizes] of Object.entries(module[file.constant] ?? {})) out[kind] = { ...(out[kind] ?? {}), ...sizes };
+    for (const [kind, sizes] of Object.entries(module[file.constant] ?? {}))
+      out[kind] = { ...(out[kind] ?? {}), ...sizes };
   }
   return out;
 }
 
 /** The recipes of a pool: `count` mazes of the algorithms given, not too easy, never the same recipe twice. */
-function draw(kind: SolidKind, n: number, random: () => number, count: number, algorithms: readonly string[], seen: Set<string>): Candidate[] {
+function draw(
+  kind: SolidKind,
+  n: number,
+  random: () => number,
+  count: number,
+  algorithms: readonly string[],
+  seen: Set<string>,
+): Candidate[] {
   const pool: Candidate[] = [];
   while (pool.length < count) {
     const algorithm = algorithms[Math.floor(random() * algorithms.length)]!;
@@ -59,11 +68,19 @@ function draw(kind: SolidKind, n: number, random: () => number, count: number, a
     if (isTooEasy(difficulty)) continue;
     // The same maze twice (a different seed that carves the same passages) is one level: told by the passages, for a solid small enough that it is cheap to.
     if (maze.grid.cells <= 1500) {
-      const same = maze.links.map((open) => [...open].sort((a, b) => a - b).join(",")).join("|") + `@${maze.start}-${maze.goal}`;
+      const same =
+        maze.links.map((open) => [...open].sort((a, b) => a - b).join(",")).join("|") + `@${maze.start}-${maze.goal}`;
       if (seen.has(same)) continue;
       seen.add(same);
     }
-    pool.push({ code: solidRecipeCode(maze.recipe), algorithm, effort: difficulty.measure.effort, cells: maze.grid.cells, exact: difficulty.exact, score: difficulty.score });
+    pool.push({
+      code: solidRecipeCode(maze.recipe),
+      algorithm,
+      effort: difficulty.measure.effort,
+      cells: maze.grid.cells,
+      exact: difficulty.exact,
+      score: difficulty.score,
+    });
   }
   return pool;
 }
@@ -101,7 +118,9 @@ function listFor(kind: SolidKind, n: number, base: number): Candidate[] {
   }
   picked.sort((a, b) => a.exact - b.exact || (a.code < b.code ? -1 : 1));
   const gaps = picked.slice(1).map((c, i) => c.exact - picked[i]!.exact);
-  console.log(`  ${kind} ${n}: ${picked[0]!.cells} cells, scores ${picked[0]!.score} to ${picked[COUNT - 1]!.score}, efforts ${picked[0]!.effort} to ${picked[COUNT - 1]!.effort}, biggest step ${Math.max(...gaps).toFixed(2)} (${((Date.now() - started) / 1000).toFixed(0)}s)`);
+  console.log(
+    `  ${kind} ${n}: ${picked[0]!.cells} cells, scores ${picked[0]!.score} to ${picked[COUNT - 1]!.score}, efforts ${picked[0]!.effort} to ${picked[COUNT - 1]!.effort}, biggest step ${Math.max(...gaps).toFixed(2)} (${((Date.now() - started) / 1000).toFixed(0)}s)`,
+  );
   return picked;
 }
 
@@ -111,7 +130,11 @@ if (args.includes("--write")) {
   const have = await existing();
   mkdirSync(CACHE, { recursive: true });
   const made: Record<string, Record<string, readonly Row[]>> = {};
-  for (const file of readdirSync(CACHE).filter((f) => f.endsWith(".json"))) made[file.replace(/\.json$/, "")] = JSON.parse(readFileSync(join(CACHE, file), "utf8")) as Record<string, readonly Row[]>;
+  for (const file of readdirSync(CACHE).filter((f) => f.endsWith(".json")))
+    made[file.replace(/\.json$/, "")] = JSON.parse(readFileSync(join(CACHE, file), "utf8")) as Record<
+      string,
+      readonly Row[]
+    >;
   let total = 0;
   for (const [group, file] of Object.entries(SOLID_GROUP_FILES)) {
     const blocks: string[] = [];
@@ -121,7 +144,9 @@ if (args.includes("--write")) {
         const rows = made[kind]?.[size] ?? have[kind]?.[size];
         if (rows === undefined) throw new Error(`no list for ${kind} ${size}: make it with --kind ${kind}`);
         total += rows.length;
-        lists.push(`    ${size}: [\n${rows.map(([code, effort, cells, score]) => `      ["${code}", ${effort}, ${cells}, ${score}],`).join("\n")}\n    ],`);
+        lists.push(
+          `    ${size}: [\n${rows.map(([code, effort, cells, score]) => `      ["${code}", ${effort}, ${cells}, ${score}],`).join("\n")}\n    ],`,
+        );
       }
       blocks.push(`  ${/-/.test(kind) ? `"${kind}"` : kind}: {\n${lists.join("\n")}\n  },`);
     }
@@ -131,15 +156,30 @@ if (args.includes("--write")) {
     );
   }
   // The same recipes with nothing else, for a server that has only to say which recipe is which level: one text a list, "<cut>:<algorithm letter><seed in base 36>,...".
-  const letters: Record<string, string> = { backtracker: "b", hunt: "h", growing: "g", prim: "p", kruskal: "k", wilson: "w" };
+  const letters: Record<string, string> = {
+    backtracker: "b",
+    hunt: "h",
+    growing: "g",
+    prim: "p",
+    kruskal: "k",
+    wilson: "w",
+  };
   const lists: string[] = [];
   for (const [group, file] of Object.entries(SOLID_GROUP_FILES)) {
-    const module = (await import(new URL(`../src/levels/${file.name}`, import.meta.url).href)) as Record<string, Record<string, Record<string, readonly Row[]>>>;
+    const module = (await import(new URL(`../src/levels/${file.name}`, import.meta.url).href)) as Record<
+      string,
+      Record<string, Record<string, readonly Row[]>>
+    >;
     for (const kind of SOLID_GROUPS[group as keyof typeof SOLID_GROUPS]) {
       const sizes = SOLID_SIZE_NAMES.map((size) => {
         const rows = module[file.constant]![kind]![size]!;
         const cut = rows[0]![0].split(":")[1]!;
-        return `${size}: "${cut}:${rows.map(([code]) => { const [, , algorithm, seed] = code.split(":"); return `${letters[algorithm!]!}${Number(seed).toString(36)}`; }).join(",")}"`;
+        return `${size}: "${cut}:${rows
+          .map(([code]) => {
+            const [, , algorithm, seed] = code.split(":");
+            return `${letters[algorithm!]!}${Number(seed).toString(36)}`;
+          })
+          .join(",")}"`;
       });
       lists.push(`  ${/-/.test(kind) ? `"${kind}"` : kind}: { ${sizes.join(", ")} },`);
     }
@@ -156,9 +196,11 @@ if (args.includes("--write")) {
   mkdirSync(CACHE, { recursive: true });
   const rows: Record<string, readonly Row[]> = {};
   for (const [index, size] of SOLID_SIZE_NAMES.entries()) {
-    if ((flag("--size", size) !== size) || (have[kind]?.[size] !== undefined && !args.includes("--force"))) continue;
+    if (flag("--size", size) !== size || (have[kind]?.[size] !== undefined && !args.includes("--force"))) continue;
     rows[size] = listFor(kind, SOLID_CUTS[kind][index]!, 31000 + 1000 * SOLID_KINDS.indexOf(kind) + index).map(rowOf);
   }
   writeFileSync(join(CACHE, `${kind}.json`), JSON.stringify(rows));
-  console.log(`${kind}: made ${Object.keys(rows).join(", ") || "nothing"} in ${((Date.now() - started) / 1000).toFixed(0)}s`);
+  console.log(
+    `${kind}: made ${Object.keys(rows).join(", ") || "nothing"} in ${((Date.now() - started) / 1000).toFixed(0)}s`,
+  );
 }

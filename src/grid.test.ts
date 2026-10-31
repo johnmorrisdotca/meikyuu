@@ -49,7 +49,8 @@ describe("every shape is a sound cell graph", () => {
         }
       }
       expect(seen.size).toBe(grid.cells);
-      for (let cell = 0; cell < grid.cells; cell += 1) expect(grid.at(grid.centres[cell]![0], grid.centres[cell]![1])).toBe(cell);
+      for (let cell = 0; cell < grid.cells; cell += 1)
+        expect(grid.at(grid.centres[cell]![0], grid.centres[cell]![1])).toBe(cell);
       expect(grid.at(grid.box.x - 5, grid.box.y - 5)).toBe(-1);
     });
 
@@ -69,12 +70,16 @@ describe("every shape is a sound cell graph", () => {
   it("the wall between two cells is the same line from either side", () => {
     for (const shape of ["square", "hex", "triangle", "circle"] as const) {
       const grid = gridOf(shape, ...SIZES[shape]);
-      const mid = (side: { wall: { a: readonly [number, number]; b: readonly [number, number] } }): [number, number] => [side.wall.a[0] + side.wall.b[0], side.wall.a[1] + side.wall.b[1]];
+      const mid = (side: {
+        wall: { a: readonly [number, number]; b: readonly [number, number] };
+      }): [number, number] => [side.wall.a[0] + side.wall.b[0], side.wall.a[1] + side.wall.b[1]];
       for (let cell = 0; cell < grid.cells; cell += 1) {
         for (const side of grid.sides[cell]!) {
           if (side.to < 0) continue;
           const [x, y] = mid(side);
-          const back = grid.sides[side.to]!.find((other) => other.to === cell && Math.abs(mid(other)[0] - x) < 1e-6 && Math.abs(mid(other)[1] - y) < 1e-6);
+          const back = grid.sides[side.to]!.find(
+            (other) => other.to === cell && Math.abs(mid(other)[0] - x) < 1e-6 && Math.abs(mid(other)[1] - y) < 1e-6,
+          );
           expect(back, `${shape} cell ${cell} to ${side.to}`).toBeDefined();
         }
       }

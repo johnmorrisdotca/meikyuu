@@ -4,15 +4,36 @@ import { ARROW_HEARTS, arrowsLeft, clearArrows, restartArrows, tapArrow, undoArr
 import { dragMaze, liftMaze, pressMaze, restartMaze } from "./game.ts";
 import { levelOf } from "./levels.ts";
 import { solutionOf } from "./maze.ts";
-import { buildMixed, measureMixed, mixedRecipeCode, mixedSolved, newMixedGame, parseMixedRecipe, withArrows, withMaze, type MixedGame, type MixedRecipe } from "./mixed.ts";
+import {
+  buildMixed,
+  measureMixed,
+  mixedRecipeCode,
+  mixedSolved,
+  newMixedGame,
+  parseMixedRecipe,
+  withArrows,
+  withMaze,
+  type MixedGame,
+  type MixedRecipe,
+} from "./mixed.ts";
 
-const recipe: MixedRecipe = { arrows: { shape: "square", w: 9, h: 9, longest: 4, seed: 5, locks: 2 }, maze: { shape: "square", w: 8, h: 8, algorithm: "kruskal", mode: "to-goal", seed: 3 } };
+const recipe: MixedRecipe = {
+  arrows: { shape: "square", w: 9, h: 9, longest: 4, seed: 5, locks: 2 },
+  maze: { shape: "square", w: 8, h: 8, algorithm: "kruskal", mode: "to-goal", seed: 3 },
+};
 
 describe("a mixed puzzle", () => {
   it("is its two recipes in one code, read back, and refuses what is not one", () => {
     expect(mixedRecipeCode(recipe)).toBe("square:9x9:4:5:2|square:8x8:kruskal:to-goal:3");
     expect(parseMixedRecipe(mixedRecipeCode(recipe))).toEqual(recipe);
-    for (const bad of ["", "square:9x9:4:5:2", "square:9x9:4:5|square:8x8:kruskal:to-goal:3", "square:9x9:4:5:2|square:8x8:kruskal:enter-leave:3", "a|b|c"]) expect(parseMixedRecipe(bad), bad).toBeNull();
+    for (const bad of [
+      "",
+      "square:9x9:4:5:2",
+      "square:9x9:4:5|square:8x8:kruskal:to-goal:3",
+      "square:9x9:4:5:2|square:8x8:kruskal:enter-leave:3",
+      "a|b|c",
+    ])
+      expect(parseMixedRecipe(bad), bad).toBeNull();
   });
 
   it("locks arrows that matter, and a labyrinth whose button is its goal", () => {
@@ -105,7 +126,8 @@ describe("a mixed puzzle in every order", () => {
     let game = clearNow(newMixedGame(board));
     const stuck = game.arrows.present.flatMap((here, id) => (here && !board.arrows.locked[id] ? [id] : []));
     expect(stuck.length).toBeGreaterThan(0);
-    for (let n = 0; n < 2 * ARROW_HEARTS; n += 1) for (const id of stuck) game = withArrows(game, tapArrow(game.arrows, id).game);
+    for (let n = 0; n < 2 * ARROW_HEARTS; n += 1)
+      for (const id of stuck) game = withArrows(game, tapArrow(game.arrows, id).game);
     expect(game.arrows.hearts).toBe(ARROW_HEARTS);
     expect(game.arrows.status).toBe("playing");
     expect(mixedSolved(clearNow(reachButton(game)))).toBe(true);
@@ -114,7 +136,9 @@ describe("a mixed puzzle in every order", () => {
   it("a puzzle lost on a real mistake stays lost when the button is reached, and a restart keeps the unlock and wins", () => {
     const board = buildMixed(recipe);
     let game = newMixedGame(board);
-    const blocked = board.arrows.arrows.findIndex((_, id) => !board.arrows.locked[id] && tapArrow(game.arrows, id).result === "blocked");
+    const blocked = board.arrows.arrows.findIndex(
+      (_, id) => !board.arrows.locked[id] && tapArrow(game.arrows, id).result === "blocked",
+    );
     expect(blocked).toBeGreaterThanOrEqual(0);
     for (let n = 0; n < ARROW_HEARTS; n += 1) game = withArrows(game, tapArrow(game.arrows, blocked).game);
     expect(game.arrows.status).toBe("lost");

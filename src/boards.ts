@@ -99,4 +99,13 @@ export const MEIKYUU_TRAIL_NAMES = Object.keys(MEIKYUU_TRAILS) as MeikyuuTrailNa
  * console.log(MEIKYUU_ARROW_COLOURS);
  * ```
  */
-export const MEIKYUU_ARROW_COLOURS: readonly string[] = ["#d9381e", "#2865a6", "#2e8b57", "#d97a1e", "#7b4fb0", "#c2185b", "#00838f", "#8d6e63"];
+export const MEIKYUU_ARROW_COLOURS: readonly string[] = [
+  "#d9381e",
+  "#2865a6",
+  "#2e8b57",
+  "#d97a1e",
+  "#7b4fb0",
+  "#c2185b",
+  "#00838f",
+  "#8d6e63",
+];

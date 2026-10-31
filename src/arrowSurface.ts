@@ -33,7 +33,12 @@ export type ArrowSurface = {
 
 const NS = "http://www.w3.org/2000/svg";
 
-export function createArrowSurface(box: HTMLElement, hooks: ArrowSurfaceHooks, board: ArrowBoard, initial: MazeLook): ArrowSurface {
+export function createArrowSurface(
+  box: HTMLElement,
+  hooks: ArrowSurfaceHooks,
+  board: ArrowBoard,
+  initial: MazeLook,
+): ArrowSurface {
   const svg = document.createElementNS(NS, "svg");
   svg.setAttribute("preserveAspectRatio", "xMidYMid meet");
   svg.setAttribute("aria-hidden", "true");
@@ -95,9 +100,14 @@ export function createArrowSurface(box: HTMLElement, hooks: ArrowSurfaceHooks, b
       shownBoard = current;
       const dots: string[] = [];
       current.inShape.forEach((inside, cell) => {
-        if (inside) dots.push(`<circle class="mk-dot" cx="${fixed((cell % current.w) + 0.5)}" cy="${fixed(Math.floor(cell / current.w) + 0.5)}" r="0.07"/>`);
+        if (inside)
+          dots.push(
+            `<circle class="mk-dot" cx="${fixed((cell % current.w) + 0.5)}" cy="${fixed(Math.floor(cell / current.w) + 0.5)}" r="0.07"/>`,
+          );
       });
-      const arrows = current.arrows.map((arrow, id) => arrowMarkup(current, arrow, id, { locked: current.locked[id]! && !game.unlocked })).join("");
+      const arrows = current.arrows
+        .map((arrow, id) => arrowMarkup(current, arrow, id, { locked: current.locked[id]! && !game.unlocked }))
+        .join("");
       const width = current.w + 2 * pad;
       const height = current.h + 2 * pad;
       svg.innerHTML = `<rect class="mk-paper" x="${-pad - 400}" y="${-pad - 400}" width="${width + 800}" height="${height + 800}"/>${dots.join("")}<g class="mk-arrows">${arrows}</g>`;

@@ -1,15 +1,50 @@
 import { createBanner } from "../banner.ts";
 import type { MazeLook } from "../draw.ts";
-import { dragMaze, headOf, hintMaze, liftMaze, newMazeGame, pressMaze, restartMaze, tapMaze, undoMaze, type MazeGame } from "../game.ts";
+import {
+  dragMaze,
+  headOf,
+  hintMaze,
+  liftMaze,
+  newMazeGame,
+  pressMaze,
+  restartMaze,
+  tapMaze,
+  undoMaze,
+  type MazeGame,
+} from "../game.ts";
 import { MEIKYUU_GUTTER, MEIKYUU_RESERVE, ensureMeikyuuPlayStyle } from "../mount.ts";
 import { createMeikyuuSounds, type MeikyuuSoundKind, type MeikyuuSounds } from "../sound.ts";
-import { clearStones, decodeRun, encodeRun, stonesLeft, stoneRulesOf, toggleStone, withStoneRules, type StoneOption, type StoneVerdict } from "../stones.ts";
+import {
+  clearStones,
+  decodeRun,
+  encodeRun,
+  stonesLeft,
+  stoneRulesOf,
+  toggleStone,
+  withStoneRules,
+  type StoneOption,
+  type StoneVerdict,
+} from "../stones.ts";
 import { meikyuuLanguageOf, meikyuuSay, type MeikyuuLanguage } from "../strings.ts";
 import { applyLook, readColours } from "./solidColours.ts";
 import { SOLID_PLAY_STYLE } from "./solidStyle.ts";
 import { paintSolid, type PaintContext } from "./solidPaint.ts";
 import { buildSolidMaze, parseSolidRecipe, type SolidMaze, type SolidRecipe } from "./solidMaze.ts";
-import { cellSeen, cellsAlongDrag, createFrame, dragTurn, edgeTurn, faceCellTurn, openingTurn, pickCell, projectFrame, SOLID_ZOOM_LEAST, SOLID_ZOOM_MOST, stepTurn, type SolidFrame } from "./solidView.ts";
+import {
+  cellSeen,
+  cellsAlongDrag,
+  createFrame,
+  dragTurn,
+  edgeTurn,
+  faceCellTurn,
+  openingTurn,
+  pickCell,
+  projectFrame,
+  SOLID_ZOOM_LEAST,
+  SOLID_ZOOM_MOST,
+  stepTurn,
+  type SolidFrame,
+} from "./solidView.ts";
 import { quatAxisAngle, quatMul, quatNormalize, quatSlerp, type Quat } from "./vec.ts";
 
 /**
@@ -143,7 +178,17 @@ export type SolidMount = {
   mazeGame: () => MazeGame<SolidMaze>;
   /** Play another maze. Returns false for a recipe that is none. */
   load: (recipe: string | SolidRecipe) => boolean;
-  set: (changes: MazeLook & { tap?: boolean; sound?: boolean; hints?: boolean; banner?: boolean; language?: MeikyuuLanguage; stones?: StoneOption; edgeTurn?: boolean }) => void;
+  set: (
+    changes: MazeLook & {
+      tap?: boolean;
+      sound?: boolean;
+      hints?: boolean;
+      banner?: boolean;
+      language?: MeikyuuLanguage;
+      stones?: StoneOption;
+      edgeTurn?: boolean;
+    },
+  ) => void;
   undo: () => void;
   restart: () => void;
   hint: () => void;
@@ -191,7 +236,11 @@ const GLIDE = 260;
 const MOVING_SHARPNESS = 0.72;
 const SHARP_AFTER = 180;
 
-function create<K extends keyof HTMLElementTagNameMap>(document: Document, tag: K, className: string): HTMLElementTagNameMap[K] {
+function create<K extends keyof HTMLElementTagNameMap>(
+  document: Document,
+  tag: K,
+  className: string,
+): HTMLElementTagNameMap[K] {
   const element = document.createElement(tag);
   element.className = className;
   return element;
@@ -213,7 +262,8 @@ function create<K extends keyof HTMLElementTagNameMap>(document: Document, tag: 
 export function ensureSolidStyle(host: Element): void {
   ensureMeikyuuPlayStyle(host);
   const root = host.getRootNode();
-  const target: ParentNode = typeof ShadowRoot !== "undefined" && root instanceof ShadowRoot ? root : host.ownerDocument.head;
+  const target: ParentNode =
+    typeof ShadowRoot !== "undefined" && root instanceof ShadowRoot ? root : host.ownerDocument.head;
   if (target.querySelector("style[data-meikyuu-solid]") !== null) return;
   const style = host.ownerDocument.createElement("style");
   style.setAttribute("data-meikyuu-solid", "");
@@ -268,10 +318,13 @@ export function mountSolid(host: HTMLElement, options: SolidMountOptions): Solid
   const withZoom = options.zoom !== false;
   let sounds: MeikyuuSounds | null = options.sound === true ? createMeikyuuSounds() : null;
   let explicitLanguage = options.language;
-  let language: MeikyuuLanguage = explicitLanguage ?? meikyuuLanguageOf(host.closest("[lang]")?.getAttribute("lang") ?? document.documentElement.lang);
+  let language: MeikyuuLanguage =
+    explicitLanguage ??
+    meikyuuLanguageOf(host.closest("[lang]")?.getAttribute("lang") ?? document.documentElement.lang);
   const gutter = Math.max(0, options.gutter ?? MEIKYUU_GUTTER);
   const callbacks = options;
-  const still = (): boolean => typeof windowOf.matchMedia === "function" && windowOf.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const still = (): boolean =>
+    typeof windowOf.matchMedia === "function" && windowOf.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   // The parts.
   host.classList.add("meikyuu-play");
@@ -347,7 +400,15 @@ export function mountSolid(host: HTMLElement, options: SolidMountOptions): Solid
   const setMessage = (key: string | null, values: Record<string, string | number> = {}, warn = false): void => {
     message = key === null ? null : { key, values, warn };
   };
-  const detail = (): SolidEventDetail => ({ kind: "solid", solid: recipe.kind, moves, cells: game.path.length, solved: game.solved, stones: game.stones.length, stonesLeft: stonesLeft(game) });
+  const detail = (): SolidEventDetail => ({
+    kind: "solid",
+    solid: recipe.kind,
+    moves,
+    cells: game.path.length,
+    solved: game.solved,
+    stones: game.stones.length,
+    stonesLeft: stonesLeft(game),
+  });
   const tell = (name: string, callback?: (detail: SolidEventDetail) => void): void => {
     const info = detail();
     callback?.(info);
@@ -378,7 +439,14 @@ export function mountSolid(host: HTMLElement, options: SolidMountOptions): Solid
   function paint(): void {
     if (context === null) return;
     const now = frameNow();
-    paintSolid(context as unknown as PaintContext, maze, now, colours, { path: game.path, stones: game.stones, hint: hinted, won: game.solved, wall: look.wall ?? 0.12, line: look.line ?? 0.34 });
+    paintSolid(context as unknown as PaintContext, maze, now, colours, {
+      path: game.path,
+      stones: game.stones,
+      hint: hinted,
+      won: game.solved,
+      wall: look.wall ?? 0.12,
+      line: look.line ?? 0.34,
+    });
   }
   function tick(time: number): void {
     scheduled = 0;
@@ -402,7 +470,14 @@ export function mountSolid(host: HTMLElement, options: SolidMountOptions): Solid
       const head = headOf(game);
       if (head !== null) {
         // On a solid with parts that hide parts a cell the line is running into may be hidden: the solid is then turned to a side it can be seen from.
-        const next = edgeTurn(maze.grid, maze.links, turned, head, seconds, maze.grid.convex ? undefined : (cell) => !cellSeen(frameNow(), maze.grid, cell));
+        const next = edgeTurn(
+          maze.grid,
+          maze.links,
+          turned,
+          head,
+          seconds,
+          maze.grid.convex ? undefined : (cell) => !cellSeen(frameNow(), maze.grid, cell),
+        );
         if (next !== null) {
           turned = next;
           frameStale = true;
@@ -450,7 +525,7 @@ export function mountSolid(host: HTMLElement, options: SolidMountOptions): Solid
   /** The solid is moving: paint at the lower resolution now, and at the full one again once it has been still for a moment. */
   function inMotion(): void {
     windowOf.clearTimeout(sharpTimer);
-    if (sharp && (Math.min(2, windowOf.devicePixelRatio || 1) > 1)) {
+    if (sharp && Math.min(2, windowOf.devicePixelRatio || 1) > 1) {
       sharp = false;
       measure();
     }
@@ -478,7 +553,11 @@ export function mountSolid(host: HTMLElement, options: SolidMountOptions): Solid
     host.dataset.stoneMode = String(stoneModeOn && game.rules !== null);
     if (game.rules !== null) host.dataset.stonesLeft = String(stonesLeft(game) ?? "none");
     else delete host.dataset.stonesLeft;
-    const label = say("solidLabel", { shape: say(`solid_${recipe.kind}`), n: maze.grid.cells, play: say("play_solid") });
+    const label = say("solidLabel", {
+      shape: say(`solid_${recipe.kind}`),
+      n: maze.grid.cells,
+      play: say("play_solid"),
+    });
     box.setAttribute("aria-label", label);
     banner.sync(say("solved", { n: moves }), say("closeMessage"), solved);
     undoButton.textContent = say("undo");
@@ -490,7 +569,13 @@ export function mountSolid(host: HTMLElement, options: SolidMountOptions): Solid
     stoneButton.setAttribute("aria-label", say("stoneLabel"));
     stoneButton.setAttribute("aria-pressed", String(stoneModeOn && game.rules !== null));
     stoneButton.disabled = solved;
-    for (const [one, key] of [[leftButton, "turnLeft"], [rightButton, "turnRight"], [upButton, "turnUp"], [downButton, "turnDown"]] as const) one.setAttribute("aria-label", say(key));
+    for (const [one, key] of [
+      [leftButton, "turnLeft"],
+      [rightButton, "turnRight"],
+      [upButton, "turnUp"],
+      [downButton, "turnDown"],
+    ] as const)
+      one.setAttribute("aria-label", say(key));
     pad.setAttribute("aria-label", say("turnPadLabel"));
     faceButton.textContent = say("faceMe");
     faceButton.setAttribute("aria-label", say("faceMeLabel"));
@@ -529,10 +614,20 @@ export function mountSolid(host: HTMLElement, options: SolidMountOptions): Solid
     invalidate();
   }
 
-  const STONE_WHY: Partial<Record<StoneVerdict, string>> = { far: "stoneFar", "on-line": "stoneOnLine", end: "stoneEnd", limit: "stoneLimit", "no-line": "stoneNoLine", solved: "stoneSolved", drawing: "stoneDrawing", "no-cell": "stoneFar" };
+  const STONE_WHY: Partial<Record<StoneVerdict, string>> = {
+    far: "stoneFar",
+    "on-line": "stoneOnLine",
+    end: "stoneEnd",
+    limit: "stoneLimit",
+    "no-line": "stoneNoLine",
+    solved: "stoneSolved",
+    drawing: "stoneDrawing",
+    "no-cell": "stoneFar",
+  };
 
   function stonesMoved(before: MazeGame<SolidMaze>): void {
-    if (before.stones.length === game.stones.length && before.stones.every((cell, at) => cell === game.stones[at])) return;
+    if (before.stones.length === game.stones.length && before.stones.every((cell, at) => cell === game.stones[at]))
+      return;
     tell("meikyuu-stones", callbacks.onStones);
   }
 
@@ -543,7 +638,8 @@ export function mountSolid(host: HTMLElement, options: SolidMountOptions): Solid
     const result = toggleStone(before, cell);
     hinted = null;
     if (result.how === "refused") {
-      if (how === "hold" && (result.why === "no-line" || result.why === "solved" || result.why === "drawing")) return false;
+      if (how === "hold" && (result.why === "no-line" || result.why === "solved" || result.why === "drawing"))
+        return false;
       game = before;
       setMessage(STONE_WHY[result.why] ?? "stoneFar", { n: before.rules?.reach ?? 2 }, true);
       playSound("bump");
@@ -615,7 +711,16 @@ export function mountSolid(host: HTMLElement, options: SolidMountOptions): Solid
   const pointers = new Map<number, [number, number]>();
   type Gesture =
     | { mode: "draw"; id: number; last: [number, number] }
-    | { mode: "turn"; id: number; last: [number, number]; from: [number, number]; at: number; moved: boolean; hold: number; held: boolean }
+    | {
+        mode: "turn";
+        id: number;
+        last: [number, number];
+        from: [number, number];
+        at: number;
+        moved: boolean;
+        hold: number;
+        held: boolean;
+      }
     | { mode: "pinch"; mid: [number, number]; gap: number; angle: number };
   let gesture: Gesture | null = null;
 
@@ -681,7 +786,12 @@ export function mountSolid(host: HTMLElement, options: SolidMountOptions): Solid
     if (pointers.size === 2) {
       endGesture(false);
       const [a, b] = [...pointers.values()] as [[number, number], [number, number]];
-      gesture = { mode: "pinch", mid: [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2], gap: Math.hypot(a[0] - b[0], a[1] - b[1]) || 1, angle: Math.atan2(b[1] - a[1], b[0] - a[0]) };
+      gesture = {
+        mode: "pinch",
+        mid: [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2],
+        gap: Math.hypot(a[0] - b[0], a[1] - b[1]) || 1,
+        angle: Math.atan2(b[1] - a[1], b[0] - a[0]),
+      };
       return;
     }
     if (pointers.size > 2) return;
@@ -694,7 +804,16 @@ export function mountSolid(host: HTMLElement, options: SolidMountOptions): Solid
       schedule();
       return;
     }
-    const turnGesture: Gesture & { mode: "turn" } = { mode: "turn", id: event.pointerId, last: at, from: at, at: windowOf.performance.now(), moved: false, hold: 0, held: false };
+    const turnGesture: Gesture & { mode: "turn" } = {
+      mode: "turn",
+      id: event.pointerId,
+      last: at,
+      from: at,
+      at: windowOf.performance.now(),
+      moved: false,
+      hold: 0,
+      held: false,
+    };
     // Press and hold lays a stone where the finger is, if the game has stones and the finger is not on the line.
     if (game.rules !== null) {
       turnGesture.hold = windowOf.setTimeout(() => {
@@ -765,7 +884,10 @@ export function mountSolid(host: HTMLElement, options: SolidMountOptions): Solid
   const onWheel = (event: WheelEvent): void => {
     event.preventDefault();
     glide = null;
-    zoom = Math.min(SOLID_ZOOM_MOST, Math.max(SOLID_ZOOM_LEAST, zoom * Math.exp(-event.deltaY * (event.ctrlKey ? 0.01 : 0.0015))));
+    zoom = Math.min(
+      SOLID_ZOOM_MOST,
+      Math.max(SOLID_ZOOM_LEAST, zoom * Math.exp(-event.deltaY * (event.ctrlKey ? 0.01 : 0.0015))),
+    );
     inMotion();
     invalidate();
     words();
@@ -825,7 +947,12 @@ export function mountSolid(host: HTMLElement, options: SolidMountOptions): Solid
       return;
     }
     if (event.target !== box) return;
-    const turns: Record<string, "left" | "right" | "up" | "down"> = { ArrowLeft: "left", ArrowRight: "right", ArrowUp: "up", ArrowDown: "down" };
+    const turns: Record<string, "left" | "right" | "up" | "down"> = {
+      ArrowLeft: "left",
+      ArrowRight: "right",
+      ArrowUp: "up",
+      ArrowDown: "down",
+    };
     const steps: Record<string, [number, number]> = { w: [0, -1], s: [0, 1], a: [-1, 0], d: [1, 0] };
     const key = event.key;
     if (turns[key] !== undefined) {
@@ -853,19 +980,25 @@ export function mountSolid(host: HTMLElement, options: SolidMountOptions): Solid
   };
   if (!picture) host.addEventListener("keydown", onKey);
 
-  const watching = typeof MutationObserver === "undefined" ? null : new MutationObserver(() => {
-    if (explicitLanguage !== undefined) return;
-    const next = meikyuuLanguageOf(host.closest("[lang]")?.getAttribute("lang") ?? document.documentElement.lang);
-    if (next === language) return;
-    language = next;
-    words();
-  });
+  const watching =
+    typeof MutationObserver === "undefined"
+      ? null
+      : new MutationObserver(() => {
+          if (explicitLanguage !== undefined) return;
+          const next = meikyuuLanguageOf(host.closest("[lang]")?.getAttribute("lang") ?? document.documentElement.lang);
+          if (next === language) return;
+          language = next;
+          words();
+        });
   watching?.observe(document.documentElement, { attributes: true, attributeFilter: ["lang"] });
   // The page going light or dark changes the colours the canvas reads.
-  const theme = typeof MutationObserver === "undefined" ? null : new MutationObserver(() => {
-    colours = readColours(canvas);
-    invalidate();
-  });
+  const theme =
+    typeof MutationObserver === "undefined"
+      ? null
+      : new MutationObserver(() => {
+          colours = readColours(canvas);
+          invalidate();
+        });
   theme?.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme", "class", "style"] });
   const scheme = typeof windowOf.matchMedia === "function" ? windowOf.matchMedia("(prefers-color-scheme: dark)") : null;
   const onScheme = (): void => {
@@ -876,7 +1009,13 @@ export function mountSolid(host: HTMLElement, options: SolidMountOptions): Solid
 
   const cellPlace = (cell: number): SolidCellPlace => {
     const now = frameNow();
-    return { x: now.cx[cell]!, y: now.cy[cell]!, visible: cellSeen(now, maze.grid, cell), facing: now.facing[cell]!, room: maze.grid.radii[cell]! * now.scale * (now.eye / (now.eye - now.cz[cell]!)) };
+    return {
+      x: now.cx[cell]!,
+      y: now.cy[cell]!,
+      visible: cellSeen(now, maze.grid, cell),
+      facing: now.facing[cell]!,
+      room: maze.grid.radii[cell]! * now.scale * (now.eye / (now.eye - now.cz[cell]!)),
+    };
   };
 
   const api: SolidMount = {
@@ -891,7 +1030,16 @@ export function mountSolid(host: HTMLElement, options: SolidMountOptions): Solid
       return true;
     },
     set: (changes) => {
-      const { tap, sound, hints, banner: showBanner, language: nextLanguage, stones: nextStones, edgeTurn: nextEdge, ...nextLook } = changes;
+      const {
+        tap,
+        sound,
+        hints,
+        banner: showBanner,
+        language: nextLanguage,
+        stones: nextStones,
+        edgeTurn: nextEdge,
+        ...nextLook
+      } = changes;
       if ("stones" in changes) {
         stoneOption = nextStones;
         const before = game;
@@ -948,7 +1096,10 @@ export function mountSolid(host: HTMLElement, options: SolidMountOptions): Solid
       refresh();
     },
     turn: (by) => {
-      const [right, down] = typeof by === "string" ? ({ left: [-TURN_STEP, 0], right: [TURN_STEP, 0], up: [0, -TURN_STEP], down: [0, TURN_STEP] } as const)[by] : [by.right ?? 0, by.down ?? 0];
+      const [right, down] =
+        typeof by === "string"
+          ? ({ left: [-TURN_STEP, 0], right: [TURN_STEP, 0], up: [0, -TURN_STEP], down: [0, TURN_STEP] } as const)[by]
+          : [by.right ?? 0, by.down ?? 0];
       glideTo(stepTurn(glide?.to ?? turned, right, down), glide?.zoomTo ?? zoom);
     },
     faceMe: (cell) => {
@@ -1057,7 +1208,19 @@ export function mountSolid(host: HTMLElement, options: SolidMountOptions): Solid
       host.style.removeProperty("--mkp-reserve");
       host.replaceChildren();
       host.classList.remove("meikyuu-play", "meikyuu-solid");
-      for (const name of ["kind", "solid", "solved", "moves", "cells", "reached", "turnMode", "stones", "stoneMode", "stonesLeft"]) delete host.dataset[name];
+      for (const name of [
+        "kind",
+        "solid",
+        "solved",
+        "moves",
+        "cells",
+        "reached",
+        "turnMode",
+        "stones",
+        "stoneMode",
+        "stonesLeft",
+      ])
+        delete host.dataset[name];
       delete (host as unknown as { meikyuuSolid?: SolidMount }).meikyuuSolid;
     },
   };

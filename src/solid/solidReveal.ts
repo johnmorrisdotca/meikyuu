@@ -68,7 +68,9 @@ export function revealDirection(grid: SolidGrid, cell: number): Vec3 {
       const sideways = add(scale(across, Math.cos(turn)), scale(along, Math.sin(turn)));
       const direction = unit(add(scale(normal, Math.cos(tilt)), scale(sideways, Math.sin(tilt))));
       // Clear along the direction and a little either side of it, which is how much of a turn the eye's own distance makes.
-      const strays = [across, scale(across, -1), along, scale(along, -1)].map((side) => unit(add(direction, scale(side, SLACK))));
+      const strays = [across, scale(across, -1), along, scale(along, -1)].map((side) =>
+        unit(add(direction, scale(side, SLACK))),
+      );
       if (!hits(grid, start, direction, cell) && strays.every((stray) => !hits(grid, start, stray, cell))) {
         found = direction;
         break search;

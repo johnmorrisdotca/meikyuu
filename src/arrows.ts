@@ -31,7 +31,12 @@ export type ArrowDirection = 0 | 1 | 2 | 3;
  * console.log(ARROW_STEPS);
  * ```
  */
-export const ARROW_STEPS: readonly (readonly [number, number])[] = [[0, -1], [1, 0], [0, 1], [-1, 0]];
+export const ARROW_STEPS: readonly (readonly [number, number])[] = [
+  [0, -1],
+  [1, 0],
+  [0, 1],
+  [-1, 0],
+];
 
 /** One arrow: its cells from tail to head (indexes into the board, row by row), and the way its head points.
  *
@@ -163,17 +168,34 @@ export function parseArrowRecipe(code: string): ArrowRecipe | null {
   const [shape, size, longest, seed, locks] = parts as [string, string, string, string, string | undefined];
   if (!(ARROW_SHAPES as readonly string[]).includes(shape)) return null;
   const sizes = /^(\d+)(?:x(\d+))?$/.exec(size);
-  if (sizes === null || !/^\d+$/.test(longest) || !/^\d+$/.test(seed) || (locks !== undefined && !/^\d+$/.test(locks))) return null;
+  if (sizes === null || !/^\d+$/.test(longest) || !/^\d+$/.test(seed) || (locks !== undefined && !/^\d+$/.test(locks)))
+    return null;
   const w = Number(sizes[1]);
   const h = sizes[2] === undefined ? w : Number(sizes[2]);
-  if ((shape === "square") !== (sizes[2] !== undefined) || w < 2 || h < 2 || w * h > MEIKYUU_MOST_ARROW_CELLS || Number(longest) < 1) return null;
-  return { shape: shape as ArrowShape, w, h, longest: Number(longest), seed: Number(seed), ...(locks === undefined ? {} : { locks: Number(locks) }) };
+  if (
+    (shape === "square") !== (sizes[2] !== undefined) ||
+    w < 2 ||
+    h < 2 ||
+    w * h > MEIKYUU_MOST_ARROW_CELLS ||
+    Number(longest) < 1
+  )
+    return null;
+  return {
+    shape: shape as ArrowShape,
+    w,
+    h,
+    longest: Number(longest),
+    seed: Number(seed),
+    ...(locks === undefined ? {} : { locks: Number(locks) }),
+  };
 }
 
 /** The cells of a picture: every cell of a square, or the cells whose middles are inside the outline. */
 function pictureOf(shape: ArrowShape, w: number, h: number): boolean[] {
   const inside = shape === "square" ? () => true : maskOf(shape);
-  return Array.from({ length: w * h }, (_, cell) => inside((((cell % w) + 0.5) / w) * 2 - 1, ((Math.floor(cell / w) + 0.5) / h) * 2 - 1));
+  return Array.from({ length: w * h }, (_, cell) =>
+    inside((((cell % w) + 0.5) / w) * 2 - 1, ((Math.floor(cell / w) + 0.5) / h) * 2 - 1),
+  );
 }
 
 /** The cells in front of an arrow's head, out to the edge of the board, nearest first.
@@ -212,7 +234,14 @@ function direction(w: number, from: number, to: number): ArrowDirection {
 }
 
 /** Grow a snake of up to `length` cells from `first`, over free cells of the picture, turning at random. */
-function grow(w: number, h: number, free: (cell: number) => boolean, first: number, length: number, random: Random): number[] {
+function grow(
+  w: number,
+  h: number,
+  free: (cell: number) => boolean,
+  first: number,
+  length: number,
+  random: Random,
+): number[] {
   const cells = [first];
   while (cells.length < length) {
     const end = cells[cells.length - 1]!;
@@ -268,7 +297,12 @@ export function makeArrows(recipe: ArrowRecipe): ArrowBoard {
   const lean = 0.9;
   const order = Array.from({ length: w * h }, (_, cell) => cell)
     .filter((cell) => inShape[cell])
-    .map((cell) => ({ cell, key: lean * (Math.hypot((cell % w) - focus[0], Math.floor(cell / w) - focus[1]) / Math.max(w, h)) + (1 - lean) * random() }))
+    .map((cell) => ({
+      cell,
+      key:
+        lean * (Math.hypot((cell % w) - focus[0], Math.floor(cell / w) - focus[1]) / Math.max(w, h)) +
+        (1 - lean) * random(),
+    }))
     .sort((a, b) => a.key - b.key)
     .map((entry) => entry.cell);
   for (let pass = 0; pass < 4; pass += 1) {
@@ -284,7 +318,10 @@ export function makeArrows(recipe: ArrowRecipe): ArrowBoard {
         else {
           const reversed = [...snake].reverse();
           heads.push({ cells: snake, dir: direction(w, snake[snake.length - 2]!, snake[snake.length - 1]!) });
-          heads.push({ cells: reversed, dir: direction(w, reversed[reversed.length - 2]!, reversed[reversed.length - 1]!) });
+          heads.push({
+            cells: reversed,
+            dir: direction(w, reversed[reversed.length - 2]!, reversed[reversed.length - 1]!),
+          });
         }
         const clear = heads.filter((head) => clearFor(head.cells, head.dir));
         if (clear.length === 0) continue;
@@ -317,7 +354,13 @@ export function blockersOf(board: Pick<ArrowBoard, "w" | "h" | "arrows">): numbe
   if (known !== undefined) return known;
   const owner = new Int32Array(board.w * board.h).fill(-1);
   board.arrows.forEach((arrow, id) => arrow.cells.forEach((cell) => (owner[cell] = id)));
-  const blockers = board.arrows.map((arrow) => [...new Set(rayOf(board, arrow).map((cell) => owner[cell]!).filter((id) => id >= 0))]);
+  const blockers = board.arrows.map((arrow) => [
+    ...new Set(
+      rayOf(board, arrow)
+        .map((cell) => owner[cell]!)
+        .filter((id) => id >= 0),
+    ),
+  ]);
   BLOCKERS.set(board, blockers);
   return blockers;
 }
@@ -337,7 +380,8 @@ function lockedFor(board: ArrowBoard, count: number, random: Random): boolean[] 
   // Take them from the top few, not strictly the top, so the choice varies between puzzles.
   const pool = candidates.slice(0, Math.max(count, Math.ceil(candidates.length / 2)));
   for (const id of shuffled(pool, random).slice(0, count)) locked[id] = true;
-  if (locked.filter(Boolean).length < count) throw new Error("this board has too few free arrows in the way of others to lock that many");
+  if (locked.filter(Boolean).length < count)
+    throw new Error("this board has too few free arrows in the way of others to lock that many");
   return locked;
 }
 
@@ -381,7 +425,15 @@ export function peelRounds(board: Pick<ArrowBoard, "w" | "h" | "arrows">): numbe
  * console.log(value);
  * ```
  */
-export type ArrowMeasure = { arrows: number; cells: number; rounds: number; free: number; blocked: number; longest: number; effort: number };
+export type ArrowMeasure = {
+  arrows: number;
+  cells: number;
+  rounds: number;
+  free: number;
+  blocked: number;
+  longest: number;
+  effort: number;
+};
 
 /** Measure the arrow count, cells, dependency rounds and native clearing effort.
  *
@@ -405,5 +457,13 @@ export function measureArrows(board: ArrowBoard): ArrowMeasure {
   const locks = board.locked.filter(Boolean).length;
   // A person's work: every arrow tapped, a look for the free one each round, and a guess wasted on each blocked arrow that looks free.
   const effort = arrows + 4 * rounds.length + Math.round((arrows - free) / 2) + 6 * locks;
-  return { arrows, cells: board.arrows.reduce((sum, arrow) => sum + arrow.cells.length, 0), rounds: rounds.length, free, blocked: arrows - free, longest: board.arrows.reduce((most, arrow) => Math.max(most, arrow.cells.length), 0), effort };
+  return {
+    arrows,
+    cells: board.arrows.reduce((sum, arrow) => sum + arrow.cells.length, 0),
+    rounds: rounds.length,
+    free,
+    blocked: arrows - free,
+    longest: board.arrows.reduce((most, arrow) => Math.max(most, arrow.cells.length), 0),
+    effort,
+  };
 }

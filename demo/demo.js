@@ -2,17 +2,42 @@
 // `mountMeikyuu` (the drawing, the line, the zoom, the arrows), with a chooser by shape, size and way to play, the options the
 // package has, a gallery of the shapes, kept on this device between visits, and spoken in the language the header's chooser picks.
 import { buildMaze, MEIKYUU_MODES, MEIKYUU_SHAPES } from "./dist/index.js";
-import { drawMaze, meikyuuSay, MEIKYUU_BOARD_NAMES, MEIKYUU_BOARDS, MEIKYUU_TRAIL_NAMES, MEIKYUU_TRAILS } from "./dist/draw-entry.js";
+import {
+  drawMaze,
+  meikyuuSay,
+  MEIKYUU_BOARD_NAMES,
+  MEIKYUU_BOARDS,
+  MEIKYUU_TRAIL_NAMES,
+  MEIKYUU_TRAILS,
+} from "./dist/draw-entry.js";
 import { mountMeikyuu } from "./dist/play-entry.js";
 import { levelsOf, MEIKYUU_KINDS, MEIKYUU_LEVELS_PER_SIZE, MEIKYUU_SIZES } from "./dist/levels.js";
 import { MEIKYUU_TALL_LEVELS, MEIKYUU_TALL_SIZES, TALL_SHAPES } from "./dist/levels-tall.js";
 import { MEIKYUU_COLOSSAL_LEVELS, MEIKYUU_COLOSSAL_TALL_LEVELS } from "./dist/levels-colossal.js";
 import { mountSolid } from "./dist/solid-play-entry.js";
-import { MEIKYUU_SOLID_PER_LIST, SOLID_DICE, SOLID_DIE_SIDES, SOLID_FIRST, SOLID_KINDS, SOLID_MORE_DICE, SOLID_SHAPES, SOLID_SIZE_NAMES } from "./dist/solid-entry.js";
+import {
+  MEIKYUU_SOLID_PER_LIST,
+  SOLID_DICE,
+  SOLID_DIE_SIDES,
+  SOLID_FIRST,
+  SOLID_KINDS,
+  SOLID_MORE_DICE,
+  SOLID_SHAPES,
+  SOLID_SIZE_NAMES,
+} from "./dist/solid-entry.js";
 
 /** The file a solid's levels are in: a page loads the one of the solid it shows, and no other. */
-const SOLID_FILES = { first: "./dist/levels-solid.js", dice: "./dist/levels-solid-dice.js", shapes: "./dist/levels-solid-shapes.js" };
-const solidFileOf = (kind) => (SOLID_FIRST.includes(kind) ? SOLID_FILES.first : SOLID_MORE_DICE.includes(kind) ? SOLID_FILES.dice : SOLID_FILES.shapes);
+const SOLID_FILES = {
+  first: "./dist/levels-solid.js",
+  dice: "./dist/levels-solid-dice.js",
+  shapes: "./dist/levels-solid-shapes.js",
+};
+const solidFileOf = (kind) =>
+  SOLID_FIRST.includes(kind)
+    ? SOLID_FILES.first
+    : SOLID_MORE_DICE.includes(kind)
+      ? SOLID_FILES.dice
+      : SOLID_FILES.shapes;
 const solidModules = new Map();
 /** The levels of a solid, fetched once. */
 async function loadSolidLevels(kind) {
@@ -26,11 +51,19 @@ const WORDS = {
   en: {
     pageDocs: "Docs",
     pageApi: "API",
-    pitch: "Draw a line through the labyrinth with a finger or the mouse. Over a thousand mazes, from a few cells to thousands, in every shape, tall ones for a phone held upright, and arrow puzzles too. Zoom in and out with a pinch or the wheel.",
+    pitch:
+      "Draw a line through the labyrinth with a finger or the mouse. Over a thousand mazes, from a few cells to thousands, in every shape, tall ones for a phone held upright, and arrow puzzles too. Zoom in and out with a pinch or the wheel.",
     name: "Meikyuu (迷宮) is Japanese for labyrinth: 迷, to be lost, and 宮, a palace.",
     nameLink: "About the name",
     play: "Play",
-    kinds: { maze: "Mazes", arrows: "Arrows", mixed: "Mixed", tall: "Tall", colossal: "Colossal", "colossal-tall": "Colossal tall" },
+    kinds: {
+      maze: "Mazes",
+      arrows: "Arrows",
+      mixed: "Mixed",
+      tall: "Tall",
+      colossal: "Colossal",
+      "colossal-tall": "Colossal tall",
+    },
     shape: "Shape",
     size: "Size",
     way: "Way to play",
@@ -62,20 +95,25 @@ const WORDS = {
     off: "Off",
     keep: "Your progress and these choices stay on this device.",
     solvedHere: "Solved",
-    mazeInfo: (size, place, shape, mode, cells, score) => `${size} · level ${place} of ${MEIKYUU_LEVELS_PER_SIZE} · ${shape} · ${mode} · ${cells} cells · difficulty ${score} of 100`,
+    mazeInfo: (size, place, shape, mode, cells, score) =>
+      `${size} · level ${place} of ${MEIKYUU_LEVELS_PER_SIZE} · ${shape} · ${mode} · ${cells} cells · difficulty ${score} of 100`,
     arrowsInfo: (shape, arrows, rating) => `${shape} board · ${arrows} arrows · difficulty ${rating} of 100`,
-    mixedInfo: (shape, arrows, locked, rating) => `${shape} board · ${arrows} arrows, ${locked} locked · a labyrinth hides the unlock button · difficulty ${rating} of 100`,
+    mixedInfo: (shape, arrows, locked, rating) =>
+      `${shape} board · ${arrows} arrows, ${locked} locked · a labyrinth hides the unlock button · difficulty ${rating} of 100`,
     shapesTitle: "The shapes",
     shapesText: "Each shape is a maze of its own. Press one to play its levels.",
     moreTitle: "Using it",
-    moreText: "The board above is the package itself: the rules, the drawing and every level. Each line below is all it takes.",
+    moreText:
+      "The board above is the package itself: the rules, the drawing and every level. Each line below is all it takes.",
     solidsTitle: "Over a solid",
-    solidsText: "A maze over the whole surface of a die (a d3 to a d30) or a shape (a globe, a box, a cross, a ring, a torus, a star, a heart). Draw from the green start; drag away from your line to turn the solid, and it turns by itself when your line reaches the edge of the side you can see, so the line can cross from one face to the next.",
+    solidsText:
+      "A maze over the whole surface of a die (a d3 to a d30) or a shape (a globe, a box, a cross, a ring, a torus, a star, a heart). Draw from the green start; drag away from your line to turn the solid, and it turns by itself when your line reaches the edge of the side you can see, so the line can cross from one face to the next.",
     solid: "Solid",
     solidSizes: { small: "Small", medium: "Medium", large: "Large", huge: "Huge", colossal: "Colossal" },
     solidDice: "Dice",
     solidShapes: "Shapes",
-    solidInfo: (name, size, place, cells, score) => `${name} · ${size} · level ${place} of ${MEIKYUU_SOLID_PER_LIST} · ${cells} cells · difficulty ${score} of 100`,
+    solidInfo: (name, size, place, cells, score) =>
+      `${name} · ${size} · level ${place} of ${MEIKYUU_SOLID_PER_LIST} · ${cells} cells · difficulty ${score} of 100`,
     tagTitle: "As a tag",
     tagText: "The same board in one element, with no framework: an arrow puzzle, level 6.",
     foot: "Every level is a short recipe that rebuilds the same maze in every browser, and each size is checked on every build to get a little harder, level by level. Your progress stays on this device.",
@@ -83,11 +121,19 @@ const WORDS = {
   ja: {
     pageDocs: "ドキュメント",
     pageApi: "API（英語）",
-    pitch: "指やマウスで、迷宮の中に線を引いて進みます。数マスから数千マスまで千を超える迷路が、あらゆる形で並びます。スマホを縦に持って遊ぶ縦長の迷路も、矢印パズルもあります。ピンチやホイールで拡大・縮小できます。",
+    pitch:
+      "指やマウスで、迷宮の中に線を引いて進みます。数マスから数千マスまで千を超える迷路が、あらゆる形で並びます。スマホを縦に持って遊ぶ縦長の迷路も、矢印パズルもあります。ピンチやホイールで拡大・縮小できます。",
     name: "「迷宮」は、迷（道に迷う）と宮（宮殿）で、ラビリンスのことです。",
     nameLink: "名前について（英語）",
     play: "遊ぶ",
-    kinds: { maze: "迷路", arrows: "矢印", mixed: "ミックス", tall: "縦長", colossal: "超巨大", "colossal-tall": "超巨大・縦長" },
+    kinds: {
+      maze: "迷路",
+      arrows: "矢印",
+      mixed: "ミックス",
+      tall: "縦長",
+      colossal: "超巨大",
+      "colossal-tall": "超巨大・縦長",
+    },
     shape: "形",
     size: "大きさ",
     way: "遊び方",
@@ -119,21 +165,27 @@ const WORDS = {
     off: "なし",
     keep: "進み具合とこの設定は、この端末に残ります。",
     solvedHere: "解けた",
-    mazeInfo: (shape, size, mode, cells, score, place) => `${size}・レベル${place}／${MEIKYUU_LEVELS_PER_SIZE}・${shape}・${mode}・${cells}マス・難しさ${score}／100`,
-    tallInfo: (shape, size, mode, cells, score, place) => `縦長 ${size}・レベル${place}／${MEIKYUU_LEVELS_PER_SIZE}・${shape}・${mode}・${cells}マス・難しさ${score}／100`,
+    mazeInfo: (shape, size, mode, cells, score, place) =>
+      `${size}・レベル${place}／${MEIKYUU_LEVELS_PER_SIZE}・${shape}・${mode}・${cells}マス・難しさ${score}／100`,
+    tallInfo: (shape, size, mode, cells, score, place) =>
+      `縦長 ${size}・レベル${place}／${MEIKYUU_LEVELS_PER_SIZE}・${shape}・${mode}・${cells}マス・難しさ${score}／100`,
     arrowsInfo: (shape, arrows, rating) => `${shape}の盤・矢${arrows}本・難しさ${rating}／100`,
-    mixedInfo: (shape, arrows, locked, rating) => `${shape}の盤・矢${arrows}本（うち${locked}本に鍵）・迷宮に解除ボタンが隠れています・難しさ${rating}／100`,
+    mixedInfo: (shape, arrows, locked, rating) =>
+      `${shape}の盤・矢${arrows}本（うち${locked}本に鍵）・迷宮に解除ボタンが隠れています・難しさ${rating}／100`,
     shapesTitle: "いろいろな形",
     shapesText: "どの形も、それぞれ別の迷路です。押すと、その形のレベルを遊べます。",
     moreTitle: "使い方",
-    moreText: "上の盤面は、このパッケージそのもの（ルール、描き方、すべてのレベル）で動いています。下の各行がそれぞれ必要なコードのすべてです。",
+    moreText:
+      "上の盤面は、このパッケージそのもの（ルール、描き方、すべてのレベル）で動いています。下の各行がそれぞれ必要なコードのすべてです。",
     solidsTitle: "立体の上で",
-    solidsText: "サイコロ（3面から30面まで）や形（球、直方体、十字、リング、トーラス、星、ハート）の、表面全体にわたる迷路です。緑のスタートから線を引きます。線から離れたところをドラッグすると立体が回り、線が見えている面の端に近づくと立体がひとりでに回るので、線は面から面へ渡れます。",
+    solidsText:
+      "サイコロ（3面から30面まで）や形（球、直方体、十字、リング、トーラス、星、ハート）の、表面全体にわたる迷路です。緑のスタートから線を引きます。線から離れたところをドラッグすると立体が回り、線が見えている面の端に近づくと立体がひとりでに回るので、線は面から面へ渡れます。",
     solid: "立体",
     solidSizes: { small: "小", medium: "中", large: "大", huge: "特大", colossal: "巨大" },
     solidDice: "サイコロ",
     solidShapes: "形",
-    solidInfo: (name, size, place, cells, score) => `${name}・${size}・レベル${place}／${MEIKYUU_SOLID_PER_LIST}・${cells}マス・難しさ${score}／100`,
+    solidInfo: (name, size, place, cells, score) =>
+      `${name}・${size}・レベル${place}／${MEIKYUU_SOLID_PER_LIST}・${cells}マス・難しさ${score}／100`,
     tagTitle: "タグとして",
     tagText: "同じ盤面を、フレームワークなしの一つの要素で。矢印パズルのレベル6です。",
     foot: "どのレベルも、どのブラウザでも同じ迷路を作り直せる短いレシピです。どの大きさも、レベルが進むごとに少しずつ難しくなることを、ビルドのたびに確かめています。進み具合はこの端末に残ります。",
@@ -156,14 +208,23 @@ const write = (value) => {
     /* Not remembered on this device; the board still plays. */
   }
 };
-const pick = (asked, allowed, kept, fallback) => (allowed.includes(asked) ? asked : allowed.includes(kept) ? kept : fallback);
-const flag = (asked, kept, fallback) => (asked === "on" ? true : asked === "off" ? false : typeof kept === "boolean" ? kept : fallback);
+const pick = (asked, allowed, kept, fallback) =>
+  allowed.includes(asked) ? asked : allowed.includes(kept) ? kept : fallback;
+const flag = (asked, kept, fallback) =>
+  asked === "on" ? true : asked === "off" ? false : typeof kept === "boolean" ? kept : fallback;
 
 /** The five lists the page plays: the three of the package, and the tall mazes, which are a list of their own. */
 const KINDS = [...MEIKYUU_KINDS, "tall", "colossal", "colossal-tall"];
 /** A kind that is played by its recipe (and a box shape), not by a number of the package's three lists. */
 const BY_RECIPE = ["tall", "colossal", "colossal-tall"];
-const listOf = (which) => (which === "tall" ? MEIKYUU_TALL_LEVELS : which === "colossal" ? MEIKYUU_COLOSSAL_LEVELS : which === "colossal-tall" ? MEIKYUU_COLOSSAL_TALL_LEVELS : levelsOf(which));
+const listOf = (which) =>
+  which === "tall"
+    ? MEIKYUU_TALL_LEVELS
+    : which === "colossal"
+      ? MEIKYUU_COLOSSAL_LEVELS
+      : which === "colossal-tall"
+        ? MEIKYUU_COLOSSAL_TALL_LEVELS
+        : levelsOf(which);
 const levelAt = (which, number) => listOf(which)[number - 1] ?? null;
 const countOf = (which) => listOf(which).length;
 const TALL_SIZE_NUMBERS = MEIKYUU_TALL_SIZES.map((each) => each.size);
@@ -201,7 +262,8 @@ const stoneChoice = {
   limit: pick(params.get("stonelimit"), ["default", "none"], kept.stones?.limit, "default"),
   reach: pick(Number(params.get("stonereach")), [1, 2], kept.stones?.reach, 2),
 };
-const stonesOption = () => (stoneChoice.on ? { limit: stoneChoice.limit === "none" ? null : undefined, reach: stoneChoice.reach } : false);
+const stonesOption = () =>
+  stoneChoice.on ? { limit: stoneChoice.limit === "none" ? null : undefined, reach: stoneChoice.reach } : false;
 let orientation = pick(params.get("orientation"), ORIENTATIONS, kept.orientation, "auto");
 let mount = null;
 /** The solid section's choice: which solid, which size, which level of its sixty-four. */
@@ -212,13 +274,21 @@ const solid = {
 };
 let solidMount = null;
 
-const language = familyLanguage({ id: "meikyuu", words: WORDS, onChange: () => { docsLink(); render(); } });
+const language = familyLanguage({
+  id: "meikyuu",
+  words: WORDS,
+  onChange: () => {
+    docsLink();
+    render();
+  },
+});
 const say = (key, ...args) => {
   const word = WORDS[language.lang][key];
   return typeof word === "function" ? word(...args) : word;
 };
 const pkg = (key, values) => meikyuuSay(language.lang, key, values);
-const keep = () => write({ numbering: 2, kind, levels, solved, filter, look, play, orientation, stones: stoneChoice, solid });
+const keep = () =>
+  write({ numbering: 2, kind, levels, solved, filter, look, play, orientation, stones: stoneChoice, solid });
 
 const host = document.getElementById("board");
 
@@ -240,10 +310,26 @@ function seg(parent, items, chosen, choose, labelOf, extra) {
 /** The levels of the list that pass the filters (only the mazes and the tall ones have any). */
 function matching() {
   const all = listOf(kind);
-  if (kind === "tall") return all.filter((each) => (filter.shape === "all" || each.recipe.shape === filter.shape) && (filter.mode === "all" || each.recipe.mode === filter.mode) && (filter.tallSize === "all" || each.size === filter.tallSize));
-  if (kind === "colossal" || kind === "colossal-tall") return all.filter((each) => (filter.shape === "all" || each.recipe.shape === filter.shape) && (filter.mode === "all" || each.recipe.mode === filter.mode));
+  if (kind === "tall")
+    return all.filter(
+      (each) =>
+        (filter.shape === "all" || each.recipe.shape === filter.shape) &&
+        (filter.mode === "all" || each.recipe.mode === filter.mode) &&
+        (filter.tallSize === "all" || each.size === filter.tallSize),
+    );
+  if (kind === "colossal" || kind === "colossal-tall")
+    return all.filter(
+      (each) =>
+        (filter.shape === "all" || each.recipe.shape === filter.shape) &&
+        (filter.mode === "all" || each.recipe.mode === filter.mode),
+    );
   if (kind !== "maze") return all;
-  return all.filter((each) => (filter.shape === "all" || each.recipe.shape === filter.shape) && (filter.mode === "all" || each.recipe.mode === filter.mode) && (filter.size === "all" || each.size === filter.size));
+  return all.filter(
+    (each) =>
+      (filter.shape === "all" || each.recipe.shape === filter.shape) &&
+      (filter.mode === "all" || each.recipe.mode === filter.mode) &&
+      (filter.size === "all" || each.size === filter.size),
+  );
 }
 
 function patch(name) {
@@ -267,29 +353,90 @@ function info() {
   if (kind === "maze" || BY_RECIPE.includes(kind)) {
     const { recipe } = current;
     const dims = ["square", "hex", "triangle"].includes(recipe.shape) ? `${recipe.w}×${recipe.h}` : `${recipe.w}`;
-    const size = kind === "tall" ? `${say("kinds").tall} ${MEIKYUU_TALL_SIZES[current.size - 1].label}` : kind === "maze" ? say("sizes")[current.size] : say("kinds")[kind];
-    return say("mazeInfo", size, current.inSize, `${pkg(`shape_${recipe.shape}`)} ${dims}`, pkg(`mode_${recipe.mode.replace(/-/g, "_")}`), current.cells, current.score) + done;
+    const size =
+      kind === "tall"
+        ? `${say("kinds").tall} ${MEIKYUU_TALL_SIZES[current.size - 1].label}`
+        : kind === "maze"
+          ? say("sizes")[current.size]
+          : say("kinds")[kind];
+    return (
+      say(
+        "mazeInfo",
+        size,
+        current.inSize,
+        `${pkg(`shape_${recipe.shape}`)} ${dims}`,
+        pkg(`mode_${recipe.mode.replace(/-/g, "_")}`),
+        current.cells,
+        current.score,
+      ) + done
+    );
   }
   const game = mount?.arrowGame();
   const arrows = game?.board.arrows.length ?? 0;
   if (kind === "arrows") return say("arrowsInfo", pkg(`shape_${current.recipe.shape}`), arrows, current.rating) + done;
-  return say("mixedInfo", pkg(`shape_${current.recipe.arrows.shape}`), arrows, game?.board.locked.filter(Boolean).length ?? 0, current.rating) + done;
+  return (
+    say(
+      "mixedInfo",
+      pkg(`shape_${current.recipe.arrows.shape}`),
+      arrows,
+      game?.board.locked.filter(Boolean).length ?? 0,
+      current.rating,
+    ) + done
+  );
 }
 
 function render() {
   language.say();
   const list = matching();
   const isMaze = kind === "maze" || BY_RECIPE.includes(kind);
-  seg(document.getElementById("kinds"), KINDS, kind, (each) => choose(each, null), (each) => say("kinds")[each]);
+  seg(
+    document.getElementById("kinds"),
+    KINDS,
+    kind,
+    (each) => choose(each, null),
+    (each) => say("kinds")[each],
+  );
   document.getElementById("maze-filters").hidden = !isMaze;
   document.getElementById("size-row").hidden = kind === "colossal" || kind === "colossal-tall";
   document.getElementById("orientation-row").hidden = !isMaze;
   document.body.dataset.kind = kind;
-  seg(document.getElementById("shapes"), ["all", ...(kind === "tall" || kind === "colossal-tall" ? TALL_SHAPES : MEIKYUU_SHAPES)], filter.shape, (each) => refilter({ shape: each }), (each) => (each === "all" ? say("all") : pkg(`shape_${each}`)));
-  if (kind === "tall") seg(document.getElementById("sizes"), ["all", ...TALL_SIZE_NUMBERS], filter.tallSize, (each) => refilter({ tallSize: each }), (each) => (each === "all" ? say("all") : MEIKYUU_TALL_SIZES[each - 1].label));
-  else seg(document.getElementById("sizes"), ["all", ...MEIKYUU_SIZES], filter.size, (each) => refilter({ size: each }), (each) => (each === "all" ? say("all") : say("sizes")[each]));
-  seg(document.getElementById("modes"), ["all", ...MEIKYUU_MODES], filter.mode, (each) => refilter({ mode: each }), (each) => (each === "all" ? say("all") : pkg(`mode_${each.replace(/-/g, "_")}`)));
-  seg(document.getElementById("orientations"), ORIENTATIONS, orientation, (each) => turn(each), (each) => say("orientations")[each]);
+  seg(
+    document.getElementById("shapes"),
+    ["all", ...(kind === "tall" || kind === "colossal-tall" ? TALL_SHAPES : MEIKYUU_SHAPES)],
+    filter.shape,
+    (each) => refilter({ shape: each }),
+    (each) => (each === "all" ? say("all") : pkg(`shape_${each}`)),
+  );
+  if (kind === "tall")
+    seg(
+      document.getElementById("sizes"),
+      ["all", ...TALL_SIZE_NUMBERS],
+      filter.tallSize,
+      (each) => refilter({ tallSize: each }),
+      (each) => (each === "all" ? say("all") : MEIKYUU_TALL_SIZES[each - 1].label),
+    );
+  else
+    seg(
+      document.getElementById("sizes"),
+      ["all", ...MEIKYUU_SIZES],
+      filter.size,
+      (each) => refilter({ size: each }),
+      (each) => (each === "all" ? say("all") : say("sizes")[each]),
+    );
+  seg(
+    document.getElementById("modes"),
+    ["all", ...MEIKYUU_MODES],
+    filter.mode,
+    (each) => refilter({ mode: each }),
+    (each) => (each === "all" ? say("all") : pkg(`mode_${each.replace(/-/g, "_")}`)),
+  );
+  seg(
+    document.getElementById("orientations"),
+    ORIENTATIONS,
+    orientation,
+    (each) => turn(each),
+    (each) => say("orientations")[each],
+  );
   const count = countOf(kind);
   const number = levels[kind];
   const input = document.getElementById("level-input");
@@ -298,16 +445,56 @@ function render() {
   document.getElementById("level-of").textContent = ` / ${count}`;
   document.getElementById("previous").disabled = list.length === 0 || list[0].number >= number;
   document.getElementById("next").disabled = list.length === 0 || list[list.length - 1].number <= number;
-  document.getElementById("info").textContent = `${info()}${isMaze && list.length !== count ? ` ${say("matching", list.length)}` : ""}`;
-  seg(document.getElementById("board-look"), MEIKYUU_BOARD_NAMES, look.board, (each) => change({ board: each }), (each) => say("boards")[each], (button, each) => button.append(patch(each)));
-  seg(document.getElementById("trail-look"), MEIKYUU_TRAIL_NAMES, look.trail, (each) => change({ trail: each }), (each) => say("trails")[each], (button, each) => button.append(swatch(each)));
-  const onOff = (id, key) => seg(document.getElementById(id), [true, false], play[key], (value) => changePlay({ [key]: value }), (value) => say(value ? "on" : "off"));
+  document.getElementById("info").textContent =
+    `${info()}${isMaze && list.length !== count ? ` ${say("matching", list.length)}` : ""}`;
+  seg(
+    document.getElementById("board-look"),
+    MEIKYUU_BOARD_NAMES,
+    look.board,
+    (each) => change({ board: each }),
+    (each) => say("boards")[each],
+    (button, each) => button.append(patch(each)),
+  );
+  seg(
+    document.getElementById("trail-look"),
+    MEIKYUU_TRAIL_NAMES,
+    look.trail,
+    (each) => change({ trail: each }),
+    (each) => say("trails")[each],
+    (button, each) => button.append(swatch(each)),
+  );
+  const onOff = (id, key) =>
+    seg(
+      document.getElementById(id),
+      [true, false],
+      play[key],
+      (value) => changePlay({ [key]: value }),
+      (value) => say(value ? "on" : "off"),
+    );
   onOff("tap", "tap");
   onOff("hints", "hints");
   onOff("sound", "sound");
-  seg(document.getElementById("stones"), [true, false], stoneChoice.on, (value) => changeStones({ on: value }), (value) => say(value ? "on" : "off"));
-  seg(document.getElementById("stone-limit"), ["default", "none"], stoneChoice.limit, (value) => changeStones({ limit: value }), (value) => say(value === "none" ? "stonesNone" : "stonesDefault"));
-  seg(document.getElementById("stone-reach"), [1, 2], stoneChoice.reach, (value) => changeStones({ reach: value }), (value) => say(value === 1 ? "stonesNear" : "stonesTwo"));
+  seg(
+    document.getElementById("stones"),
+    [true, false],
+    stoneChoice.on,
+    (value) => changeStones({ on: value }),
+    (value) => say(value ? "on" : "off"),
+  );
+  seg(
+    document.getElementById("stone-limit"),
+    ["default", "none"],
+    stoneChoice.limit,
+    (value) => changeStones({ limit: value }),
+    (value) => say(value === "none" ? "stonesNone" : "stonesDefault"),
+  );
+  seg(
+    document.getElementById("stone-reach"),
+    [1, 2],
+    stoneChoice.reach,
+    (value) => changeStones({ reach: value }),
+    (value) => say(value === 1 ? "stonesNear" : "stonesTwo"),
+  );
   gallery();
   renderSolids();
 }
@@ -318,7 +505,10 @@ function renderSolids() {
   // Two rows, the dice by their sides and the shapes, each its own group of buttons under the one `solid-kinds`.
   const kinds = document.getElementById("solid-kinds");
   if (kinds.children.length === 0) {
-    for (const [id, label] of [["solid-dice", "solidDice"], ["solid-shapes", "solidShapes"]]) {
+    for (const [id, label] of [
+      ["solid-dice", "solidDice"],
+      ["solid-shapes", "solidShapes"],
+    ]) {
       const row = document.createElement("div");
       row.className = "solid-row";
       const caption = document.createElement("span");
@@ -335,11 +525,30 @@ function renderSolids() {
     }
   }
   for (const caption of kinds.querySelectorAll("[data-say-row]")) caption.textContent = say(caption.dataset.sayRow);
-  for (const choices of kinds.querySelectorAll(".fam-seg")) choices.setAttribute("aria-label", say(choices.dataset.sayLabel));
+  for (const choices of kinds.querySelectorAll(".fam-seg"))
+    choices.setAttribute("aria-label", say(choices.dataset.sayLabel));
   const named = (each) => pkg(`solid_${each}`);
-  seg(document.getElementById("solid-dice"), [...SOLID_DICE], solid.kind, (each) => chooseSolid({ kind: each }), (each) => `d${SOLID_DIE_SIDES[each]} ${named(each)}`);
-  seg(document.getElementById("solid-shapes"), [...SOLID_SHAPES], solid.kind, (each) => chooseSolid({ kind: each }), named);
-  seg(document.getElementById("solid-sizes"), [...SOLID_SIZE_NAMES], solid.size, (each) => chooseSolid({ size: each }), (each) => say("solidSizes")[each]);
+  seg(
+    document.getElementById("solid-dice"),
+    [...SOLID_DICE],
+    solid.kind,
+    (each) => chooseSolid({ kind: each }),
+    (each) => `d${SOLID_DIE_SIDES[each]} ${named(each)}`,
+  );
+  seg(
+    document.getElementById("solid-shapes"),
+    [...SOLID_SHAPES],
+    solid.kind,
+    (each) => chooseSolid({ kind: each }),
+    named,
+  );
+  seg(
+    document.getElementById("solid-sizes"),
+    [...SOLID_SIZE_NAMES],
+    solid.size,
+    (each) => chooseSolid({ size: each }),
+    (each) => say("solidSizes")[each],
+  );
   const input = document.getElementById("solid-level-input");
   if (document.activeElement !== input) input.value = String(solid.level);
   input.max = String(MEIKYUU_SOLID_PER_LIST);
@@ -347,13 +556,21 @@ function renderSolids() {
   document.getElementById("solid-previous").disabled = solid.level <= 1;
   document.getElementById("solid-next").disabled = solid.level >= MEIKYUU_SOLID_PER_LIST;
   const level = solidLevelOf(solid.kind, solid.size, solid.level);
-  document.getElementById("solid-info").textContent = say("solidInfo", pkg(`solid_${solid.kind}`), say("solidSizes")[solid.size], solid.level, level.cells, level.score);
+  document.getElementById("solid-info").textContent = say(
+    "solidInfo",
+    pkg(`solid_${solid.kind}`),
+    say("solidSizes")[solid.size],
+    solid.level,
+    level.cells,
+    level.score,
+  );
 }
 
 function putSolid() {
   const level = solidLevelOf(solid.kind, solid.size, solid.level);
   const host = document.getElementById("solid-board");
-  if (solidMount === null) solidMount = mountSolid(host, { recipe: level.code, ...look, ...play, stones: stonesOption() });
+  if (solidMount === null)
+    solidMount = mountSolid(host, { recipe: level.code, ...look, ...play, stones: stonesOption() });
   else solidMount.load(level.code);
   host.dataset.level = String(solid.level);
   host.dataset.ready = "true";
@@ -411,14 +628,29 @@ function refilter(next) {
 }
 
 /** The shapes, each one a maze of its own as the package draws it, to play the levels of. */
-const SAMPLES = { square: [10, 8], hex: [9, 8], triangle: [12, 6], circle: [6, 6], heart: [17, 17], leaf: [17, 17], star: [23, 23], ring: [15, 15], diamond: [15, 15], cross: [13, 13], moon: [17, 17], hexagon: [4, 4], pyramid: [7, 7] };
+const SAMPLES = {
+  square: [10, 8],
+  hex: [9, 8],
+  triangle: [12, 6],
+  circle: [6, 6],
+  heart: [17, 17],
+  leaf: [17, 17],
+  star: [23, 23],
+  ring: [15, 15],
+  diamond: [15, 15],
+  cross: [13, 13],
+  moon: [17, 17],
+  hexagon: [4, 4],
+  pyramid: [7, 7],
+};
 const drawn = new Map();
 function gallery() {
   const list = document.getElementById("gallery");
   list.replaceChildren(
     ...MEIKYUU_SHAPES.map((shape) => {
       const [w, h] = SAMPLES[shape];
-      if (!drawn.has(shape)) drawn.set(shape, buildMaze({ shape, w, h, algorithm: "wilson", mode: "enter-leave", seed: 4 }));
+      if (!drawn.has(shape))
+        drawn.set(shape, buildMaze({ shape, w, h, algorithm: "wilson", mode: "enter-leave", seed: 4 }));
       const item = document.createElement("li");
       const button = document.createElement("button");
       button.type = "button";
@@ -449,7 +681,9 @@ function gallery() {
 function put() {
   const level = levelAt(kind, levels[kind]);
   // A tall level is played by its recipe in a box two thirds as wide as it is tall; the others by their number in their list, in a square.
-  const entry = BY_RECIPE.includes(kind) ? { recipe: level.code, ratio: level.ratio } : { kind, level: levels[kind], ratio: "square" };
+  const entry = BY_RECIPE.includes(kind)
+    ? { recipe: level.code, ratio: level.ratio }
+    : { kind, level: levels[kind], ratio: "square" };
   if (mount === null) {
     mount = mountMeikyuu(host, {
       ...entry,
@@ -490,7 +724,8 @@ document.getElementById("level-input").addEventListener("change", (event) => {
   const asked = Number(event.target.value);
   if (!Number.isInteger(asked)) return;
   // A level typed in that the filters hide takes them off.
-  if (!matching().some((each) => each.number === asked)) Object.assign(filter, { shape: "all", size: "all", tallSize: "all", mode: "all" });
+  if (!matching().some((each) => each.number === asked))
+    Object.assign(filter, { shape: "all", size: "all", tallSize: "all", mode: "all" });
   choose(kind, asked);
 });
 
@@ -507,5 +742,9 @@ choose(kind, null);
 putSolid();
 host.dataset.ready = "true";
 
-function docsLink(){document.querySelector('[data-say="pageDocs"]')?.setAttribute("href",language.lang==="ja"?"docs/ja/index.html":"docs/index.html");}
+function docsLink() {
+  document
+    .querySelector('[data-say="pageDocs"]')
+    ?.setAttribute("href", language.lang === "ja" ? "docs/ja/index.html" : "docs/index.html");
+}
 docsLink();

@@ -66,14 +66,27 @@ function nearestInSize(size: MeikyuuSize, score: number): number {
  * console.log(MEIKYUU_LEGACY_MAZE_LEVELS.length);
  * ```
  */
-export const MEIKYUU_LEGACY_MAZE_LEVELS: readonly LegacyMazeLevel[] = MEIKYUU_LEGACY_MAZE_ROWS.map(([code, effort, cells, score], index) => {
-  const now = byCode.get(code) ?? null;
-  const size = sizeOf(cells);
-  const place = (placed.get(size) ?? 0) + 1;
-  placed.set(size, place);
-  const nearest = now?.number ?? nearestInSize(size, score);
-  return { number: index + 1, code, effort, cells, score, size, place, now: now?.number ?? null, nowInSize: now?.inSize ?? null, nearest };
-});
+export const MEIKYUU_LEGACY_MAZE_LEVELS: readonly LegacyMazeLevel[] = MEIKYUU_LEGACY_MAZE_ROWS.map(
+  ([code, effort, cells, score], index) => {
+    const now = byCode.get(code) ?? null;
+    const size = sizeOf(cells);
+    const place = (placed.get(size) ?? 0) + 1;
+    placed.set(size, place);
+    const nearest = now?.number ?? nearestInSize(size, score);
+    return {
+      number: index + 1,
+      code,
+      effort,
+      cells,
+      score,
+      size,
+      place,
+      now: now?.number ?? null,
+      nowInSize: now?.inSize ?? null,
+      nearest,
+    };
+  },
+);
 
 /** The 1.0.0 level with this number, or null.
  *

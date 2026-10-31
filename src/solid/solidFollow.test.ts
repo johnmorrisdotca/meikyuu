@@ -25,7 +25,8 @@ describe("following the way over a solid, by the solid's own turning and Face me
           let q = openingTurn(maze.grid, maze.start);
           const frame = createFrame(maze.grid);
           const hidden = maze.grid.convex ? undefined : (cell: number) => !cellSeen(frame, maze.grid, cell);
-          const clear = (cell: number): boolean => frame.visible[cell] === 1 && frame.facing[cell]! > LEAST_FACING && cellSeen(frame, maze.grid, cell);
+          const clear = (cell: number): boolean =>
+            frame.visible[cell] === 1 && frame.facing[cell]! > LEAST_FACING && cellSeen(frame, maze.grid, cell);
           for (let k = 1; k < way.length; k += 1) {
             steps += 1;
             let ok = false;
@@ -42,7 +43,10 @@ describe("following the way over a solid, by the solid's own turning and Face me
               q = faceCellTurn(maze.grid, q, way[k]!, true);
               projectFrame(frame, maze.grid, q, 1, 330, 330);
               byHand += 1;
-              expect(clear(way[k]!), `${kind} ${size} level ${at + 1}, step ${k}: the cell never came into view, even with Face me`).toBe(true);
+              expect(
+                clear(way[k]!),
+                `${kind} ${size} level ${at + 1}, step ${k}: the cell never came into view, even with Face me`,
+              ).toBe(true);
             }
           }
         }

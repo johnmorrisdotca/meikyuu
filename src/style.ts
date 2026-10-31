@@ -12,7 +12,10 @@ import { MEIKYUU_TRAILS } from "./boards.ts";
  * the page's light or dark. With reduced motion asked for, nothing moves.
  */
 const TRAIL_RULES = Object.entries(MEIKYUU_TRAILS)
-  .map(([name, { light, dark }]) => `.meikyuu[data-board="paper"][data-trail="${name}"] { --mk-trail: ${light}; }\n@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .meikyuu[data-board="paper"][data-trail="${name}"] { --mk-trail: ${dark}; } }\n:root[data-theme="dark"] .meikyuu[data-board="paper"][data-trail="${name}"] { --mk-trail: ${dark}; }`)
+  .map(
+    ([name, { light, dark }]) =>
+      `.meikyuu[data-board="paper"][data-trail="${name}"] { --mk-trail: ${light}; }\n@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .meikyuu[data-board="paper"][data-trail="${name}"] { --mk-trail: ${dark}; } }\n:root[data-theme="dark"] .meikyuu[data-board="paper"][data-trail="${name}"] { --mk-trail: ${dark}; }`,
+  )
   .join("\n");
 
 /** The scoped native SVG styles for mazes and arrow boards.

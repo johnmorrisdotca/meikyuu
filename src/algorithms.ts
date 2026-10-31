@@ -190,7 +190,8 @@ function kruskal(grid: CellGraph, random: Random): Links {
     return root;
   };
   const edges: [number, number][] = [];
-  for (let cell = 0; cell < grid.cells; cell += 1) for (const next of grid.neighbours[cell]!) if (next > cell) edges.push([cell, next]);
+  for (let cell = 0; cell < grid.cells; cell += 1)
+    for (const next of grid.neighbours[cell]!) if (next > cell) edges.push([cell, next]);
   for (const [a, b] of shuffled(edges, random)) {
     const ra = find(a);
     const rb = find(b);
@@ -206,7 +207,10 @@ function wilson(grid: CellGraph, random: Random): Links {
   const inTree = new Uint8Array(grid.cells);
   const next = new Int32Array(grid.cells).fill(-1);
   inTree[below(random, grid.cells)] = 1;
-  for (const first of shuffled(Array.from({ length: grid.cells }, (_, i) => i), random)) {
+  for (const first of shuffled(
+    Array.from({ length: grid.cells }, (_, i) => i),
+    random,
+  )) {
     if (inTree[first] === 1) continue;
     // Walk at random until the tree is met, remembering only where each cell was last left toward: that erases loops.
     let cell = first;
@@ -224,7 +228,8 @@ function wilson(grid: CellGraph, random: Random): Links {
 }
 
 function eller(grid: CellGraph, random: Random): Links {
-  if (grid.shape !== "square") throw new Error("Eller's algorithm works a row at a time, so it makes square mazes only");
+  if (grid.shape !== "square")
+    throw new Error("Eller's algorithm works a row at a time, so it makes square mazes only");
   const { w, h } = grid;
   const links = emptyLinks(grid.cells);
   let sets = new Int32Array(w).fill(-1);

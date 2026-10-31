@@ -52,7 +52,8 @@ export function dimensionsFor(shape: MeikyuuShape, cells: number, aspect: number
         else low = middle + 1;
       }
       const before = Math.max(2, low - 1);
-      const w = Math.abs(cellsOf(shape, before, before) - cells) < Math.abs(cellsOf(shape, low, low) - cells) ? before : low;
+      const w =
+        Math.abs(cellsOf(shape, before, before) - cells) < Math.abs(cellsOf(shape, low, low) - cells) ? before : low;
       return [w, w];
     }
   }
@@ -102,7 +103,19 @@ export function candidateOf(recipe: MazeRecipe, old?: number): Candidate | null 
   if (!isPerfect(maze.grid, maze.links)) return null;
   const difficulty = difficultyOf(maze);
   const { measure } = difficulty;
-  return { code: recipeCode(recipe), recipe, cells: maze.grid.cells, effort: measure.effort, score: difficulty.score, fine: difficulty.exact, difficulty, deadEnds: measure.deadEnds, branches: measure.branches, same: sameness(maze), ...(old === undefined ? {} : { old }) };
+  return {
+    code: recipeCode(recipe),
+    recipe,
+    cells: maze.grid.cells,
+    effort: measure.effort,
+    score: difficulty.score,
+    fine: difficulty.exact,
+    difficulty,
+    deadEnds: measure.deadEnds,
+    branches: measure.branches,
+    same: sameness(maze),
+    ...(old === undefined ? {} : { old }),
+  };
 }
 
 /** Whether a candidate is too easy to be a level at all, or, with a place of a size, to be a level at that place (`isTooEasy`). */
@@ -113,19 +126,52 @@ export const tooEasy = (c: Candidate, place?: number): boolean => isTooEasy(c.di
  * in and out, and Prim's and the growing tree's short dead ends, and brings the rest in one at a time. These are the numbers the 1.0.0 list was made
  * with, so a place keeps the kind of maze it had.
  */
-export const SHAPE_FROM: Record<MeikyuuShape, number> = { square: 0, circle: 12, hex: 16, triangle: 20, hexagon: 26, pyramid: 30, diamond: 36, ring: 42, cross: 48, moon: 55, heart: 62, star: 75, leaf: 90 };
+export const SHAPE_FROM: Record<MeikyuuShape, number> = {
+  square: 0,
+  circle: 12,
+  hex: 16,
+  triangle: 20,
+  hexagon: 26,
+  pyramid: 30,
+  diamond: 36,
+  ring: 42,
+  cross: 48,
+  moon: 55,
+  heart: 62,
+  star: 75,
+  leaf: 90,
+};
 export const MODE_FROM: Record<MeikyuuMode, number> = { "enter-leave": 0, "to-goal": 10, "centre-out": 25, keys: 55 };
-export const ALGORITHM_FROM: Record<MeikyuuAlgorithm, number> = { prim: 0, growing: 0, kruskal: 12, wilson: 25, eller: 25, hunt: 60, backtracker: 90 };
+export const ALGORITHM_FROM: Record<MeikyuuAlgorithm, number> = {
+  prim: 0,
+  growing: 0,
+  kruskal: 12,
+  wilson: 25,
+  eller: 25,
+  hunt: 60,
+  backtracker: 90,
+};
 
 /** A candidate's shape, way to play and algorithm have arrived by the time a list reaches `effort`. */
 export function arrivedAt(c: Candidate, effort: number): boolean {
-  return effort >= SHAPE_FROM[c.recipe.shape] && effort >= MODE_FROM[c.recipe.mode] && effort >= ALGORITHM_FROM[c.recipe.algorithm];
+  return (
+    effort >= SHAPE_FROM[c.recipe.shape] &&
+    effort >= MODE_FROM[c.recipe.mode] &&
+    effort >= ALGORITHM_FROM[c.recipe.algorithm]
+  );
 }
 
 const ASPECTS = [1, 1.25, 0.8, 1, 1.5, 0.67] as const;
 
 /** A recipe at random, with cells about `cells` (log-uniform between `low` and `high` when not given). */
-export function randomRecipe(random: Random, low: number, high: number, shapes: readonly MeikyuuShape[], aspects: readonly number[] = ASPECTS, algorithms: readonly MeikyuuAlgorithm[] = MEIKYUU_ALGORITHMS): MazeRecipe {
+export function randomRecipe(
+  random: Random,
+  low: number,
+  high: number,
+  shapes: readonly MeikyuuShape[],
+  aspects: readonly number[] = ASPECTS,
+  algorithms: readonly MeikyuuAlgorithm[] = MEIKYUU_ALGORITHMS,
+): MazeRecipe {
   const weighted = shapes.flatMap((shape) => (shape === "square" ? [shape, shape] : [shape]));
   const shape = weighted[below(random, weighted.length)]!;
   const target = Math.exp(Math.log(low) + random() * (Math.log(high) - Math.log(low)));
@@ -140,7 +186,14 @@ export function randomRecipe(random: Random, low: number, high: number, shapes: 
 }
 
 /** A stream of candidates, each a random recipe within the cells given, that builds and is not too easy. */
-export function* candidates(seed: number, low: number, high: number, shapes: readonly MeikyuuShape[], aspects?: readonly number[], algorithms?: readonly MeikyuuAlgorithm[]): Generator<Candidate> {
+export function* candidates(
+  seed: number,
+  low: number,
+  high: number,
+  shapes: readonly MeikyuuShape[],
+  aspects?: readonly number[],
+  algorithms?: readonly MeikyuuAlgorithm[],
+): Generator<Candidate> {
   const random = seededRandom(seed);
   for (;;) {
     const recipe = randomRecipe(random, low, high, shapes, aspects, algorithms);

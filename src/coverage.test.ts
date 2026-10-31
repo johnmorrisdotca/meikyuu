@@ -6,17 +6,33 @@ import { buildMaze, parseRecipe, type Maze } from "./maze.ts";
 import { squareGrid } from "./shapes.ts";
 
 /** A maze made by hand from the passages of a square grid. */
-function handMade(w: number, h: number, passages: readonly (readonly [number, number])[], start: number, goal: number): Maze {
+function handMade(
+  w: number,
+  h: number,
+  passages: readonly (readonly [number, number])[],
+  start: number,
+  goal: number,
+): Maze {
   const grid = squareGrid(w, h);
   const links: number[][] = Array.from({ length: grid.cells }, () => []);
   for (const [a, b] of passages) {
     links[a]!.push(b);
     links[b]!.push(a);
   }
-  return { recipe: { shape: "square", w, h, algorithm: "wilson", mode: "to-goal", seed: 0 }, grid, links, start, goal, entrance: null, exit: null, keys: [] };
+  return {
+    recipe: { shape: "square", w, h, algorithm: "wilson", mode: "to-goal", seed: 0 },
+    grid,
+    links,
+    start,
+    goal,
+    entrance: null,
+    exit: null,
+    keys: [],
+  };
 }
 
-const points = (w: number, h: number): [number, number][] => Array.from({ length: w * h }, (_, i) => [i % w, Math.floor(i / w)]);
+const points = (w: number, h: number): [number, number][] =>
+  Array.from({ length: w * h }, (_, i) => [i % w, Math.floor(i / w)]);
 
 describe("how much of the map an answer covers", () => {
   it("cuts a map into 2 by 2 zones under 150 cells, 3 by 3 under 800 and 4 by 4 above, and a solid into 2 by 2 by 2 under 200 and 3 by 3 by 3 above", () => {
@@ -26,7 +42,10 @@ describe("how much of the map an answer covers", () => {
 
   it("is whole for an answer that crosses the whole map, and nothing but the floor's half for one that stays in a corner", () => {
     const map = points(30, 30);
-    const whole = coverageOf(map, map.map((_, i) => i));
+    const whole = coverageOf(
+      map,
+      map.map((_, i) => i),
+    );
     expect(whole.bbox).toBe(1);
     expect(whole.zones).toBe(1);
     expect(whole.cover).toBe(1);
@@ -51,11 +70,20 @@ describe("how much of the map an answer covers", () => {
 
   it("takes a solid's zones over three quarters, so a whole tour of a shell reads whole", () => {
     const shell: number[][] = [];
-    for (let x = 0; x < 8; x += 1) for (let y = 0; y < 8; y += 1) for (let z = 0; z < 8; z += 1) if (x === 0 || x === 7 || y === 0 || y === 7 || z === 0 || z === 7) shell.push([x, y, z]);
-    const whole = coverageOf(shell, shell.map((_, i) => i));
+    for (let x = 0; x < 8; x += 1)
+      for (let y = 0; y < 8; y += 1)
+        for (let z = 0; z < 8; z += 1)
+          if (x === 0 || x === 7 || y === 0 || y === 7 || z === 0 || z === 7) shell.push([x, y, z]);
+    const whole = coverageOf(
+      shell,
+      shell.map((_, i) => i),
+    );
     expect(whole.zones).toBe(1);
     expect(whole.bbox).toBe(1);
-    const tenth = coverageOf(shell, shell.slice(0, 30).map((_, i) => i));
+    const tenth = coverageOf(
+      shell,
+      shell.slice(0, 30).map((_, i) => i),
+    );
     expect(tenth.zones).toBeLessThan(0.5);
   });
 
@@ -63,7 +91,8 @@ describe("how much of the map an answer covers", () => {
     // A 12 by 12 maze of long snakes: the answer runs from the top left to the bottom right through the whole of it.
     const snake: [number, number][] = [];
     for (let row = 0; row < 12; row += 1) {
-      for (let col = 0; col < 11; col += 1) snake.push([row * 12 + (row % 2 === 0 ? col : 11 - col), row * 12 + (row % 2 === 0 ? col + 1 : 10 - col)]);
+      for (let col = 0; col < 11; col += 1)
+        snake.push([row * 12 + (row % 2 === 0 ? col : 11 - col), row * 12 + (row % 2 === 0 ? col + 1 : 10 - col)]);
       if (row < 11) snake.push([row * 12 + (row % 2 === 0 ? 11 : 0), (row + 1) * 12 + (row % 2 === 0 ? 11 : 0)]);
     }
     const whole = difficultyOf(handMade(12, 12, snake, 0, 12 * 11 + 0));
@@ -86,7 +115,14 @@ describe("how much of the map an answer covers", () => {
   });
 
   it("is the same every time, and always from 0 to 1, for every shape of maze", () => {
-    for (const code of ["circle:8:prim:centre-out:3", "cross:30:wilson:to-goal:9", "hexagon:6:growing:enter-leave:1", "pyramid:12:hunt:to-goal:4", "heart:20:kruskal:keys-2:7", "ring:14:backtracker:centre-out:2"]) {
+    for (const code of [
+      "circle:8:prim:centre-out:3",
+      "cross:30:wilson:to-goal:9",
+      "hexagon:6:growing:enter-leave:1",
+      "pyramid:12:hunt:to-goal:4",
+      "heart:20:kruskal:keys-2:7",
+      "ring:14:backtracker:centre-out:2",
+    ]) {
       const maze = buildMaze(parseRecipe(code)!);
       const a = difficultyOf(maze).coverage;
       expect(difficultyOf(maze).coverage, code).toEqual(a);

@@ -49,11 +49,27 @@ export type MeikyuuColossalLevel = {
 
 export { COLOSSAL_CELLS, COLOSSAL_TALL_HEIGHT, COLOSSAL_TALL_WIDTH, MEIKYUU_COLOSSAL_PER_LIST };
 
-function listOf(rows: readonly (readonly [string, number, number, number])[], list: MeikyuuColossalLevel["list"], ratio: MeikyuuColossalLevel["ratio"]): readonly MeikyuuColossalLevel[] {
+function listOf(
+  rows: readonly (readonly [string, number, number, number])[],
+  list: MeikyuuColossalLevel["list"],
+  ratio: MeikyuuColossalLevel["ratio"],
+): readonly MeikyuuColossalLevel[] {
   return rows.map(([code, effort, cells, score], index) => {
     const recipe = parseRecipe(code);
     if (recipe === null) throw new Error(`${code} is not a recipe`);
-    return { kind: "maze", list, number: index + 1, inSize: index + 1, code, recipe, cells, effort, rating: ratingOf(effort), score, ratio };
+    return {
+      kind: "maze",
+      list,
+      number: index + 1,
+      inSize: index + 1,
+      code,
+      recipe,
+      cells,
+      effort,
+      rating: ratingOf(effort),
+      score,
+      ratio,
+    };
   });
 }
 
@@ -65,7 +81,11 @@ function listOf(rows: readonly (readonly [string, number, number, number])[], li
  * console.log(MEIKYUU_COLOSSAL_LEVELS.length);
  * ```
  */
-export const MEIKYUU_COLOSSAL_LEVELS: readonly MeikyuuColossalLevel[] = listOf(MEIKYUU_COLOSSAL_ROWS, "colossal", "square");
+export const MEIKYUU_COLOSSAL_LEVELS: readonly MeikyuuColossalLevel[] = listOf(
+  MEIKYUU_COLOSSAL_ROWS,
+  "colossal",
+  "square",
+);
 
 /** The 128 tall colossal levels: 64 across and 96 down, two to three.
  *
@@ -75,7 +95,11 @@ export const MEIKYUU_COLOSSAL_LEVELS: readonly MeikyuuColossalLevel[] = listOf(M
  * console.log(MEIKYUU_COLOSSAL_TALL_LEVELS.length);
  * ```
  */
-export const MEIKYUU_COLOSSAL_TALL_LEVELS: readonly MeikyuuColossalLevel[] = listOf(MEIKYUU_COLOSSAL_TALL_ROWS, "colossal-tall", TALL_RATIO);
+export const MEIKYUU_COLOSSAL_TALL_LEVELS: readonly MeikyuuColossalLevel[] = listOf(
+  MEIKYUU_COLOSSAL_TALL_ROWS,
+  "colossal-tall",
+  TALL_RATIO,
+);
 
 /** Square colossal level `n` (from 1), or null when there is none.
  *
@@ -89,7 +113,7 @@ export const MEIKYUU_COLOSSAL_TALL_LEVELS: readonly MeikyuuColossalLevel[] = lis
  * ```
  */
 export function colossalLevelOf(n: number): MeikyuuColossalLevel | null {
-  return Number.isInteger(n) ? MEIKYUU_COLOSSAL_LEVELS[n - 1] ?? null : null;
+  return Number.isInteger(n) ? (MEIKYUU_COLOSSAL_LEVELS[n - 1] ?? null) : null;
 }
 
 /** Tall colossal level `n` (from 1), or null when there is none.
@@ -104,7 +128,7 @@ export function colossalLevelOf(n: number): MeikyuuColossalLevel | null {
  * ```
  */
 export function colossalTallLevelOf(n: number): MeikyuuColossalLevel | null {
-  return Number.isInteger(n) ? MEIKYUU_COLOSSAL_TALL_LEVELS[n - 1] ?? null : null;
+  return Number.isInteger(n) ? (MEIKYUU_COLOSSAL_TALL_LEVELS[n - 1] ?? null) : null;
 }
 
 /** The colossal levels of a list that pass a filter, by shape and way to play, each when given.
@@ -118,7 +142,18 @@ export function colossalTallLevelOf(n: number): MeikyuuColossalLevel | null {
  * console.log(findColossalLevels({shape:"square"}).length);
  * ```
  */
-export function findColossalLevels(filter: { list?: MeikyuuColossalLevel["list"]; shape?: MazeRecipe["shape"]; mode?: MazeRecipe["mode"] } = {}): MeikyuuColossalLevel[] {
-  const every = filter.list === "colossal" ? MEIKYUU_COLOSSAL_LEVELS : filter.list === "colossal-tall" ? MEIKYUU_COLOSSAL_TALL_LEVELS : [...MEIKYUU_COLOSSAL_LEVELS, ...MEIKYUU_COLOSSAL_TALL_LEVELS];
-  return every.filter((level) => (filter.shape === undefined || level.recipe.shape === filter.shape) && (filter.mode === undefined || level.recipe.mode === filter.mode));
+export function findColossalLevels(
+  filter: { list?: MeikyuuColossalLevel["list"]; shape?: MazeRecipe["shape"]; mode?: MazeRecipe["mode"] } = {},
+): MeikyuuColossalLevel[] {
+  const every =
+    filter.list === "colossal"
+      ? MEIKYUU_COLOSSAL_LEVELS
+      : filter.list === "colossal-tall"
+        ? MEIKYUU_COLOSSAL_TALL_LEVELS
+        : [...MEIKYUU_COLOSSAL_LEVELS, ...MEIKYUU_COLOSSAL_TALL_LEVELS];
+  return every.filter(
+    (level) =>
+      (filter.shape === undefined || level.recipe.shape === filter.shape) &&
+      (filter.mode === undefined || level.recipe.mode === filter.mode),
+  );
 }

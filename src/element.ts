@@ -39,9 +39,11 @@ import { FIT_MODES, type FitMode } from "./viewport.ts";
  * `mountMeikyuu`), and has the methods `undo()`, `restart()`, `hint()` and `fit()`. Nothing in it can be selected,
  * and its box stays one steady square whatever is drawn.
  */
-const ElementBase: typeof HTMLElement = typeof HTMLElement === "undefined" ? (class {} as unknown as typeof HTMLElement) : HTMLElement;
+const ElementBase: typeof HTMLElement =
+  typeof HTMLElement === "undefined" ? (class {} as unknown as typeof HTMLElement) : HTMLElement;
 
-const isOn = (value: string | null, fallback = false): boolean => (value === null ? fallback : !["false", "off", "0", "no"].includes(value.trim().toLowerCase()));
+const isOn = (value: string | null, fallback = false): boolean =>
+  value === null ? fallback : !["false", "off", "0", "no"].includes(value.trim().toLowerCase());
 /** A box shape written as `square`, `maze`, a number, or a fraction such as `2/3`. */
 function ratioOf(value: string | null): "square" | "maze" | number | undefined {
   if (value === null || value === "square") return undefined;
@@ -50,8 +52,10 @@ function ratioOf(value: string | null): "square" | "maze" | number | undefined {
   const number = bottom === undefined ? Number(top) : Number(top) / Number(bottom);
   return Number.isFinite(number) && number > 0 ? number : undefined;
 }
-const numberOf = (value: string | null): number | undefined => (value === null || value.trim() === "" || !Number.isFinite(Number(value)) ? undefined : Number(value));
-const oneOf = <T extends string>(value: string | null, allowed: readonly T[]): T | undefined => (allowed.includes(value as T) ? (value as T) : undefined);
+const numberOf = (value: string | null): number | undefined =>
+  value === null || value.trim() === "" || !Number.isFinite(Number(value)) ? undefined : Number(value);
+const oneOf = <T extends string>(value: string | null, allowed: readonly T[]): T | undefined =>
+  allowed.includes(value as T) ? (value as T) : undefined;
 
 /** The real mounted-board options, checked by TypeScript and the embed builder.
  * @example
@@ -60,7 +64,38 @@ const oneOf = <T extends string>(value: string | null, allowed: readonly T[]): T
  * console.log(typeof MEIKYUU_EMBED_OPTION_KEYS); // object
  * ```
  */
-export const MEIKYUU_EMBED_OPTION_KEYS = Object.keys({ kind: true, level: true, recipe: true, tap: true, hints: true, banner: true, controls: true, zoom: true, ratio: true, orientation: true, gutter: true, reserve: true, fit: true, edgePan: true, pan: true, turnButton: true, sound: true, stones: true, language: true, board: true, trail: true, wall: true, line: true, onMove: true, onSolve: true, onKey: true, onUnlock: true, onBump: true, onLose: true, onStones: true } satisfies Record<keyof MeikyuuMountOptions, boolean>);
+export const MEIKYUU_EMBED_OPTION_KEYS = Object.keys({
+  kind: true,
+  level: true,
+  recipe: true,
+  tap: true,
+  hints: true,
+  banner: true,
+  controls: true,
+  zoom: true,
+  ratio: true,
+  orientation: true,
+  gutter: true,
+  reserve: true,
+  fit: true,
+  edgePan: true,
+  pan: true,
+  turnButton: true,
+  sound: true,
+  stones: true,
+  language: true,
+  board: true,
+  trail: true,
+  wall: true,
+  line: true,
+  onMove: true,
+  onSolve: true,
+  onKey: true,
+  onUnlock: true,
+  onBump: true,
+  onLose: true,
+  onStones: true,
+} satisfies Record<keyof MeikyuuMountOptions, boolean>);
 /** Host callbacks; the same actions emit native events.
  * @example
  * ```ts
@@ -69,7 +104,21 @@ export const MEIKYUU_EMBED_OPTION_KEYS = Object.keys({ kind: true, level: true, 
  * console.log(Object.keys(options).length); // 0
  * ```
  */
-export type MeikyuuElementOptions = Pick<MeikyuuMountOptions, "onMove" | "onSolve" | "onKey" | "onUnlock" | "onBump" | "onLose" | "onStones" | "wall" | "line" | "board" | "trail" | "recipe">;
+export type MeikyuuElementOptions = Pick<
+  MeikyuuMountOptions,
+  | "onMove"
+  | "onSolve"
+  | "onKey"
+  | "onUnlock"
+  | "onBump"
+  | "onLose"
+  | "onStones"
+  | "wall"
+  | "line"
+  | "board"
+  | "trail"
+  | "recipe"
+>;
 
 /** Native custom element with reflected setup and presentation.
  * @example
@@ -79,7 +128,36 @@ export type MeikyuuElementOptions = Pick<MeikyuuMountOptions, "onMove" | "onSolv
  * ```
  */
 export class MeikyuuBoard extends ElementBase {
-  static observedAttributes = ["kind", "level", "recipe", "board", "trail", "tap", "hints", "banner", "sound", "controls", "zoom", "lang", "ratio", "orientation", "gutter", "reserve", "fit", "pan", "edge-pan", "turn-button", "stones", "stone-limit", "stone-reach", "size", "daily", "theme", "width", "label"];
+  static observedAttributes = [
+    "kind",
+    "level",
+    "recipe",
+    "board",
+    "trail",
+    "tap",
+    "hints",
+    "banner",
+    "sound",
+    "controls",
+    "zoom",
+    "lang",
+    "ratio",
+    "orientation",
+    "gutter",
+    "reserve",
+    "fit",
+    "pan",
+    "edge-pan",
+    "turn-button",
+    "stones",
+    "stone-limit",
+    "stone-reach",
+    "size",
+    "daily",
+    "theme",
+    "width",
+    "label",
+  ];
 
   #widthBefore: string | null = null;
   #widthOwned = false;
@@ -92,127 +170,290 @@ export class MeikyuuBoard extends ElementBase {
     this.setAttribute("data-meikyuu-embed", "");
     const width = Number(this.getAttribute("width"));
     const size = this.getAttribute("size");
-    const displaySize = size === null && (this.hasAttribute("daily")) ? "medium" : size;
-    const owned = (this.hasAttribute("width") && Number.isFinite(width) && width > 0) || (displaySize !== null && ["small", "medium", "large"].includes(displaySize));
-    if (owned && !this.#widthOwned) { this.#widthBefore = this.style.width; this.#widthOwned = true; }
-    if (this.hasAttribute("width") && Number.isFinite(width) && width > 0) this.style.width = `${Math.min(width, 2000)}px`;
-    else if (displaySize !== null && ["small", "medium", "large"].includes(displaySize)) this.style.width = `${{ small: 320, medium: 480, large: 640 }[displaySize as "small" | "medium" | "large"]}px`;
-    else if (this.#widthOwned) { this.style.width = this.#widthBefore ?? ""; this.#widthOwned = false; }
+    const displaySize = size === null && this.hasAttribute("daily") ? "medium" : size;
+    const owned =
+      (this.hasAttribute("width") && Number.isFinite(width) && width > 0) ||
+      (displaySize !== null && ["small", "medium", "large"].includes(displaySize));
+    if (owned && !this.#widthOwned) {
+      this.#widthBefore = this.style.width;
+      this.#widthOwned = true;
+    }
+    if (this.hasAttribute("width") && Number.isFinite(width) && width > 0)
+      this.style.width = `${Math.min(width, 2000)}px`;
+    else if (displaySize !== null && ["small", "medium", "large"].includes(displaySize))
+      this.style.width = `${{ small: 320, medium: 480, large: 640 }[displaySize as "small" | "medium" | "large"]}px`;
+    else if (this.#widthOwned) {
+      this.style.width = this.#widthBefore ?? "";
+      this.#widthOwned = false;
+    }
     this.style.maxWidth = "100%";
-    const theme = this.getAttribute("theme"); this.style.colorScheme = theme === "light" || theme === "dark" ? theme : "light dark";
+    const theme = this.getAttribute("theme");
+    this.style.colorScheme = theme === "light" || theme === "dark" ? theme : "light dark";
     const root = this.getRootNode();
-    const target: ParentNode = typeof ShadowRoot !== "undefined" && root instanceof ShadowRoot ? root : this.ownerDocument.head;
+    const target: ParentNode =
+      typeof ShadowRoot !== "undefined" && root instanceof ShadowRoot ? root : this.ownerDocument.head;
     if (target.querySelector("style[data-meikyuu-embed-style]") === null) {
-      const style = this.ownerDocument.createElement("style"); style.setAttribute("data-meikyuu-embed-style", "");
-      const rules = (theme: string) => [...MEIKYUU_PLAY_STYLE.matchAll(new RegExp(`:root\\[data-theme="${theme}"\\] ([^{]+)\\{([^}]+)\\}`, "g"))].map(match => `[data-meikyuu-embed][theme="${theme}"]${match[1].trim() === ".meikyuu-play" ? ".meikyuu-play" : ` ${match[1].trim()}`} {${match[2]}}`).join("\n");
-      const light = [...MEIKYUU_PLAY_STYLE.matchAll(/\.(meikyuu|meikyuu-play) \{([^}]+)\}/g)].filter(match => !match[2].includes("#ece8dc") && !match[2].includes("#171a18"));
-      style.textContent = `@media(prefers-color-scheme:dark){${rules("dark").replaceAll('[theme="dark"]', ':not([theme="light"]):not([theme="dark"])')}}\n${rules("dark")}\n${light.map(match => `[data-meikyuu-embed][theme="light"]${match[1] === "meikyuu-play" ? ".meikyuu-play" : " .meikyuu"} {${match[2]}}`).join("\n")}\n[data-meikyuu-embed][label]{outline-offset:2px}`;
+      const style = this.ownerDocument.createElement("style");
+      style.setAttribute("data-meikyuu-embed-style", "");
+      const rules = (theme: string) =>
+        [...MEIKYUU_PLAY_STYLE.matchAll(new RegExp(`:root\\[data-theme="${theme}"\\] ([^{]+)\\{([^}]+)\\}`, "g"))]
+          .map(
+            (match) =>
+              `[data-meikyuu-embed][theme="${theme}"]${match[1].trim() === ".meikyuu-play" ? ".meikyuu-play" : ` ${match[1].trim()}`} {${match[2]}}`,
+          )
+          .join("\n");
+      const light = [...MEIKYUU_PLAY_STYLE.matchAll(/\.(meikyuu|meikyuu-play) \{([^}]+)\}/g)].filter(
+        (match) => !match[2].includes("#ece8dc") && !match[2].includes("#171a18"),
+      );
+      style.textContent = `@media(prefers-color-scheme:dark){${rules("dark").replaceAll('[theme="dark"]', ':not([theme="light"]):not([theme="dark"])')}}\n${rules("dark")}\n${light.map((match) => `[data-meikyuu-embed][theme="light"]${match[1] === "meikyuu-play" ? ".meikyuu-play" : " .meikyuu"} {${match[2]}}`).join("\n")}\n[data-meikyuu-embed][label]{outline-offset:2px}`;
       target.append(style);
     }
-    if (this.hasAttribute("label")) { this.#labelBefore ??= { role: this.getAttribute("role"), label: this.getAttribute("aria-label") }; this.setAttribute("role", "group"); this.setAttribute("aria-label", this.getAttribute("label")!); }
-    else if (this.#labelBefore !== null) { for (const [name, value] of [["role", this.#labelBefore.role], ["aria-label", this.#labelBefore.label]]) { if (value === null) this.removeAttribute(name!); else this.setAttribute(name!, value); } this.#labelBefore = null; }
+    if (this.hasAttribute("label")) {
+      this.#labelBefore ??= { role: this.getAttribute("role"), label: this.getAttribute("aria-label") };
+      this.setAttribute("role", "group");
+      this.setAttribute("aria-label", this.getAttribute("label")!);
+    } else if (this.#labelBefore !== null) {
+      for (const [name, value] of [
+        ["role", this.#labelBefore.role],
+        ["aria-label", this.#labelBefore.label],
+      ]) {
+        if (value === null) this.removeAttribute(name!);
+        else this.setAttribute(name!, value);
+      }
+      this.#labelBefore = null;
+    }
   }
 
   #options: MeikyuuElementOptions = {};
   /** Host callbacks, read at event time without restarting play. */
-  get options(): MeikyuuElementOptions { return this.#options; }
-  set options(value: MeikyuuElementOptions) { this.#options = value ?? {}; if (this.isConnected) this.#refresh(); }
+  get options(): MeikyuuElementOptions {
+    return this.#options;
+  }
+  set options(value: MeikyuuElementOptions) {
+    this.#options = value ?? {};
+    if (this.isConnected) this.#refresh();
+  }
   #problem(message: string): void {
-    this.#mount?.destroy(); this.#mount = null; this.#key = "";
-    const status = this.ownerDocument.createElement("p"); status.setAttribute("role", "status"); status.textContent = message; this.replaceChildren(status);
+    this.#mount?.destroy();
+    this.#mount = null;
+    this.#key = "";
+    const status = this.ownerDocument.createElement("p");
+    status.setAttribute("role", "status");
+    status.textContent = message;
+    this.replaceChildren(status);
     this.dispatchEvent(new CustomEvent("meikyuu-error", { bubbles: true, composed: true, detail: { message } }));
   }
 
   /** The `kind` attribute, reflected. */
-  get kind(): string | null { return this.getAttribute("kind"); }
-  set kind(value: string | number | boolean | null | undefined) { this.#write("kind", value); }
+  get kind(): string | null {
+    return this.getAttribute("kind");
+  }
+  set kind(value: string | number | boolean | null | undefined) {
+    this.#write("kind", value);
+  }
   /** The `level` attribute, reflected. */
-  get level(): string | null { return this.getAttribute("level"); }
-  set level(value: string | number | boolean | null | undefined) { this.#write("level", value); }
+  get level(): string | null {
+    return this.getAttribute("level");
+  }
+  set level(value: string | number | boolean | null | undefined) {
+    this.#write("level", value);
+  }
   /** The `recipe` attribute, reflected. */
-  get recipe(): string | null { return this.getAttribute("recipe"); }
-  set recipe(value: string | number | boolean | null | undefined) { this.#write("recipe", value); }
+  get recipe(): string | null {
+    return this.getAttribute("recipe");
+  }
+  set recipe(value: string | number | boolean | null | undefined) {
+    this.#write("recipe", value);
+  }
   /** The `board` attribute, reflected. */
-  get board(): string | null { return this.getAttribute("board"); }
-  set board(value: string | number | boolean | null | undefined) { this.#write("board", value); }
+  get board(): string | null {
+    return this.getAttribute("board");
+  }
+  set board(value: string | number | boolean | null | undefined) {
+    this.#write("board", value);
+  }
   /** The `trail` attribute, reflected. */
-  get trail(): string | null { return this.getAttribute("trail"); }
-  set trail(value: string | number | boolean | null | undefined) { this.#write("trail", value); }
+  get trail(): string | null {
+    return this.getAttribute("trail");
+  }
+  set trail(value: string | number | boolean | null | undefined) {
+    this.#write("trail", value);
+  }
   /** The `tap` attribute, reflected. */
-  get tap(): string | null { return this.getAttribute("tap"); }
-  set tap(value: string | number | boolean | null | undefined) { this.#write("tap", value); }
+  get tap(): string | null {
+    return this.getAttribute("tap");
+  }
+  set tap(value: string | number | boolean | null | undefined) {
+    this.#write("tap", value);
+  }
   /** The `hints` attribute, reflected. */
-  get hints(): string | null { return this.getAttribute("hints"); }
-  set hints(value: string | number | boolean | null | undefined) { this.#write("hints", value); }
+  get hints(): string | null {
+    return this.getAttribute("hints");
+  }
+  set hints(value: string | number | boolean | null | undefined) {
+    this.#write("hints", value);
+  }
   /** The `banner` attribute, reflected. */
-  get banner(): string | null { return this.getAttribute("banner"); }
-  set banner(value: string | number | boolean | null | undefined) { this.#write("banner", value); }
+  get banner(): string | null {
+    return this.getAttribute("banner");
+  }
+  set banner(value: string | number | boolean | null | undefined) {
+    this.#write("banner", value);
+  }
   /** The `sound` attribute, reflected. */
-  get sound(): string | null { return this.getAttribute("sound"); }
-  set sound(value: string | number | boolean | null | undefined) { this.#write("sound", value); }
+  get sound(): string | null {
+    return this.getAttribute("sound");
+  }
+  set sound(value: string | number | boolean | null | undefined) {
+    this.#write("sound", value);
+  }
   /** The `controls` attribute, reflected. */
-  get controls(): string | null { return this.getAttribute("controls"); }
-  set controls(value: string | number | boolean | null | undefined) { this.#write("controls", value); }
+  get controls(): string | null {
+    return this.getAttribute("controls");
+  }
+  set controls(value: string | number | boolean | null | undefined) {
+    this.#write("controls", value);
+  }
   /** The `zoom` attribute, reflected. */
-  get zoom(): string | null { return this.getAttribute("zoom"); }
-  set zoom(value: string | number | boolean | null | undefined) { this.#write("zoom", value); }
+  get zoom(): string | null {
+    return this.getAttribute("zoom");
+  }
+  set zoom(value: string | number | boolean | null | undefined) {
+    this.#write("zoom", value);
+  }
   /** The `ratio` attribute, reflected. */
-  get ratio(): string | null { return this.getAttribute("ratio"); }
-  set ratio(value: string | number | boolean | null | undefined) { this.#write("ratio", value); }
+  get ratio(): string | null {
+    return this.getAttribute("ratio");
+  }
+  set ratio(value: string | number | boolean | null | undefined) {
+    this.#write("ratio", value);
+  }
   /** The `orientation` attribute, reflected. */
-  get orientation(): string | null { return this.getAttribute("orientation"); }
-  set orientation(value: string | number | boolean | null | undefined) { this.#write("orientation", value); }
+  get orientation(): string | null {
+    return this.getAttribute("orientation");
+  }
+  set orientation(value: string | number | boolean | null | undefined) {
+    this.#write("orientation", value);
+  }
   /** The `gutter` attribute, reflected. */
-  get gutter(): string | null { return this.getAttribute("gutter"); }
-  set gutter(value: string | number | boolean | null | undefined) { this.#write("gutter", value); }
+  get gutter(): string | null {
+    return this.getAttribute("gutter");
+  }
+  set gutter(value: string | number | boolean | null | undefined) {
+    this.#write("gutter", value);
+  }
   /** The `reserve` attribute, reflected. */
-  get reserve(): string | null { return this.getAttribute("reserve"); }
-  set reserve(value: string | number | boolean | null | undefined) { this.#write("reserve", value); }
+  get reserve(): string | null {
+    return this.getAttribute("reserve");
+  }
+  set reserve(value: string | number | boolean | null | undefined) {
+    this.#write("reserve", value);
+  }
   /** The `pan` attribute, reflected. */
-  get pan(): string | null { return this.getAttribute("pan"); }
-  set pan(value: string | number | boolean | null | undefined) { this.#write("pan", value); }
+  get pan(): string | null {
+    return this.getAttribute("pan");
+  }
+  set pan(value: string | number | boolean | null | undefined) {
+    this.#write("pan", value);
+  }
   /** The `edge-pan` attribute, reflected. */
-  get "edge-pan"(): string | null { return this.getAttribute("edge-pan"); }
-  set "edge-pan"(value: string | number | boolean | null | undefined) { this.#write("edge-pan", value); }
+  get "edge-pan"(): string | null {
+    return this.getAttribute("edge-pan");
+  }
+  set "edge-pan"(value: string | number | boolean | null | undefined) {
+    this.#write("edge-pan", value);
+  }
   /** The `edge-pan` attribute, reflected. */
-  get edgePan(): string | null { return this.getAttribute("edge-pan"); }
-  set edgePan(value: string | number | boolean | null | undefined) { this.#write("edge-pan", value); }
+  get edgePan(): string | null {
+    return this.getAttribute("edge-pan");
+  }
+  set edgePan(value: string | number | boolean | null | undefined) {
+    this.#write("edge-pan", value);
+  }
   /** The `turn-button` attribute, reflected. */
-  get "turn-button"(): string | null { return this.getAttribute("turn-button"); }
-  set "turn-button"(value: string | number | boolean | null | undefined) { this.#write("turn-button", value); }
+  get "turn-button"(): string | null {
+    return this.getAttribute("turn-button");
+  }
+  set "turn-button"(value: string | number | boolean | null | undefined) {
+    this.#write("turn-button", value);
+  }
   /** The `turn-button` attribute, reflected. */
-  get turnButton(): string | null { return this.getAttribute("turn-button"); }
-  set turnButton(value: string | number | boolean | null | undefined) { this.#write("turn-button", value); }
+  get turnButton(): string | null {
+    return this.getAttribute("turn-button");
+  }
+  set turnButton(value: string | number | boolean | null | undefined) {
+    this.#write("turn-button", value);
+  }
   /** The `stones` attribute, reflected. */
-  get stones(): string | null { return this.getAttribute("stones"); }
-  set stones(value: string | number | boolean | null | undefined) { this.#write("stones", value); }
+  get stones(): string | null {
+    return this.getAttribute("stones");
+  }
+  set stones(value: string | number | boolean | null | undefined) {
+    this.#write("stones", value);
+  }
   /** The `stone-limit` attribute, reflected. */
-  get "stone-limit"(): string | null { return this.getAttribute("stone-limit"); }
-  set "stone-limit"(value: string | number | boolean | null | undefined) { this.#write("stone-limit", value); }
+  get "stone-limit"(): string | null {
+    return this.getAttribute("stone-limit");
+  }
+  set "stone-limit"(value: string | number | boolean | null | undefined) {
+    this.#write("stone-limit", value);
+  }
   /** The `stone-limit` attribute, reflected. */
-  get stoneLimit(): string | null { return this.getAttribute("stone-limit"); }
-  set stoneLimit(value: string | number | boolean | null | undefined) { this.#write("stone-limit", value); }
+  get stoneLimit(): string | null {
+    return this.getAttribute("stone-limit");
+  }
+  set stoneLimit(value: string | number | boolean | null | undefined) {
+    this.#write("stone-limit", value);
+  }
   /** The `stone-reach` attribute, reflected. */
-  get "stone-reach"(): string | null { return this.getAttribute("stone-reach"); }
-  set "stone-reach"(value: string | number | boolean | null | undefined) { this.#write("stone-reach", value); }
+  get "stone-reach"(): string | null {
+    return this.getAttribute("stone-reach");
+  }
+  set "stone-reach"(value: string | number | boolean | null | undefined) {
+    this.#write("stone-reach", value);
+  }
   /** The `stone-reach` attribute, reflected. */
-  get stoneReach(): string | null { return this.getAttribute("stone-reach"); }
-  set stoneReach(value: string | number | boolean | null | undefined) { this.#write("stone-reach", value); }
+  get stoneReach(): string | null {
+    return this.getAttribute("stone-reach");
+  }
+  set stoneReach(value: string | number | boolean | null | undefined) {
+    this.#write("stone-reach", value);
+  }
   /** The `size` attribute, reflected. */
-  get size(): string | null { return this.getAttribute("size"); }
-  set size(value: string | number | boolean | null | undefined) { this.#write("size", value); }
+  get size(): string | null {
+    return this.getAttribute("size");
+  }
+  set size(value: string | number | boolean | null | undefined) {
+    this.#write("size", value);
+  }
   /** The `daily` attribute, reflected. */
-  get daily(): string | null { return this.getAttribute("daily"); }
-  set daily(value: string | number | boolean | null | undefined) { this.#write("daily", value); }
+  get daily(): string | null {
+    return this.getAttribute("daily");
+  }
+  set daily(value: string | number | boolean | null | undefined) {
+    this.#write("daily", value);
+  }
   /** The `theme` attribute, reflected. */
-  get theme(): string | null { return this.getAttribute("theme"); }
-  set theme(value: string | number | boolean | null | undefined) { this.#write("theme", value); }
+  get theme(): string | null {
+    return this.getAttribute("theme");
+  }
+  set theme(value: string | number | boolean | null | undefined) {
+    this.#write("theme", value);
+  }
   /** The `width` attribute, reflected. */
-  get width(): string | null { return this.getAttribute("width"); }
-  set width(value: string | number | boolean | null | undefined) { this.#write("width", value); }
+  get width(): string | null {
+    return this.getAttribute("width");
+  }
+  set width(value: string | number | boolean | null | undefined) {
+    this.#write("width", value);
+  }
   /** The `label` attribute, reflected. */
-  get label(): string | null { return this.getAttribute("label"); }
-  set label(value: string | number | boolean | null | undefined) { this.#write("label", value); }
+  get label(): string | null {
+    return this.getAttribute("label");
+  }
+  set label(value: string | number | boolean | null | undefined) {
+    this.#write("label", value);
+  }
 
   #mount: MeikyuuMount | null = null;
   #key = "";
@@ -265,9 +506,15 @@ export class MeikyuuBoard extends ElementBase {
     let level = this.getAttribute("level") === null ? undefined : Number(this.getAttribute("level"));
     const recipe = this.getAttribute("recipe") ?? this.#options.recipe;
     let day: string | null;
-    try { day = recipe === undefined ? embedDay(this.getAttribute("daily")) : null; } catch { this.#problem("Use a real UTC date written YYYY-MM-DD."); return; }
-    if (day === null) this.removeAttribute("data-day"); else this.setAttribute("data-day", day);
-    if (day !== null) level = dailySeed(day, `meikyuu/${kind}`) % levelCount(kind) + 1;
+    try {
+      day = recipe === undefined ? embedDay(this.getAttribute("daily")) : null;
+    } catch {
+      this.#problem("Use a real UTC date written YYYY-MM-DD.");
+      return;
+    }
+    if (day === null) this.removeAttribute("data-day");
+    else this.setAttribute("data-day", day);
+    if (day !== null) level = (dailySeed(day, `meikyuu/${kind}`) % levelCount(kind)) + 1;
     const controls = isOn(this.getAttribute("controls"), true);
     const zoom = isOn(this.getAttribute("zoom"), true);
     const ratio = ratioOf(this.getAttribute("ratio"));
@@ -282,7 +529,8 @@ export class MeikyuuBoard extends ElementBase {
     const settings = {
       board: this.#options.board ?? oneOf<MeikyuuBoardName>(this.getAttribute("board"), MEIKYUU_BOARD_NAMES),
       trail: this.#options.trail ?? oneOf<MeikyuuTrailName>(this.getAttribute("trail"), MEIKYUU_TRAIL_NAMES),
-      wall: this.#options.wall, line: this.#options.line,
+      wall: this.#options.wall,
+      line: this.#options.line,
       tap: isOn(this.getAttribute("tap")),
       hints: isOn(this.getAttribute("hints"), true),
       banner: isOn(this.getAttribute("banner"), true),
@@ -290,7 +538,19 @@ export class MeikyuuBoard extends ElementBase {
       language: oneOf<MeikyuuLanguage>(this.getAttribute("lang"), ["en", "ja"] as const),
     };
     const stones: StoneOption | undefined = isOn(this.getAttribute("stones"))
-      ? { ...(this.getAttribute("stone-limit") === null ? {} : { limit: this.getAttribute("stone-limit")!.trim().toLowerCase() === "none" ? null : numberOf(this.getAttribute("stone-limit")) }), ...(numberOf(this.getAttribute("stone-reach")) === undefined ? {} : { reach: numberOf(this.getAttribute("stone-reach")) }) }
+      ? {
+          ...(this.getAttribute("stone-limit") === null
+            ? {}
+            : {
+                limit:
+                  this.getAttribute("stone-limit")!.trim().toLowerCase() === "none"
+                    ? null
+                    : numberOf(this.getAttribute("stone-limit")),
+              }),
+          ...(numberOf(this.getAttribute("stone-reach")) === undefined
+            ? {}
+            : { reach: numberOf(this.getAttribute("stone-reach")) }),
+        }
       : undefined;
     const live = (mount: MeikyuuMount): void => {
       mount.set({ ...settings, stones });
@@ -305,17 +565,53 @@ export class MeikyuuBoard extends ElementBase {
     if (recipe === undefined && (level === undefined || !Number.isInteger(level))) return;
     this.#mount?.destroy();
     this.#key = key;
-    this.#mount = mountMeikyuu(this, { kind, level, recipe, ...settings, stones, controls, zoom, ratio, reserve, gutter, fit, orientation, pan, edgePan, turnButton,
-      onMove: (detail) => this.#options.onMove?.(detail), onSolve: (detail) => this.#options.onSolve?.(detail), onKey: (detail) => this.#options.onKey?.(detail), onUnlock: (detail) => this.#options.onUnlock?.(detail), onBump: (detail) => this.#options.onBump?.(detail), onLose: (detail) => this.#options.onLose?.(detail), onStones: (detail) => this.#options.onStones?.(detail),
+    this.#mount = mountMeikyuu(this, {
+      kind,
+      level,
+      recipe,
+      ...settings,
+      stones,
+      controls,
+      zoom,
+      ratio,
+      reserve,
+      gutter,
+      fit,
+      orientation,
+      pan,
+      edgePan,
+      turnButton,
+      onMove: (detail) => this.#options.onMove?.(detail),
+      onSolve: (detail) => this.#options.onSolve?.(detail),
+      onKey: (detail) => this.#options.onKey?.(detail),
+      onUnlock: (detail) => this.#options.onUnlock?.(detail),
+      onBump: (detail) => this.#options.onBump?.(detail),
+      onLose: (detail) => this.#options.onLose?.(detail),
+      onStones: (detail) => this.#options.onStones?.(detail),
     });
-    if (this.#mount === null) { this.#problem("Choose a valid kind, level or recipe."); return; }
-    this.#frame(); this.dispatchEvent(new CustomEvent("meikyuu-load", { bubbles: true, composed: true, detail: { kind, level: level ?? null, day } }));
+    if (this.#mount === null) {
+      this.#problem("Choose a valid kind, level or recipe.");
+      return;
+    }
+    this.#frame();
+    this.dispatchEvent(
+      new CustomEvent("meikyuu-load", { bubbles: true, composed: true, detail: { kind, level: level ?? null, day } }),
+    );
   }
 }
 
 // Keep fit() callable while a framework can assign its attribute.
 const fitMethod = MeikyuuBoard.prototype.fit;
-Object.defineProperty(MeikyuuBoard.prototype, "fit", { configurable: true, get() { return fitMethod; }, set(this: Element, value: unknown) { if (value === null || value === undefined) this.removeAttribute("fit"); else this.setAttribute("fit", String(value)); } });
+Object.defineProperty(MeikyuuBoard.prototype, "fit", {
+  configurable: true,
+  get() {
+    return fitMethod;
+  },
+  set(this: Element, value: unknown) {
+    if (value === null || value === undefined) this.removeAttribute("fit");
+    else this.setAttribute("fit", String(value));
+  },
+});
 /** Register a standard or custom tag without replacing a definition. Safe without a browser.
  * @param tag - The custom tag name; omitted to use the package default.
  * @returns Nothing; existing definitions and server imports remain safe.

@@ -59,14 +59,25 @@ const REACH = 30;
 /** A line of more cells than this is a long one: it is not rippled on winning, where the ripple repaints the whole line every frame. */
 const LONG_LINE = 600;
 
-function svgElement<K extends keyof SVGElementTagNameMap>(parent: Element, tag: K, className?: string): SVGElementTagNameMap[K] {
+function svgElement<K extends keyof SVGElementTagNameMap>(
+  parent: Element,
+  tag: K,
+  className?: string,
+): SVGElementTagNameMap[K] {
   const el = document.createElementNS(NS, tag);
   if (className !== undefined) el.setAttribute("class", className);
   parent.append(el);
   return el;
 }
 
-export function createMazeSurface(box: HTMLElement, hooks: MazeSurfaceHooks, maze: Maze, initial: MazeLook, turnNow: Turn = 0, surfaceOptions: SurfaceOptions = {}): MazeSurface {
+export function createMazeSurface(
+  box: HTMLElement,
+  hooks: MazeSurfaceHooks,
+  maze: Maze,
+  initial: MazeLook,
+  turnNow: Turn = 0,
+  surfaceOptions: SurfaceOptions = {},
+): MazeSurface {
   const svg = document.createElementNS(NS, "svg");
   svg.setAttribute("preserveAspectRatio", "xMidYMid meet");
   svg.setAttribute("aria-hidden", "true");
@@ -157,57 +168,67 @@ export function createMazeSurface(box: HTMLElement, hooks: MazeSurfaceHooks, maz
     for (const [key, tile] of tiles) if (!keep.has(key) && tile.path?.parentNode) tile.path.remove();
   }
 
-  const surface = createSurface(box, turnedBox(turn, maze.grid.box), {
-    press: (_at, pixel) => {
-      const now = hooks.game();
-      if (now.solved || hooks.stoneMode?.() === true) return false;
-      // Pressing the start, or the end of the line, begins a stroke there.
-      const target = headOf(now) ?? current.start;
-      const [cx, cy] = surface.pixelOf(toDisplay(turn, current.grid.centres[target]!));
-      if (Math.hypot(pixel[0] - cx, pixel[1] - cy) > Math.max(REACH, surface.view().scale * 0.6)) return false;
-      hooks.change(pressMaze(now, target), "press");
-      return true;
+  const surface = createSurface(
+    box,
+    turnedBox(turn, maze.grid.box),
+    {
+      press: (_at, pixel) => {
+        const now = hooks.game();
+        if (now.solved || hooks.stoneMode?.() === true) return false;
+        // Pressing the start, or the end of the line, begins a stroke there.
+        const target = headOf(now) ?? current.start;
+        const [cx, cy] = surface.pixelOf(toDisplay(turn, current.grid.centres[target]!));
+        if (Math.hypot(pixel[0] - cx, pixel[1] - cy) > Math.max(REACH, surface.view().scale * 0.6)) return false;
+        hooks.change(pressMaze(now, target), "press");
+        return true;
+      },
+      move: (from, to) => {
+        // The pointer's way from one point to the next (in the picture), carried into the maze, each cell it enters offered to the game.
+        const before = hooks.game();
+        let next = before;
+        for (const cell of cellsAlong(current.grid, turn, from, to)) next = dragMaze(next, cell);
+        if (next !== before) hooks.change(next, "drag");
+      },
+      lift: () => hooks.change(liftMaze(hooks.game()), "lift"),
+      tap: (at) => {
+        const [x, y] = toLogical(turn, at);
+        const cell = current.grid.at(x, y);
+        if (hooks.stoneMode?.() === true) {
+          if (cell >= 0) hooks.stone?.(cell, "tap");
+          return;
+        }
+        if (!hooks.taps()) return;
+        if (cell >= 0) hooks.change(tapMaze(hooks.game(), cell), "tap");
+      },
+      // Press-and-hold lays a stone where the finger is, if the game has stones and the finger is not on the line (a hold on the line is a pause before drawing).
+      ...(hooks.stone === undefined
+        ? {}
+        : {
+            hold: (at: readonly [number, number]) => {
+              const [x, y] = toLogical(turn, at);
+              const cell = current.grid.at(x, y);
+              return cell >= 0 && !hooks.game().path.includes(cell) && hooks.stone!(cell, "hold");
+            },
+          }),
+      render: (view, _shown, size) => {
+        lastView = view;
+        svg.setAttribute("viewBox", viewBoxOf(view, size));
+        // Walls, the line and the marks keep a thickness a finger and an eye can see at any zoom.
+        const unit = 1 / view.scale;
+        const line = lookNow.line ?? 0.34;
+        walls.setAttribute("stroke-width", fixed(Math.max(lookNow.wall ?? 0.12, 1.6 * unit)));
+        trail.setAttribute("stroke-width", fixed(Math.max(line, 3 * unit)));
+        hintAhead.setAttribute("stroke-width", fixed(Math.max(line * 1.5, 5 * unit)));
+        hintBack.setAttribute("stroke-width", fixed(Math.max(line * 1.5, 5 * unit)));
+        head.setAttribute("r", fixed(Math.max(line * 0.8, 3.4 * unit)));
+        head.setAttribute("stroke-width", fixed(Math.max(0.06, unit)));
+        showTiles(unturnedBox(turn, { x: view.x, y: view.y, w: size.width / view.scale, h: size.height / view.scale }));
+        hooks.viewChanged?.();
+      },
     },
-    move: (from, to) => {
-      // The pointer's way from one point to the next (in the picture), carried into the maze, each cell it enters offered to the game.
-      const before = hooks.game();
-      let next = before;
-      for (const cell of cellsAlong(current.grid, turn, from, to)) next = dragMaze(next, cell);
-      if (next !== before) hooks.change(next, "drag");
-    },
-    lift: () => hooks.change(liftMaze(hooks.game()), "lift"),
-    tap: (at) => {
-      const [x, y] = toLogical(turn, at);
-      const cell = current.grid.at(x, y);
-      if (hooks.stoneMode?.() === true) {
-        if (cell >= 0) hooks.stone?.(cell, "tap");
-        return;
-      }
-      if (!hooks.taps()) return;
-      if (cell >= 0) hooks.change(tapMaze(hooks.game(), cell), "tap");
-    },
-    // Press-and-hold lays a stone where the finger is, if the game has stones and the finger is not on the line (a hold on the line is a pause before drawing).
-    ...(hooks.stone === undefined ? {} : { hold: (at: readonly [number, number]) => {
-      const [x, y] = toLogical(turn, at);
-      const cell = current.grid.at(x, y);
-      return cell >= 0 && !hooks.game().path.includes(cell) && hooks.stone!(cell, "hold");
-    } }),
-    render: (view, _shown, size) => {
-      lastView = view;
-      svg.setAttribute("viewBox", viewBoxOf(view, size));
-      // Walls, the line and the marks keep a thickness a finger and an eye can see at any zoom.
-      const unit = 1 / view.scale;
-      const line = lookNow.line ?? 0.34;
-      walls.setAttribute("stroke-width", fixed(Math.max(lookNow.wall ?? 0.12, 1.6 * unit)));
-      trail.setAttribute("stroke-width", fixed(Math.max(line, 3 * unit)));
-      hintAhead.setAttribute("stroke-width", fixed(Math.max(line * 1.5, 5 * unit)));
-      hintBack.setAttribute("stroke-width", fixed(Math.max(line * 1.5, 5 * unit)));
-      head.setAttribute("r", fixed(Math.max(line * 0.8, 3.4 * unit)));
-      head.setAttribute("stroke-width", fixed(Math.max(0.06, unit)));
-      showTiles(unturnedBox(turn, { x: view.x, y: view.y, w: size.width / view.scale, h: size.height / view.scale }));
-      hooks.viewChanged?.();
-    },
-  }, undefined, surfaceOptions);
+    undefined,
+    surfaceOptions,
+  );
 
   applyLook();
   build(maze);
@@ -276,8 +297,16 @@ export function createMazeSurface(box: HTMLElement, hooks: MazeSurfaceHooks, maz
       head.setAttribute("cy", fixed(current.grid.centres[end]![1]));
     }
     marks.innerHTML = marksOf(current, next.collected);
-    hintAhead.setAttribute("d", hint !== null && hint.cells.length > 0 ? linePath(current.grid, end === null ? hint.cells : [end, ...hint.cells]) : "");
-    hintBack.setAttribute("d", hint !== null && hint.back > 0 ? linePath(current.grid, next.path.slice(next.path.length - hint.back - 1)) : "");
+    hintAhead.setAttribute(
+      "d",
+      hint !== null && hint.cells.length > 0
+        ? linePath(current.grid, end === null ? hint.cells : [end, ...hint.cells])
+        : "",
+    );
+    hintBack.setAttribute(
+      "d",
+      hint !== null && hint.back > 0 ? linePath(current.grid, next.path.slice(next.path.length - hint.back - 1)) : "",
+    );
     if (won) svg.setAttribute("data-won", "true");
     else svg.removeAttribute("data-won");
     // A line this long is not rippled when it wins (see style.ts).

@@ -37,7 +37,15 @@ export function squareGrid(w: number, h: number): Grid {
       ]);
     }
   }
-  return makeGrid({ shape: "square", w, h, centres, sides, box: { x: 0, y: 0, w, h }, at: (px, py) => (px >= 0 && py >= 0 && px < w && py < h ? Math.floor(py) * w + Math.floor(px) : -1) });
+  return makeGrid({
+    shape: "square",
+    w,
+    h,
+    centres,
+    sides,
+    box: { x: 0, y: 0, w, h },
+    at: (px, py) => (px >= 0 && py >= 0 && px < w && py < h ? Math.floor(py) * w + Math.floor(px) : -1),
+  });
 }
 
 const HEX_S = 1 / Math.sqrt(3);
@@ -68,10 +76,29 @@ export function hexGrid(w: number, h: number): Grid {
       const odd = (row & 1) === 1;
       // East, south-east, south-west, west, north-west, north-east.
       const across: [number, number][] = odd
-        ? [[col + 1, row], [col + 1, row + 1], [col, row + 1], [col - 1, row], [col, row - 1], [col + 1, row - 1]]
-        : [[col + 1, row], [col, row + 1], [col - 1, row + 1], [col - 1, row], [col - 1, row - 1], [col, row - 1]];
+        ? [
+            [col + 1, row],
+            [col + 1, row + 1],
+            [col, row + 1],
+            [col - 1, row],
+            [col, row - 1],
+            [col + 1, row - 1],
+          ]
+        : [
+            [col + 1, row],
+            [col, row + 1],
+            [col - 1, row + 1],
+            [col - 1, row],
+            [col - 1, row - 1],
+            [col, row - 1],
+          ];
       centres.push([cx, cy]);
-      sides.push(across.map(([c, r], k) => ({ to: c >= 0 && c < w && r >= 0 && r < h ? r * w + c : -1, wall: wall(vertex(k), vertex(k + 1)) })));
+      sides.push(
+        across.map(([c, r], k) => ({
+          to: c >= 0 && c < w && r >= 0 && r < h ? r * w + c : -1,
+          wall: wall(vertex(k), vertex(k + 1)),
+        })),
+      );
     }
   }
   const at = (px: number, py: number): number => {
@@ -94,7 +121,15 @@ export function hexGrid(w: number, h: number): Grid {
     // Further from every middle than a hexagon's corner is: outside the shape.
     return bestDistance <= HEX_S * HEX_S + 1e-9 ? best : -1;
   };
-  return makeGrid({ shape: "hex", w, h, centres, sides, box: { x: 0, y: 0, w: h > 1 ? w + 0.5 : w, h: HEX_S * (1.5 * h + 0.5) }, at });
+  return makeGrid({
+    shape: "hex",
+    w,
+    h,
+    centres,
+    sides,
+    box: { x: 0, y: 0, w: h > 1 ? w + 0.5 : w, h: HEX_S * (1.5 * h + 0.5) },
+    at,
+  });
 }
 
 const TRI_H = Math.sqrt(3) / 2;
@@ -121,7 +156,17 @@ export function triangleGrid(w: number, h: number): Grid {
       const left = col / 2;
       const top = row * TRI_H;
       const bottom = (row + 1) * TRI_H;
-      const left3: [Point, Point, Point] = up ? [[left + 0.5, top], [left, bottom], [left + 1, bottom]] : [[left, top], [left + 1, top], [left + 0.5, bottom]];
+      const left3: [Point, Point, Point] = up
+        ? [
+            [left + 0.5, top],
+            [left, bottom],
+            [left + 1, bottom],
+          ]
+        : [
+            [left, top],
+            [left + 1, top],
+            [left + 0.5, bottom],
+          ];
       corners.push(left3);
       const [p, q, s] = left3;
       centres.push([(p[0] + q[0] + s[0]) / 3, (p[1] + q[1] + s[1]) / 3]);
@@ -129,10 +174,18 @@ export function triangleGrid(w: number, h: number): Grid {
       const r = col < w - 1 ? row * w + col + 1 : -1;
       if (up) {
         // Left side, right side, bottom (the cell below is a down-pointing one).
-        sides.push([{ to: l, wall: wall(q, p) }, { to: r, wall: wall(p, s) }, { to: row < h - 1 ? (row + 1) * w + col : -1, wall: wall(s, q) }]);
+        sides.push([
+          { to: l, wall: wall(q, p) },
+          { to: r, wall: wall(p, s) },
+          { to: row < h - 1 ? (row + 1) * w + col : -1, wall: wall(s, q) },
+        ]);
       } else {
         // Left side, right side, top (the cell above is an up-pointing one).
-        sides.push([{ to: l, wall: wall(p, s) }, { to: r, wall: wall(q, s) }, { to: row > 0 ? (row - 1) * w + col : -1, wall: wall(p, q) }]);
+        sides.push([
+          { to: l, wall: wall(p, s) },
+          { to: r, wall: wall(q, s) },
+          { to: row > 0 ? (row - 1) * w + col : -1, wall: wall(p, q) },
+        ]);
       }
     }
   }
@@ -147,7 +200,8 @@ export function triangleGrid(w: number, h: number): Grid {
     const row = Math.floor(py / TRI_H);
     if (row < 0 || row >= h) return -1;
     const around = Math.floor(px * 2);
-    for (let col = around - 1; col <= around + 1; col += 1) if (col >= 0 && col < w && inside([px, py], corners[row * w + col]!)) return row * w + col;
+    for (let col = around - 1; col <= around + 1; col += 1)
+      if (col >= 0 && col < w && inside([px, py], corners[row * w + col]!)) return row * w + col;
     return -1;
   };
   return makeGrid({ shape: "triangle", w, h, centres, sides, box: { x: 0, y: 0, w: (w + 1) / 2, h: h * TRI_H }, at });
@@ -211,14 +265,21 @@ export function circleGrid(rings: number): Grid {
         // Back along the ring, forward along it, then in toward the middle.
         here.push({ to: first[ring]! + ((index + n - 1) % n), wall: wall(polar(ring + 1, t0), polar(ring, t0)) });
         here.push({ to: first[ring]! + ((index + 1) % n), wall: wall(polar(ring, t1), polar(ring + 1, t1)) });
-        here.push({ to: first[ring - 1]! + Math.floor((index * counts[ring - 1]!) / n), wall: wall(polar(ring, t0), polar(ring, t1), ring) });
+        here.push({
+          to: first[ring - 1]! + Math.floor((index * counts[ring - 1]!) / n),
+          wall: wall(polar(ring, t0), polar(ring, t1), ring),
+        });
       }
       // Out: each cell of the next ring that sits on this one, or the edge of the maze.
       if (ring === rings - 1) here.push({ to: -1, wall: wall(polar(ring + 1, t0), polar(ring + 1, t1), ring + 1) });
       else {
         const next = counts[ring + 1]!;
         const per = next / n;
-        for (let child = index * per; child < (index + 1) * per; child += 1) here.push({ to: first[ring + 1]! + child, wall: wall(polar(ring + 1, angle(ring + 1, child)), polar(ring + 1, angle(ring + 1, child + 1)), ring + 1) });
+        for (let child = index * per; child < (index + 1) * per; child += 1)
+          here.push({
+            to: first[ring + 1]! + child,
+            wall: wall(polar(ring + 1, angle(ring + 1, child)), polar(ring + 1, angle(ring + 1, child + 1)), ring + 1),
+          });
       }
     }
   }
@@ -231,11 +292,25 @@ export function circleGrid(rings: number): Grid {
     turn -= Math.floor(turn);
     return first[ring]! + Math.min(counts[ring]! - 1, Math.floor(turn * counts[ring]!));
   };
-  return makeGrid({ shape: "circle", w: rings, h: rings, centres, sides, box: { x: -rings, y: -rings, w: 2 * rings, h: 2 * rings }, at });
+  return makeGrid({
+    shape: "circle",
+    w: rings,
+    h: rings,
+    centres,
+    sides,
+    box: { x: -rings, y: -rings, w: 2 * rings, h: 2 * rings },
+    at,
+  });
 }
 
 /** Every shape cut out of a bigger grid: the grid it is cut from, and the test a cell passes to stay. */
-function cut(base: Grid, shape: MeikyuuShape, w: number, h: number, stays: (x: number, y: number, cell: number) => boolean): Grid {
+function cut(
+  base: Grid,
+  shape: MeikyuuShape,
+  w: number,
+  h: number,
+  stays: (x: number, y: number, cell: number) => boolean,
+): Grid {
   return subGrid(base, (cell) => stays(base.centres[cell]![0], base.centres[cell]![1], cell), shape, w, h);
 }
 
@@ -297,7 +372,7 @@ export function gridOf(shape: MeikyuuShape, w: number, h: number = w): Grid {
     default: {
       const test = maskOf(shape);
       const base = squareGrid(w, w);
-      return cut(base, shape, w, w, (x, y) => test(((x / w) * 2) - 1, ((y / w) * 2) - 1));
+      return cut(base, shape, w, w, (x, y) => test((x / w) * 2 - 1, (y / w) * 2 - 1));
     }
   }
 }

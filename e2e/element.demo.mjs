@@ -17,7 +17,9 @@ test("the tag draws a maze level of the package's own and plays it, with its eve
   expect(errors).toEqual([]);
 });
 
-test("its attributes are read again when they change: another level, another kind, a recipe of your own, a board, a language", async ({ page }) => {
+test("its attributes are read again when they change: another level, another kind, a recipe of your own, a board, a language", async ({
+  page,
+}) => {
   await bare(page, `<meikyuu-board id="a" level="40"></meikyuu-board>`);
   await expect(svgOf(page)).toHaveAttribute("data-shape", mazeOf(40).level.recipe.shape);
   await page.evaluate(() => document.getElementById("a").setAttribute("level", "41"));
@@ -40,7 +42,9 @@ test("its attributes are read again when they change: another level, another kin
   await expect(svgOf(page)).toBeVisible();
 });
 
-test("tap, hints and zoom are attributes too, and the methods undo, restart, hint and fit are on the element", async ({ page }) => {
+test("tap, hints and zoom are attributes too, and the methods undo, restart, hint and fit are on the element", async ({
+  page,
+}) => {
   await bare(page, `<meikyuu-board id="a" level="40" tap hints="off" zoom="off"></meikyuu-board>`);
   await expect(page.locator('#a [data-action="hint"]')).toBeHidden();
   await expect(page.locator("#a .mk-pad")).toBeHidden();
@@ -64,8 +68,13 @@ test("tap, hints and zoom are attributes too, and the methods undo, restart, hin
   await expect(page.locator("#a .mk-messages")).toContainText("Press the green start");
 });
 
-test("an arrow level and a mixed level load through the tag, and a tag taken out of the page takes its board with it", async ({ page }) => {
-  await bare(page, `<meikyuu-board id="a" kind="arrows" level="5"></meikyuu-board><meikyuu-board id="b" kind="mixed" level="5"></meikyuu-board>`);
+test("an arrow level and a mixed level load through the tag, and a tag taken out of the page takes its board with it", async ({
+  page,
+}) => {
+  await bare(
+    page,
+    `<meikyuu-board id="a" kind="arrows" level="5"></meikyuu-board><meikyuu-board id="b" kind="mixed" level="5"></meikyuu-board>`,
+  );
   const { board } = await arrowsOf(5);
   await expect(page.locator("#a .mk-arrow")).toHaveCount(board.arrows.length);
   await expect(page.locator("#b .mk-tab")).toHaveCount(2);
@@ -74,14 +83,21 @@ test("an arrow level and a mixed level load through the tag, and a tag taken out
   await expect(page.locator("style[data-meikyuu-play]")).toHaveCount(1);
 });
 
-test("a tag with neither a level nor a recipe, or with one that is none, draws nothing and says nothing", async ({ page }) => {
-  const errors = await bare(page, `<meikyuu-board id="a"></meikyuu-board><meikyuu-board id="b" level="99999"></meikyuu-board><meikyuu-board id="c" recipe="nonsense"></meikyuu-board>`);
+test("a tag with neither a level nor a recipe, or with one that is none, draws nothing and says nothing", async ({
+  page,
+}) => {
+  const errors = await bare(
+    page,
+    `<meikyuu-board id="a"></meikyuu-board><meikyuu-board id="b" level="99999"></meikyuu-board><meikyuu-board id="c" recipe="nonsense"></meikyuu-board>`,
+  );
   await page.waitForTimeout(150);
   await expect(page.locator(".mk-box")).toHaveCount(0);
   expect(errors).toEqual([]);
 });
 
-test("mountMeikyuu works on any element, with a recipe or a level, and its handle drives the board", async ({ page }) => {
+test("mountMeikyuu works on any element, with a recipe or a level, and its handle drives the board", async ({
+  page,
+}) => {
   await bare(page, `<div id="host"></div>`);
   const found = findMaze(({ level }) => level.recipe.mode === "keys" && level.cells < 150, { from: 100, to: 800 });
   const result = await page.evaluate(async (code) => {
@@ -103,8 +119,14 @@ test("mountMeikyuu works on any element, with a recipe or a level, and its handl
   expect(result.cls).toBe("");
 });
 
-test("keys: the line passes over a key and picks it up, and the key stays picked up when the line is drawn back out of its branch", async ({ page }) => {
-  const found = findMaze(({ level, maze, way }) => level.recipe.mode === "keys" && maze.grid.cells < 200 && maze.keys.length >= 1 && way.length > 5, { from: 100, to: 800 });
+test("keys: the line passes over a key and picks it up, and the key stays picked up when the line is drawn back out of its branch", async ({
+  page,
+}) => {
+  const found = findMaze(
+    ({ level, maze, way }) =>
+      level.recipe.mode === "keys" && maze.grid.cells < 200 && maze.keys.length >= 1 && way.length > 5,
+    { from: 100, to: 800 },
+  );
   const { maze } = found;
   await bare(page, `<meikyuu-board id="a" recipe="${found.level.code}"></meikyuu-board>`);
   await expect(svgOf(page)).toHaveAttribute("viewBox", /./);

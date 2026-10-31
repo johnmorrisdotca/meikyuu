@@ -11,7 +11,14 @@
  */
 import { writeFileSync } from "node:fs";
 
-import { arrowRecipeCode, ARROW_SHAPES, makeArrows, measureArrows, type ArrowRecipe, type ArrowShape } from "../src/arrows.ts";
+import {
+  arrowRecipeCode,
+  ARROW_SHAPES,
+  makeArrows,
+  measureArrows,
+  type ArrowRecipe,
+  type ArrowShape,
+} from "../src/arrows.ts";
 import { MEIKYUU_ALGORITHMS } from "../src/algorithms.ts";
 import { buildMaze, recipeCode, type MazeRecipe } from "../src/maze.ts";
 import { measureMaze } from "../src/measure.ts";
@@ -19,15 +26,32 @@ import { buildMixed, measureMixed, mixedRecipeCode } from "../src/mixed.ts";
 import { seededRandom } from "../src/random.ts";
 
 const args = process.argv.slice(2);
-const flag = (name: string, fallback: string): string => (args.includes(name) ? args[args.indexOf(name) + 1]! : fallback);
+const flag = (name: string, fallback: string): string =>
+  args.includes(name) ? args[args.indexOf(name) + 1]! : fallback;
 const ARROWS = Number(flag("--arrows", "300"));
 const MIXED = Number(flag("--mixed", "100"));
 const here = (name: string): string => new URL(`../src/levels/${name}`, import.meta.url).pathname;
 
-const SHAPE_FROM: Record<ArrowShape, number> = { square: 0, diamond: 22, cross: 30, ring: 40, heart: 50, moon: 62, leaf: 76, star: 90 };
+const SHAPE_FROM: Record<ArrowShape, number> = {
+  square: 0,
+  diamond: 22,
+  cross: 30,
+  ring: 40,
+  heart: 50,
+  moon: 62,
+  leaf: 76,
+  star: 90,
+};
 
 /** The recipe of an arrow puzzle at a scale (about how many cells across the picture is). */
-function arrowRecipe(shape: ArrowShape, scale: number, aspect: number, seed: number, locks: number, random: () => number): ArrowRecipe {
+function arrowRecipe(
+  shape: ArrowShape,
+  scale: number,
+  aspect: number,
+  seed: number,
+  locks: number,
+  random: () => number,
+): ArrowRecipe {
   const w = shape === "square" ? Math.max(3, Math.round(scale * (aspect === 1 ? 1.25 : 1))) : Math.max(7, scale);
   const h = shape === "square" ? Math.max(3, Math.round(scale * (aspect === 2 ? 1.25 : 1))) : w;
   // Longer arrows as the picture grows: from two cells to nine.
@@ -37,7 +61,13 @@ function arrowRecipe(shape: ArrowShape, scale: number, aspect: number, seed: num
 
 type Found = { recipe: ArrowRecipe; effort: number };
 
-function search(target: number, shape: ArrowShape, index: number, locks: number, hints: Map<string, number>): Found | null {
+function search(
+  target: number,
+  shape: ArrowShape,
+  index: number,
+  locks: number,
+  hints: Map<string, number>,
+): Found | null {
   const random = seededRandom(900 + index);
   const aspect = Math.floor(random() * 3);
   const key = `${shape}:${aspect}:${locks}`;
@@ -50,7 +80,8 @@ function search(target: number, shape: ArrowShape, index: number, locks: number,
       try {
         const effort = measureArrows(makeArrows(recipe)).effort;
         if (effort > target * 1.5) passed = true;
-        if (best === null || Math.abs(Math.log(effort / target)) < Math.abs(Math.log(best.effort / target))) best = { recipe, effort };
+        if (best === null || Math.abs(Math.log(effort / target)) < Math.abs(Math.log(best.effort / target)))
+          best = { recipe, effort };
       } catch {
         // Too few arrows to lock that many: a bigger picture.
       }
@@ -74,7 +105,8 @@ function search(target: number, shape: ArrowShape, index: number, locks: number,
 const started = Date.now();
 const EFFORT_FIRST = 8;
 const EFFORT_LAST = 380;
-const targetAt = (i: number, count: number): number => EFFORT_FIRST * (EFFORT_LAST / EFFORT_FIRST) ** (Math.min(1, i / (count - 1)) ** 0.8);
+const targetAt = (i: number, count: number): number =>
+  EFFORT_FIRST * (EFFORT_LAST / EFFORT_FIRST) ** (Math.min(1, i / (count - 1)) ** 0.8);
 
 // Plain arrow puzzles.
 const plain: Found[] = [];
@@ -97,7 +129,10 @@ for (let index = 0; index < ARROWS; index += 1) {
   }
   seen.add(code);
   plain.push(found);
-  if ((index + 1) % 25 === 0) console.log(`arrows ${index + 1}/${ARROWS} target ${target.toFixed(0)} got ${found.effort} ${code} ${((Date.now() - started) / 1000).toFixed(0)}s`);
+  if ((index + 1) % 25 === 0)
+    console.log(
+      `arrows ${index + 1}/${ARROWS} target ${target.toFixed(0)} got ${found.effort} ${code} ${((Date.now() - started) / 1000).toFixed(0)}s`,
+    );
 }
 plain.sort((a, b) => a.effort - b.effort);
 writeFileSync(
@@ -123,25 +158,44 @@ for (let index = 0; index < MIXED; index += 1) {
   if (arrows === null) throw new Error(`no mixed arrows for ${index + 1}`);
   // A maze, played to its goal (the button), whose effort is what the rest of the target is, doubled, as the mixed measure halves it.
   const mazeTarget = target * 0.7;
-  const algorithms = MEIKYUU_ALGORITHMS.filter((algorithm) => algorithm !== "eller" && (algorithm !== "backtracker" || target > 200));
+  const algorithms = MEIKYUU_ALGORITHMS.filter(
+    (algorithm) => algorithm !== "eller" && (algorithm !== "backtracker" || target > 200),
+  );
   let bestMaze: { recipe: MazeRecipe; effort: number } | null = null;
   for (let scale = 3; scale < 90; scale += 1) {
     for (let seed = 0; seed < 3; seed += 1) {
-      const recipe: MazeRecipe = { shape: "square", w: scale, h: scale, algorithm: algorithms[(index + seed) % algorithms.length]!, mode: "to-goal", seed: 1 + seed * 53 + index * 19 };
+      const recipe: MazeRecipe = {
+        shape: "square",
+        w: scale,
+        h: scale,
+        algorithm: algorithms[(index + seed) % algorithms.length]!,
+        mode: "to-goal",
+        seed: 1 + seed * 53 + index * 19,
+      };
       const effort = measureMaze(buildMaze(recipe)).effort;
-      if (bestMaze === null || Math.abs(Math.log(effort / mazeTarget)) < Math.abs(Math.log(bestMaze.effort / mazeTarget))) bestMaze = { recipe, effort };
+      if (
+        bestMaze === null ||
+        Math.abs(Math.log(effort / mazeTarget)) < Math.abs(Math.log(bestMaze.effort / mazeTarget))
+      )
+        bestMaze = { recipe, effort };
     }
     if (bestMaze !== null && bestMaze.effort > mazeTarget * 1.4) break;
   }
   const recipe = { arrows: arrows.recipe, maze: bestMaze!.recipe };
   let code = mixedRecipeCode(recipe);
   for (let nudge = 0; mixedSeen.has(code) && nudge < 50; nudge += 1) {
-    code = mixedRecipeCode({ ...recipe, arrows: { ...recipe.arrows, seed: recipe.arrows.seed + 999983 * (nudge + 1) } });
+    code = mixedRecipeCode({
+      ...recipe,
+      arrows: { ...recipe.arrows, seed: recipe.arrows.seed + 999983 * (nudge + 1) },
+    });
   }
   mixedSeen.add(code);
   const effort = measureMixed(buildMixed({ ...recipe, arrows: { ...recipe.arrows } }));
   mixed.push({ code, effort });
-  if ((index + 1) % 25 === 0) console.log(`mixed ${index + 1}/${MIXED} target ${target.toFixed(0)} got ${effort} ${code} ${((Date.now() - started) / 1000).toFixed(0)}s`);
+  if ((index + 1) % 25 === 0)
+    console.log(
+      `mixed ${index + 1}/${MIXED} target ${target.toFixed(0)} got ${effort} ${code} ${((Date.now() - started) / 1000).toFixed(0)}s`,
+    );
 }
 mixed.sort((a, b) => a.effort - b.effort);
 writeFileSync(
@@ -151,8 +205,15 @@ writeFileSync(
 const count = (items: string[]): string => {
   const map = new Map<string, number>();
   for (const item of items) map.set(item, (map.get(item) ?? 0) + 1);
-  return [...map].sort((a, b) => b[1] - a[1]).map(([k, n]) => `${k} ${n}`).join(", ");
+  return [...map]
+    .sort((a, b) => b[1] - a[1])
+    .map(([k, n]) => `${k} ${n}`)
+    .join(", ");
 };
-console.log(`arrows ${plain.length} (${plain[0]!.effort} to ${plain[plain.length - 1]!.effort}): ${count(plain.map((p) => p.recipe.shape))}`);
-console.log(`mixed ${mixed.length} (${mixed[0]!.effort} to ${mixed[mixed.length - 1]!.effort}) in ${((Date.now() - started) / 1000).toFixed(0)}s`);
+console.log(
+  `arrows ${plain.length} (${plain[0]!.effort} to ${plain[plain.length - 1]!.effort}): ${count(plain.map((p) => p.recipe.shape))}`,
+);
+console.log(
+  `mixed ${mixed.length} (${mixed[0]!.effort} to ${mixed[mixed.length - 1]!.effort}) in ${((Date.now() - started) / 1000).toFixed(0)}s`,
+);
 void recipeCode;

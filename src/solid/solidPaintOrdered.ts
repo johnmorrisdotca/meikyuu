@@ -1,5 +1,17 @@
 import type { SolidMaze } from "./solidMaze.ts";
-import { crossing, discOn, openEdges, roomPixels, SHADES, shadeAt, shadeOf, slabsOf, type PaintContext, type SolidColours, type SolidPaintState } from "./solidPaintParts.ts";
+import {
+  crossing,
+  discOn,
+  openEdges,
+  roomPixels,
+  SHADES,
+  shadeAt,
+  shadeOf,
+  slabsOf,
+  type PaintContext,
+  type SolidColours,
+  type SolidPaintState,
+} from "./solidPaintParts.ts";
 import type { SolidFrame } from "./solidView.ts";
 import { quatMatrix } from "./vec.ts";
 
@@ -20,10 +32,15 @@ const STONE = 4;
 const HEAD = 8;
 const HINT_FIRST = 16;
 
-
 type Route = { cells: readonly number[]; colour: string; width: number; alpha: number };
 
-export function paintSolidOrdered(ctx: PaintContext, maze: SolidMaze, frame: SolidFrame, colours: SolidColours, state: SolidPaintState): void {
+export function paintSolidOrdered(
+  ctx: PaintContext,
+  maze: SolidMaze,
+  frame: SolidFrame,
+  colours: SolidColours,
+  state: SolidPaintState,
+): void {
   const { grid } = maze;
   const { width, height } = frame;
   ctx.fillStyle = colours.ground;
@@ -33,13 +50,26 @@ export function paintSolidOrdered(ctx: PaintContext, maze: SolidMaze, frame: Sol
   const routes: Route[] = [];
   const head = state.path.length > 0 ? state.path[state.path.length - 1]! : -1;
   if (state.hint !== null && head >= 0) {
-    if (state.hint.cells.length > 0) routes.push({ cells: [head, ...state.hint.cells], colour: colours.hint, width: lineWidth * 1.5, alpha: 0.85 });
-    if (state.hint.back > 0) routes.push({ cells: state.path.slice(state.path.length - state.hint.back - 1), colour: colours.bad, width: lineWidth * 1.5, alpha: 1 });
+    if (state.hint.cells.length > 0)
+      routes.push({ cells: [head, ...state.hint.cells], colour: colours.hint, width: lineWidth * 1.5, alpha: 0.85 });
+    if (state.hint.back > 0)
+      routes.push({
+        cells: state.path.slice(state.path.length - state.hint.back - 1),
+        colour: colours.bad,
+        width: lineWidth * 1.5,
+        alpha: 1,
+      });
   }
-  if (state.path.length > 0) routes.push({ cells: state.path, colour: state.won ? colours.goal : colours.trail, width: lineWidth, alpha: 1 });
+  if (state.path.length > 0)
+    routes.push({ cells: state.path, colour: state.won ? colours.goal : colours.trail, width: lineWidth, alpha: 1 });
   let scratch = SCRATCH.get(frame);
   if (scratch === undefined) {
-    scratch = { marks: new Uint8Array(grid.cells), routeAt: [0, 1, 2].map(() => new Int32Array(grid.cells)), buckets: new Uint8Array(grid.cells), lists: Array.from({ length: SHADES }, () => [] as number[]) };
+    scratch = {
+      marks: new Uint8Array(grid.cells),
+      routeAt: [0, 1, 2].map(() => new Int32Array(grid.cells)),
+      buckets: new Uint8Array(grid.cells),
+      lists: Array.from({ length: SHADES }, () => [] as number[]),
+    };
     SCRATCH.set(frame, scratch);
   }
   const { marks, routeAt } = scratch;
@@ -184,7 +214,10 @@ export function paintSolidOrdered(ctx: PaintContext, maze: SolidMaze, frame: Sol
         ctx.lineWidth = lineWidth;
         ctx.stroke();
       }
-      for (const [bit, fill, ring] of [[START, colours.start, false], [GOAL, colours.goal, true]] as const) {
+      for (const [bit, fill, ring] of [
+        [START, colours.start, false],
+        [GOAL, colours.goal, true],
+      ] as const) {
         if ((mark & bit) === 0) continue;
         const room = grid.radii[cell]!;
         const outline = discOn(frame, m, maze, cell, room * 0.62);

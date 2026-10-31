@@ -40,25 +40,38 @@ describe("where the 1.0.0 maze levels went", () => {
       // The level to point at is one of the size, and none of the size scores nearer.
       const near = MEIKYUU_MAZE_LEVELS[level.nearest - 1]!;
       expect(near.size, level.code).toBe(level.size);
-      if (current === undefined) for (const other of MEIKYUU_MAZE_LEVELS.filter((l) => l.size === level.size)) expect(Math.abs(near.score - level.score), level.code).toBeLessThanOrEqual(Math.abs(other.score - level.score));
+      if (current === undefined)
+        for (const other of MEIKYUU_MAZE_LEVELS.filter((l) => l.size === level.size))
+          expect(Math.abs(near.score - level.score), level.code).toBeLessThanOrEqual(
+            Math.abs(other.score - level.score),
+          );
     }
   });
 
   it("keeps every level that was good enough in the list, a new maze where one was too easy, and cuts off only the hardest of Large and Huge", () => {
-    const count = (size: string, test: (level: (typeof MEIKYUU_LEGACY_MAZE_LEVELS)[number]) => boolean): number => MEIKYUU_LEGACY_MAZE_LEVELS.filter((level) => level.size === size && test(level)).length;
+    const count = (size: string, test: (level: (typeof MEIKYUU_LEGACY_MAZE_LEVELS)[number]) => boolean): number =>
+      MEIKYUU_LEGACY_MAZE_LEVELS.filter((level) => level.size === size && test(level)).length;
     // 843 of the 1,000 are still levels; 157 are not (117 places a new maze took, 40 cut off the end).
     expect(MEIKYUU_LEGACY_MAZE_LEVELS.filter((level) => level.now !== null).length).toBe(843);
     // Large and Huge keep their first 256 places' mazes exactly; the rest of 1.0.0's are gone.
     for (const size of ["large", "huge"]) {
-      expect(count(size, (level) => level.place <= 256 && level.now === null), size).toBe(0);
-      expect(count(size, (level) => level.place > 256 && level.now !== null), size).toBe(0);
+      expect(
+        count(size, (level) => level.place <= 256 && level.now === null),
+        size,
+      ).toBe(0);
+      expect(
+        count(size, (level) => level.place > 256 && level.now !== null),
+        size,
+      ).toBe(0);
     }
     expect(count("large", (level) => level.place > 256)).toBe(29);
     expect(count("huge", (level) => level.place > 256)).toBe(11);
     // The ones that stayed are not too easy to be levels, and the ones replaced were.
     for (const level of MEIKYUU_LEGACY_MAZE_LEVELS) {
       if (level.now === null) continue;
-      expect(isTooEasy(difficultyOf(buildMaze(parseRecipe(level.code)!))), `${level.code} stayed but is too easy`).toBe(false);
+      expect(isTooEasy(difficultyOf(buildMaze(parseRecipe(level.code)!))), `${level.code} stayed but is too easy`).toBe(
+        false,
+      );
     }
     expect(MEIKYUU_SIZES.length).toBe(4);
   }, 60_000);

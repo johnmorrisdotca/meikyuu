@@ -43,15 +43,21 @@ export type Quat = readonly [number, number, number, number];
 export const QUAT_IDENTITY: Quat = [0, 0, 0, 1];
 
 export const dot = (a: Vec3, b: Vec3): number => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
-export const cross = (a: Vec3, b: Vec3): Vec3 => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+export const cross = (a: Vec3, b: Vec3): Vec3 => [
+  a[1] * b[2] - a[2] * b[1],
+  a[2] * b[0] - a[0] * b[2],
+  a[0] * b[1] - a[1] * b[0],
+];
 export const add = (a: Vec3, b: Vec3): Vec3 => [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
 export const sub = (a: Vec3, b: Vec3): Vec3 => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
 export const scale = (a: Vec3, k: number): Vec3 => [a[0] * k, a[1] * k, a[2] * k];
 // Square roots and the four sums are exact in every engine (Math.hypot is not), so the cells of a solid are the same numbers everywhere.
 export const length = (a: Vec3): number => Math.sqrt(a[0] * a[0] + a[1] * a[1] + a[2] * a[2]);
-export const distance = (a: Vec3, b: Vec3): number => Math.sqrt((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2 + (a[2] - b[2]) ** 2);
+export const distance = (a: Vec3, b: Vec3): number =>
+  Math.sqrt((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2 + (a[2] - b[2]) ** 2);
 /** The square of the distance: the cheapest way to say which of two points is nearer. */
-export const distanceSquared = (a: Vec3, b: Vec3): number => (a[0] - b[0]) * (a[0] - b[0]) + (a[1] - b[1]) * (a[1] - b[1]) + (a[2] - b[2]) * (a[2] - b[2]);
+export const distanceSquared = (a: Vec3, b: Vec3): number =>
+  (a[0] - b[0]) * (a[0] - b[0]) + (a[1] - b[1]) * (a[1] - b[1]) + (a[2] - b[2]) * (a[2] - b[2]);
 
 /** The direction of a vector, of length one; the zero vector stays zero. */
 export function unit(a: Vec3): Vec3 {
@@ -90,7 +96,12 @@ export function mean(points: readonly Vec3[]): Vec3 {
 export function quatMul(b: Quat, a: Quat): Quat {
   const [bx, by, bz, bw] = b;
   const [ax, ay, az, aw] = a;
-  return [bw * ax + bx * aw + by * az - bz * ay, bw * ay - bx * az + by * aw + bz * ax, bw * az + bx * ay - by * ax + bz * aw, bw * aw - bx * ax - by * ay - bz * az];
+  return [
+    bw * ax + bx * aw + by * az - bz * ay,
+    bw * ay - bx * az + by * aw + bz * ax,
+    bw * az + bx * ay - by * ax + bz * aw,
+    bw * aw - bx * ax - by * ay - bz * az,
+  ];
 }
 
 /** A rotation made one again: the turns a drag adds up carry a little error, which this takes out.
@@ -172,13 +183,27 @@ export function quatTurn(q: Quat, p: Vec3): Vec3 {
   const tx = 2 * (qy * p[2] - qz * p[1]);
   const ty = 2 * (qz * p[0] - qx * p[2]);
   const tz = 2 * (qx * p[1] - qy * p[0]);
-  return [p[0] + qw * tx + (qy * tz - qz * ty), p[1] + qw * ty + (qz * tx - qx * tz), p[2] + qw * tz + (qx * ty - qy * tx)];
+  return [
+    p[0] + qw * tx + (qy * tz - qz * ty),
+    p[1] + qw * ty + (qz * tx - qx * tz),
+    p[2] + qw * tz + (qx * ty - qy * tx),
+  ];
 }
 
 /** The turn as a 3 by 3 matrix, row by row, so that a frame turns many points without redoing the algebra for each. */
 export function quatMatrix(q: Quat): readonly number[] {
   const [x, y, z, w] = q;
-  return [1 - 2 * (y * y + z * z), 2 * (x * y - z * w), 2 * (x * z + y * w), 2 * (x * y + z * w), 1 - 2 * (x * x + z * z), 2 * (y * z - x * w), 2 * (x * z - y * w), 2 * (y * z + x * w), 1 - 2 * (x * x + y * y)];
+  return [
+    1 - 2 * (y * y + z * z),
+    2 * (x * y - z * w),
+    2 * (x * z + y * w),
+    2 * (x * y + z * w),
+    1 - 2 * (x * x + z * z),
+    2 * (y * z - x * w),
+    2 * (x * z - y * w),
+    2 * (y * z + x * w),
+    1 - 2 * (x * x + y * y),
+  ];
 }
 
 /** Halfway (or any share) from one rotation to another along the shortest way.
@@ -203,7 +228,13 @@ export function quatSlerp(a: Quat, b: Quat, t: number): Quat {
     d = -d;
     to = [-b[0], -b[1], -b[2], -b[3]];
   }
-  if (d > 0.9995) return quatNormalize([a[0] + (to[0] - a[0]) * t, a[1] + (to[1] - a[1]) * t, a[2] + (to[2] - a[2]) * t, a[3] + (to[3] - a[3]) * t]);
+  if (d > 0.9995)
+    return quatNormalize([
+      a[0] + (to[0] - a[0]) * t,
+      a[1] + (to[1] - a[1]) * t,
+      a[2] + (to[2] - a[2]) * t,
+      a[3] + (to[3] - a[3]) * t,
+    ]);
   const angle = Math.acos(Math.min(1, d));
   const sa = Math.sin((1 - t) * angle) / Math.sin(angle);
   const sb = Math.sin(t * angle) / Math.sin(angle);

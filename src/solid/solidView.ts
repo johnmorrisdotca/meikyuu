@@ -1,6 +1,15 @@
 import type { SolidGrid } from "./solidGrid.ts";
 import { revealDirection } from "./solidReveal.ts";
-import { quatAxisAngle, quatBetween, quatMatrix, quatMul, quatNormalize, quatTurn, type Quat, type Vec3 } from "./vec.ts";
+import {
+  quatAxisAngle,
+  quatBetween,
+  quatMatrix,
+  quatMul,
+  quatNormalize,
+  quatTurn,
+  type Quat,
+  type Vec3,
+} from "./vec.ts";
 
 /**
  * LOOKING AT A SOLID: where every corner and every cell lands on a flat picture when the solid is turned, which cells are on the near side, which
@@ -214,7 +223,14 @@ function reachOf(grid: SolidGrid, m: readonly number[], eye: number): number {
  * console.log(projectFrame(frame,solidGrid,q,1,640,480).cellPixels);
  * ```
  */
-export function projectFrame(frame: SolidFrame, grid: SolidGrid, q: Quat, zoom: number, width: number, height: number): SolidFrame {
+export function projectFrame(
+  frame: SolidFrame,
+  grid: SolidGrid,
+  q: Quat,
+  zoom: number,
+  width: number,
+  height: number,
+): SolidFrame {
   const m = quatMatrix(q);
   const eye = frame.eye;
   const fit = (Math.min(width, height) / 2) * SOLID_FILL;
@@ -362,7 +378,8 @@ export function pickCell(frame: SolidFrame, grid: SolidGrid, x: number, y: numbe
       const a = loop[i]!;
       const b = loop[i + 1 === loop.length ? 0 : i + 1]!;
       // The outline runs one way round, so a point inside is on the same side of every edge.
-      if ((frame.sx[b]! - frame.sx[a]!) * (y - frame.sy[a]!) - (frame.sy[b]! - frame.sy[a]!) * (x - frame.sx[a]!) < 0) inside = false;
+      if ((frame.sx[b]! - frame.sx[a]!) * (y - frame.sy[a]!) - (frame.sy[b]! - frame.sy[a]!) * (x - frame.sx[a]!) < 0)
+        inside = false;
     }
     if (!inside) continue;
     const z = overlapping ? depthAt(frame, grid, cell, x, y) : frame.cz[cell]!;
@@ -423,7 +440,12 @@ export function cellSeen(frame: SolidFrame, grid: SolidGrid, cell: number): bool
  * console.log(cellsAlongDrag(frame,solidGrid,[320,240],[330,240]));
  * ```
  */
-export function cellsAlongDrag(frame: SolidFrame, grid: SolidGrid, from: readonly [number, number], to: readonly [number, number]): number[] {
+export function cellsAlongDrag(
+  frame: SolidFrame,
+  grid: SolidGrid,
+  from: readonly [number, number],
+  to: readonly [number, number],
+): number[] {
   const out: number[] = [];
   const length = Math.hypot(to[0] - from[0], to[1] - from[1]);
   const step = Math.max(1.5, Math.min(10, frame.cellPixels * 0.25));
@@ -495,8 +517,15 @@ export function trackballPoint(frame: SolidFrame, x: number, y: number): Vec3 {
  * console.log(dragTurn(frame,q,[320,240],[330,240]));
  * ```
  */
-export function dragTurn(frame: SolidFrame, q: Quat, from: readonly [number, number], to: readonly [number, number]): Quat {
-  return quatNormalize(quatMul(quatBetween(trackballPoint(frame, from[0], from[1]), trackballPoint(frame, to[0], to[1])), q));
+export function dragTurn(
+  frame: SolidFrame,
+  q: Quat,
+  from: readonly [number, number],
+  to: readonly [number, number],
+): Quat {
+  return quatNormalize(
+    quatMul(quatBetween(trackballPoint(frame, from[0], from[1]), trackballPoint(frame, to[0], to[1])), q),
+  );
 }
 
 /** A turn about the viewer's own axes: `right` radians about the vertical (the solid's near side moves right) and `down` about the horizontal.
@@ -608,7 +637,8 @@ export function openingTurn(grid: SolidGrid, cell: number): Quat {
   if (grid.upright) {
     // A shape with a way up (a heart, a star) is first seen from the front, tipped a little to show the top; if the cell is not on that side, turned about the vertical (the screen's
     // y) by a little more each time, round to the back, so that the shape is still seen from a side with its face on show; and only then with the cell squarely facing the viewer.
-    for (const yaw of [0, 0.6, -0.6, 1, -1, Math.PI, Math.PI + 0.6, Math.PI - 0.6]) tries.push(stepTurn(quatAxisAngle([0, 1, 0], yaw), -0.15, 0.3));
+    for (const yaw of [0, 0.6, -0.6, 1, -1, Math.PI, Math.PI + 0.6, Math.PI - 0.6])
+      tries.push(stepTurn(quatAxisAngle([0, 1, 0], yaw), -0.15, 0.3));
     const n = grid.normals[cell]!;
     const facing = quatAxisAngle([0, 1, 0], -Math.atan2(n[0], n[2]));
     tries.push(stepTurn(facing, 0, 0.3), facing);
@@ -691,7 +721,14 @@ export const EDGE_RATE = 1.6;
  * console.log(edgeTurn(solidGrid,solid.links,q,solid.start,0.1));
  * ```
  */
-export function edgeTurn(grid: SolidGrid, links: readonly (readonly number[])[], q: Quat, cell: number, seconds: number, hidden?: (cell: number) => boolean): Quat | null {
+export function edgeTurn(
+  grid: SolidGrid,
+  links: readonly (readonly number[])[],
+  q: Quat,
+  cell: number,
+  seconds: number,
+  hidden?: (cell: number) => boolean,
+): Quat | null {
   const n = quatTurn(q, grid.normals[cell]!);
   let urgency = n[2] >= EDGE_SAFE ? 0 : Math.min(1, (EDGE_SAFE - n[2]) / (EDGE_SAFE - EDGE_FULL));
   let sx = n[0];

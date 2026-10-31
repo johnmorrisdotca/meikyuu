@@ -89,8 +89,15 @@ export function stoneLimitFor(cells: number): number {
 export function stoneRulesOf(option: StoneOption | undefined, cells: number): StoneRules | null {
   if (option === undefined || option === false) return null;
   const given = option === true ? {} : option;
-  const reach = Math.min(MEIKYUU_STONE_REACH_MOST, Math.max(1, Math.round(given.reach ?? MEIKYUU_STONE_REACH_MOST))) as 1 | 2;
-  const limit = given.limit === undefined ? stoneLimitFor(cells) : given.limit === null || !Number.isFinite(given.limit) ? null : Math.max(0, Math.floor(given.limit));
+  const reach = Math.min(MEIKYUU_STONE_REACH_MOST, Math.max(1, Math.round(given.reach ?? MEIKYUU_STONE_REACH_MOST))) as
+    | 1
+    | 2;
+  const limit =
+    given.limit === undefined
+      ? stoneLimitFor(cells)
+      : given.limit === null || !Number.isFinite(given.limit)
+        ? null
+        : Math.max(0, Math.floor(given.limit));
   return { limit, reach };
 }
 
@@ -104,7 +111,18 @@ export function stoneRulesOf(option: StoneOption | undefined, cells: number): St
  * console.log(value);
  * ```
  */
-export type StoneVerdict = "ok" | "off" | "solved" | "drawing" | "no-line" | "no-cell" | "on-line" | "has-stone" | "end" | "limit" | "far";
+export type StoneVerdict =
+  | "ok"
+  | "off"
+  | "solved"
+  | "drawing"
+  | "no-line"
+  | "no-cell"
+  | "on-line"
+  | "has-stone"
+  | "end"
+  | "limit"
+  | "far";
 
 /** How many stones can still be laid: null for no limit, and nought for a game with none.
  *
@@ -214,7 +232,11 @@ export function canLayStone(game: MazeGame<MazeCore>, cell: number): StoneVerdic
  */
 export function layStone<M extends MazeCore>(game: MazeGame<M>, cell: number): MazeGame<M> {
   if (canLayStone(game, cell) !== "ok") return game;
-  return { ...game, stones: [...game.stones, cell], undo: [...game.undo, { path: game.path, collected: game.collected, solved: game.solved, stones: game.stones }] };
+  return {
+    ...game,
+    stones: [...game.stones, cell],
+    undo: [...game.undo, { path: game.path, collected: game.collected, solved: game.solved, stones: game.stones }],
+  };
 }
 
 /** The game with the stone on the cell taken up (and given back); the same game when there is none. Undo lays it again.
@@ -235,7 +257,11 @@ export function layStone<M extends MazeCore>(game: MazeGame<M>, cell: number): M
  */
 export function takeStone<M extends MazeCore>(game: MazeGame<M>, cell: number): MazeGame<M> {
   if (game.rules === null || game.drawing || !hasStone(game, cell)) return game;
-  return { ...game, stones: game.stones.filter((each) => each !== cell), undo: [...game.undo, { path: game.path, collected: game.collected, solved: game.solved, stones: game.stones }] };
+  return {
+    ...game,
+    stones: game.stones.filter((each) => each !== cell),
+    undo: [...game.undo, { path: game.path, collected: game.collected, solved: game.solved, stones: game.stones }],
+  };
 }
 
 /** A tap on a cell: a stone there is taken up, and otherwise one is laid. `how` says which, or that it was refused and why.
@@ -254,8 +280,12 @@ export function takeStone<M extends MazeCore>(game: MazeGame<M>, cell: number): 
  * console.log(toggleStone(stoneGame,maze.goal).how);
  * ```
  */
-export function toggleStone<M extends MazeCore>(game: MazeGame<M>, cell: number): { game: MazeGame<M>; how: "laid" | "taken" | "refused"; why: StoneVerdict } {
-  if (hasStone(game, cell) && game.rules !== null && !game.drawing) return { game: takeStone(game, cell), how: "taken", why: "ok" };
+export function toggleStone<M extends MazeCore>(
+  game: MazeGame<M>,
+  cell: number,
+): { game: MazeGame<M>; how: "laid" | "taken" | "refused"; why: StoneVerdict } {
+  if (hasStone(game, cell) && game.rules !== null && !game.drawing)
+    return { game: takeStone(game, cell), how: "taken", why: "ok" };
   const why = canLayStone(game, cell);
   return why === "ok" ? { game: layStone(game, cell), how: "laid", why } : { game, how: "refused", why };
 }
@@ -277,7 +307,11 @@ export function toggleStone<M extends MazeCore>(game: MazeGame<M>, cell: number)
  */
 export function clearStones<M extends MazeCore>(game: MazeGame<M>): MazeGame<M> {
   if (game.stones.length === 0 || game.drawing) return game;
-  return { ...game, stones: [], undo: [...game.undo, { path: game.path, collected: game.collected, solved: game.solved, stones: game.stones }] };
+  return {
+    ...game,
+    stones: [],
+    undo: [...game.undo, { path: game.path, collected: game.collected, solved: game.solved, stones: game.stones }],
+  };
 }
 
 /** The same game under other rules (the limit or the reach changed, or stones turned on or off): the stones down stay down, and none is ever taken off by a lower limit, only no more laid.
@@ -297,7 +331,9 @@ export function clearStones<M extends MazeCore>(game: MazeGame<M>): MazeGame<M> 
  * ```
  */
 export function withStoneRules<M extends MazeCore>(game: MazeGame<M>, rules: StoneRules | null): MazeGame<M> {
-  const same = game.rules === rules || (game.rules !== null && rules !== null && game.rules.limit === rules.limit && game.rules.reach === rules.reach);
+  const same =
+    game.rules === rules ||
+    (game.rules !== null && rules !== null && game.rules.limit === rules.limit && game.rules.reach === rules.reach);
   return same ? game : { ...game, rules, stones: rules === null ? [] : game.stones };
 }
 
@@ -362,11 +398,29 @@ export function decodeRun<M extends MazeCore>(maze: M, code: string, rules: Ston
     for (const part of stoneText.split(".")) {
       if (!CELL.test(part)) return null;
       const cell = parseInt(part, 36);
-      if (cell >= maze.grid.cells || cell === maze.start || cell === maze.goal || path.includes(cell) || stones.includes(cell)) return null;
+      if (
+        cell >= maze.grid.cells ||
+        cell === maze.start ||
+        cell === maze.goal ||
+        path.includes(cell) ||
+        stones.includes(cell)
+      )
+        return null;
       stones.push(cell);
     }
   }
   const collected = maze.keys.filter((key) => path.includes(key));
-  const solved = path.length > 0 && path[path.length - 1] === maze.goal && maze.keys.every((key) => collected.includes(key));
-  return { maze, path, collected, solved, drawing: false, strokes: path.length > 1 || stones.length > 0 ? 1 : 0, undo: path.length > 0 || stones.length > 0 ? [{ path: [], collected: [], solved: false, stones: [] }] : [], stones, rules };
+  const solved =
+    path.length > 0 && path[path.length - 1] === maze.goal && maze.keys.every((key) => collected.includes(key));
+  return {
+    maze,
+    path,
+    collected,
+    solved,
+    drawing: false,
+    strokes: path.length > 1 || stones.length > 0 ? 1 : 0,
+    undo: path.length > 0 || stones.length > 0 ? [{ path: [], collected: [], solved: false, stones: [] }] : [],
+    stones,
+    rules,
+  };
 }

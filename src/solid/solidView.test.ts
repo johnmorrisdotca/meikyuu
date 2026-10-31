@@ -2,10 +2,42 @@ import { describe, expect, it } from "vitest";
 
 import { seededRandom } from "../random.ts";
 import { SOLID_KINDS, solidGridOf, type SolidGrid, type SolidKind } from "./solidGrid.ts";
-import { cellSeen, cellsAlongDrag, createFrame, dragTurn, edgeTurn, EDGE_SAFE, faceCellTurn, openingTurn, pickCell, projectFrame, stepTurn, trackballPoint } from "./solidView.ts";
+import {
+  cellSeen,
+  cellsAlongDrag,
+  createFrame,
+  dragTurn,
+  edgeTurn,
+  EDGE_SAFE,
+  faceCellTurn,
+  openingTurn,
+  pickCell,
+  projectFrame,
+  stepTurn,
+  trackballPoint,
+} from "./solidView.ts";
 import { dot, quatAxisAngle, quatBetween, quatMul, quatTurn, QUAT_IDENTITY, type Quat, type Vec3 } from "./vec.ts";
 
-const SIZES: Record<SolidKind, number> = { cube: 4, sphere: 3, tetrahedron: 4, octahedron: 3, icosahedron: 2, prism: 3, trapezohedron: 3, dodecahedron: 2, "rhombic-dodecahedron": 3, bipyramid: 2, icositetrahedron: 2, triacontahedron: 2, box: 3, cross: 3, ring: 3, torus: 5, star: 3, heart: 3 };
+const SIZES: Record<SolidKind, number> = {
+  cube: 4,
+  sphere: 3,
+  tetrahedron: 4,
+  octahedron: 3,
+  icosahedron: 2,
+  prism: 3,
+  trapezohedron: 3,
+  dodecahedron: 2,
+  "rhombic-dodecahedron": 3,
+  bipyramid: 2,
+  icositetrahedron: 2,
+  triacontahedron: 2,
+  box: 3,
+  cross: 3,
+  ring: 3,
+  torus: 5,
+  star: 3,
+  heart: 3,
+};
 const W = 360;
 const H = 300;
 
@@ -144,7 +176,12 @@ describe("looking at a solid", () => {
           const ray = byRay(grid, q, frame, x, y);
           if (picked !== ray) {
             // Only allowed where the point is on the line between the two, to within a hair.
-            expect(picked >= 0 && ray >= 0 ? Math.min(nearEdge(grid, frame, picked, x, y), nearEdge(grid, frame, ray, x, y)) : 0, `${kind} at ${x.toFixed(2)},${y.toFixed(2)}: picked ${picked}, ray ${ray}`).toBeLessThan(1e-6);
+            expect(
+              picked >= 0 && ray >= 0
+                ? Math.min(nearEdge(grid, frame, picked, x, y), nearEdge(grid, frame, ray, x, y))
+                : 0,
+              `${kind} at ${x.toFixed(2)},${y.toFixed(2)}: picked ${picked}, ray ${ray}`,
+            ).toBeLessThan(1e-6);
           } else if (picked >= 0) hit += 1;
         }
       }
@@ -251,7 +288,11 @@ describe("looking at a solid", () => {
     let q = faceCellTurn(grid, QUAT_IDENTITY, head);
     expect(quatTurn(q, grid.normals[over]!)[2]).toBeLessThan(0.01);
     let turns = 0;
-    for (let next = edgeTurn(grid, links, q, head, 1 / 60); next !== null && turns < 600; next = edgeTurn(grid, links, q, head, 1 / 60)) {
+    for (
+      let next = edgeTurn(grid, links, q, head, 1 / 60);
+      next !== null && turns < 600;
+      next = edgeTurn(grid, links, q, head, 1 / 60)
+    ) {
       q = next;
       turns += 1;
     }

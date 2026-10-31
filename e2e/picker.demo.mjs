@@ -37,7 +37,9 @@ test("the arrows step to the next and the previous level, and a number typed goe
   await expect(page.locator("#next")).toBeDisabled();
 });
 
-test("the difficulty shown climbs inside each size, from its easy third to its hard one, and each size ends harder than the one before", async ({ page }) => {
+test("the difficulty shown climbs inside each size, from its easy third to its hard one, and each size ends harder than the one before", async ({
+  page,
+}) => {
   await open(page, "");
   let top = 0;
   for (const first of [0, 256, 512, 768]) {
@@ -58,7 +60,9 @@ test("the difficulty shown climbs inside each size, from its easy third to its h
   expect(top).toBeGreaterThan(90);
 });
 
-test("the shape, the size and the way to play narrow the levels, and the arrows step through only those", async ({ page }) => {
+test("the shape, the size and the way to play narrow the levels, and the arrows step through only those", async ({
+  page,
+}) => {
   await open(page, "");
   await page.locator('#shapes button[data-value="heart"]').click();
   const hearts = findMazeLevels({ shape: "heart" });
@@ -112,7 +116,9 @@ test("the gallery shows each shape as a maze, and pressing one plays that shape'
   await page.locator('#gallery button[data-shape="circle"]').click();
   await expect(page.locator(`${at("board")} .mk-box svg`)).toHaveAttribute("data-shape", "circle");
   // The gallery is a grid of several to a row, not a long column, at a phone's width and a desk's.
-  const tops = await page.evaluate(() => [...document.querySelectorAll("#gallery li")].slice(0, 4).map((el) => Math.round(el.getBoundingClientRect().top)));
+  const tops = await page.evaluate(() =>
+    [...document.querySelectorAll("#gallery li")].slice(0, 4).map((el) => Math.round(el.getBoundingClientRect().top)),
+  );
   expect(new Set(tops).size).toBeLessThan(4);
 });
 

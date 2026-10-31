@@ -207,7 +207,12 @@ export function autoTurn(box: Box, ratio: number, room: { width: number; height:
  * console.log(resolveTurn("auto",grid.box,1,{width:390,height:844}));
  * ```
  */
-export function resolveTurn(orientation: MeikyuuOrientation, box: Box, ratio: number, room: { width: number; height: number } | null): Turn {
+export function resolveTurn(
+  orientation: MeikyuuOrientation,
+  box: Box,
+  ratio: number,
+  room: { width: number; height: number } | null,
+): Turn {
   if (orientation !== "auto") return turnFor(orientation, box);
   return room === null ? 0 : autoTurn(box, ratio, room);
 }

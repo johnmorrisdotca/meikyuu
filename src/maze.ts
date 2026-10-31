@@ -129,7 +129,18 @@ export type MazeCore = {
   readonly grid: { readonly cells: number; readonly neighbours: readonly (readonly number[])[] };
 };
 
-const ROWLESS: readonly MeikyuuShape[] = ["circle", "heart", "leaf", "star", "ring", "diamond", "cross", "moon", "hexagon", "pyramid"];
+const ROWLESS: readonly MeikyuuShape[] = [
+  "circle",
+  "heart",
+  "leaf",
+  "star",
+  "ring",
+  "diamond",
+  "cross",
+  "moon",
+  "hexagon",
+  "pyramid",
+];
 
 /** A recipe as one short word, such as `square:12x9:wilson:to-goal:48213` or `heart:25:prim:keys-3:7`, and the other way (`parseRecipe`).
  *
@@ -225,7 +236,11 @@ export function parseRecipe(code: string): MazeRecipe | null {
   const parts = code.split(":");
   if (parts.length !== 5) return null;
   const [shape, size, algorithm, mode, seed] = parts as [string, string, string, string, string];
-  if (!(MEIKYUU_SHAPES as readonly string[]).includes(shape) || !(MEIKYUU_ALGORITHMS as readonly string[]).includes(algorithm)) return null;
+  if (
+    !(MEIKYUU_SHAPES as readonly string[]).includes(shape) ||
+    !(MEIKYUU_ALGORITHMS as readonly string[]).includes(algorithm)
+  )
+    return null;
   const sizes = /^(\d+)(?:x(\d+))?$/.exec(size);
   const modes = /^(enter-leave|to-goal|centre-out|keys)(?:-(\d+))?$/.exec(mode);
   if (sizes === null || modes === null || !/^\d+$/.test(seed)) return null;
@@ -236,7 +251,15 @@ export function parseRecipe(code: string): MazeRecipe | null {
   if (layoutCells(shape as MeikyuuShape, w, h) > MEIKYUU_MOST_CELLS) return null;
   const keys = modes[1] === "keys" ? Math.max(1, Number(modes[2] ?? 1)) : undefined;
   if (keys !== undefined && keys > MEIKYUU_MOST_KEYS) return null;
-  return { shape: shape as MeikyuuShape, w, h, algorithm: algorithm as MeikyuuAlgorithm, mode: modes[1] as MeikyuuMode, seed: Number(seed), ...(keys === undefined ? {} : { keys }) };
+  return {
+    shape: shape as MeikyuuShape,
+    w,
+    h,
+    algorithm: algorithm as MeikyuuAlgorithm,
+    mode: modes[1] as MeikyuuMode,
+    seed: Number(seed),
+    ...(keys === undefined ? {} : { keys }),
+  };
 }
 
 /** How far every cell is from `from` along the passages, and the cell before it on the way: -1 where unreachable.
@@ -322,7 +345,10 @@ function placeKeys(grid: Grid, links: Links, start: number, goal: number, count:
   const ends = [];
   for (let cell = 0; cell < grid.cells; cell += 1) if (links[cell]!.length === 1 && !onWay.has(cell)) ends.push(cell);
   const most = ends.reduce((m, cell) => Math.max(m, away[cell]!), 0);
-  const deepEnds = shuffled(ends.filter((cell) => away[cell]! >= Math.ceil(most * 0.4)), random);
+  const deepEnds = shuffled(
+    ends.filter((cell) => away[cell]! >= Math.ceil(most * 0.4)),
+    random,
+  );
   const picked: number[] = [];
   const spacing = Math.max(3, Math.floor(Math.sqrt(grid.cells) / 3));
   for (const cell of deepEnds) {
@@ -364,25 +390,43 @@ export function buildMaze(recipe: MazeRecipe): Maze {
     case "enter-leave": {
       const from = edge[below(random, edge.length)]!;
       start = farthest(edge, walk(links, from).dist);
-      goal = farthest(edge.filter((cell) => cell !== start), walk(links, start).dist);
+      goal = farthest(
+        edge.filter((cell) => cell !== start),
+        walk(links, start).dist,
+      );
       entrance = doorAt(grid, start, random);
       exit = doorAt(grid, goal, random);
       break;
     }
     case "to-goal": {
       start = innerCell(grid, random);
-      goal = deep(Array.from({ length: grid.cells }, (_, i) => i), walk(links, start).dist, 0.8, random);
+      goal = deep(
+        Array.from({ length: grid.cells }, (_, i) => i),
+        walk(links, start).dist,
+        0.8,
+        random,
+      );
       break;
     }
     case "centre-out": {
       start = centreCell(grid);
-      goal = deep(edge.filter((cell) => cell !== start), walk(links, start).dist, 0.8, random);
+      goal = deep(
+        edge.filter((cell) => cell !== start),
+        walk(links, start).dist,
+        0.8,
+        random,
+      );
       exit = doorAt(grid, goal, random);
       break;
     }
     case "keys": {
       start = innerCell(grid, random);
-      goal = deep(edge.filter((cell) => cell !== start), walk(links, start).dist, 0.8, random);
+      goal = deep(
+        edge.filter((cell) => cell !== start),
+        walk(links, start).dist,
+        0.8,
+        random,
+      );
       exit = doorAt(grid, goal, random);
       keys = placeKeys(grid, links, start, goal, recipe.keys ?? 1, random);
       break;
@@ -448,6 +492,8 @@ export function passageCount(links: Links): number {
  */
 export function isPerfect(grid: MazeCore["grid"], links: Links): boolean {
   if (passageCount(links) !== grid.cells - 1) return false;
-  for (let cell = 0; cell < grid.cells; cell += 1) for (const next of links[cell]!) if (!grid.neighbours[cell]!.includes(next) || !links[next]!.includes(cell)) return false;
+  for (let cell = 0; cell < grid.cells; cell += 1)
+    for (const next of links[cell]!)
+      if (!grid.neighbours[cell]!.includes(next) || !links[next]!.includes(cell)) return false;
   return walk(links, 0).order.length === grid.cells;
 }

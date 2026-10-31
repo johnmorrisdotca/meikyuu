@@ -4,10 +4,19 @@
 import { cpSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 
 import { API_CSS, apiPage } from "./api.mjs";
-import { FAMILY_SCRIPT, FAMILY_EMBED_BUILDER_WORDS, familyEmbedBuilder, familyFooter, familyHead, familyHeader, familyUnreviewed } from "./family-template.mjs";
+import {
+  FAMILY_SCRIPT,
+  FAMILY_EMBED_BUILDER_WORDS,
+  familyEmbedBuilder,
+  familyFooter,
+  familyHead,
+  familyHeader,
+  familyUnreviewed,
+} from "./family-template.mjs";
 
 const id = "meikyuu";
-const ICON = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%232f5d4a'/%3E%3Ctext x='50' y='70' font-size='60' text-anchor='middle' fill='%23f3efe4'%3E迷%3C/text%3E%3C/svg%3E";
+const ICON =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%232f5d4a'/%3E%3Ctext x='50' y='70' font-size='60' text-anchor='middle' fill='%23f3efe4'%3E迷%3C/text%3E%3C/svg%3E";
 
 const uses = [
   `import { buildMaze, measureMaze } from "@johnmorrisdotca/meikyuu";`,
@@ -34,9 +43,11 @@ const page = `<!doctype html>
     ${familyHead({
       id,
       title: "Meikyuu 迷宮 — Maze generator and maze game",
-      description: "Play Meikyuu, a maze game of over a thousand levels: mazes on squares, hexagons, triangles, circles and cut-out shapes, from a few cells to thousands, tall ones for a phone held upright, with arrow puzzles too. Draw with a finger or the mouse, zoom in and out. Free and open source, in English and Japanese.",
+      description:
+        "Play Meikyuu, a maze game of over a thousand levels: mazes on squares, hexagons, triangles, circles and cut-out shapes, from a few cells to thousands, tall ones for a phone held upright, with arrow puzzles too. Draw with a finger or the mouse, zoom in and out. Free and open source, in English and Japanese.",
       ogTitle: "Meikyuu 迷宮 — Maze generator and maze game",
-      ogDescription: "Draw a line through over a thousand mazes, from tiny to huge, in every shape, and tall ones for a phone. Arrow puzzles and mixed ones too.",
+      ogDescription:
+        "Draw a line through over a thousand mazes, from tiny to huge, in every shape, and tall ones for a phone. Arrow puzzles and mixed ones too.",
     })}
     <link rel="icon" href="${ICON}" />
     <link rel="stylesheet" href="family.css" />
@@ -44,7 +55,13 @@ const page = `<!doctype html>
   </head>
   <body>
     <main>
-      ${familyHeader({ id, links: [{ href: "docs/index.html", say: "pageDocs" }, { href: "api.html", say: "pageApi" }] })}
+      ${familyHeader({
+        id,
+        links: [
+          { href: "docs/index.html", say: "pageDocs" },
+          { href: "api.html", say: "pageApi" },
+        ],
+      })}
       <div class="setup fam-row" data-help-en="Choose what to play: mazes, arrow puzzles, or mixed puzzles where a labyrinth unlocks arrows." data-help-ja="遊ぶものを選びます。迷路、矢印パズル、または迷宮で矢のカギを開けるミックスです。">
         <span class="fam-label" data-say="play"></span>
         <div class="fam-seg" role="group" data-say-label="play" id="kinds" data-testid="kinds"></div>
@@ -146,13 +163,32 @@ writeFileSync("site/api.css", API_CSS);
 writeFileSync("site/api.html", apiPage({ id, name: "Meikyuu", icon: ICON }));
 console.log("site/ is ready: serve it, or let the Pages workflow publish it.");
 
-writeFileSync("site/family-embed-builder.js", `export const FAMILY_EMBED_BUILDER_WORDS = ${JSON.stringify(FAMILY_EMBED_BUILDER_WORDS)};\nexport ${familyEmbedBuilder.toString()};\n`);
+writeFileSync(
+  "site/family-embed-builder.js",
+  `export const FAMILY_EMBED_BUILDER_WORDS = ${JSON.stringify(FAMILY_EMBED_BUILDER_WORDS)};\nexport ${familyEmbedBuilder.toString()};\n`,
+);
 const builderParts = {
-  builderHead: familyHead({ id, title: "Meikyuu · build a puzzle embed", description: "Choose a maze, arrow puzzle or daily level, preview it and copy the embed code." }),
-  builderHeader: familyHeader({ id, links: [{ href: "./", say: "toGallery" }, { href: "docs/index.html", say: "pageDocs" }, { href: "api.html", say: "pageApi" }] }),
-  unreviewed: familyUnreviewed({ id }), footer: familyFooter({ id }), script: `<script>${FAMILY_SCRIPT}</script>`,
+  builderHead: familyHead({
+    id,
+    title: "Meikyuu · build a puzzle embed",
+    description: "Choose a maze, arrow puzzle or daily level, preview it and copy the embed code.",
+  }),
+  builderHeader: familyHeader({
+    id,
+    links: [
+      { href: "./", say: "toGallery" },
+      { href: "docs/index.html", say: "pageDocs" },
+      { href: "api.html", say: "pageApi" },
+    ],
+  }),
+  unreviewed: familyUnreviewed({ id }),
+  footer: familyFooter({ id }),
+  script: `<script>${FAMILY_SCRIPT}</script>`,
 };
-writeFileSync("site/builder.html", readFileSync("demo/builder.html", "utf8").replace(/<!-- family:([A-Za-z]+) -->/g, (_match, key) => builderParts[key]));
+writeFileSync(
+  "site/builder.html",
+  readFileSync("demo/builder.html", "utf8").replace(/<!-- family:([A-Za-z]+) -->/g, (_match, key) => builderParts[key]),
+);
 
 cpSync("demo/embed", "site/embed", { recursive: true });
 for (const file of ["builder.js", "builder.css"]) cpSync(`demo/${file}`, `site/${file}`);

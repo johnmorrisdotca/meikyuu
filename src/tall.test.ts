@@ -1,6 +1,14 @@
 import { describe, expect, it } from "vitest";
 
-import { findTallLevels, MEIKYUU_TALL_LEVELS, MEIKYUU_TALL_PER_SIZE, MEIKYUU_TALL_SIZES, tallLevelOf, tallLevelOfSize, tallLevelsOfSize } from "./levels-tall.ts";
+import {
+  findTallLevels,
+  MEIKYUU_TALL_LEVELS,
+  MEIKYUU_TALL_PER_SIZE,
+  MEIKYUU_TALL_SIZES,
+  tallLevelOf,
+  tallLevelOfSize,
+  tallLevelsOfSize,
+} from "./levels-tall.ts";
 import { MEIKYUU_MAZE_LEVELS } from "./levels.ts";
 import { buildMaze } from "./maze.ts";
 import { gridOf } from "./shapes.ts";
@@ -55,27 +63,40 @@ describe("tall mazes", () => {
   it("climb inside every size by the score, never scoring under the one before, and the score rises by thirds", () => {
     for (const { size } of MEIKYUU_TALL_SIZES) {
       const levels = tallLevelsOfSize(size);
-      for (let i = 1; i < levels.length; i += 1) expect(levels[i]!.score, `size ${size} level ${i + 1}`).toBeGreaterThanOrEqual(levels[i - 1]!.score);
-      const mean = (from: number, to: number): number => levels.slice(from, to).reduce((a, level) => a + level.score, 0) / (to - from);
+      for (let i = 1; i < levels.length; i += 1)
+        expect(levels[i]!.score, `size ${size} level ${i + 1}`).toBeGreaterThanOrEqual(levels[i - 1]!.score);
+      const mean = (from: number, to: number): number =>
+        levels.slice(from, to).reduce((a, level) => a + level.score, 0) / (to - from);
       expect(mean(0, 86), `size ${size}`).toBeLessThan(mean(86, 171));
       expect(mean(86, 171), `size ${size}`).toBeLessThan(mean(171, 256));
       expect(mean(171, 256) - mean(0, 86), `size ${size}`).toBeGreaterThanOrEqual(3);
     }
     for (let size = 2; size <= 6; size += 1) {
       expect(tallLevelOfSize(size, 1)!.effort, `size ${size}`).toBeGreaterThan(tallLevelOfSize(size - 1, 1)!.effort);
-      expect(tallLevelOfSize(size, 256)!.effort, `size ${size}`).toBeGreaterThan(tallLevelOfSize(size - 1, 256)!.effort);
+      expect(tallLevelOfSize(size, 256)!.effort, `size ${size}`).toBeGreaterThan(
+        tallLevelOfSize(size - 1, 256)!.effort,
+      );
     }
   });
 
   it("are squares, hexagons and triangles in every way to play, with no maze of the square lists among them", () => {
     for (const { size } of MEIKYUU_TALL_SIZES) {
       const levels = tallLevelsOfSize(size);
-      for (const shape of TALL_SHAPES) expect(levels.filter((level) => level.recipe.shape === shape).length, `${size} ${shape}`).toBeGreaterThanOrEqual(20);
-      for (const mode of ["enter-leave", "to-goal", "centre-out", "keys"] as const) expect(levels.filter((level) => level.recipe.mode === mode).length, `${size} ${mode}`).toBeGreaterThanOrEqual(30);
+      for (const shape of TALL_SHAPES)
+        expect(
+          levels.filter((level) => level.recipe.shape === shape).length,
+          `${size} ${shape}`,
+        ).toBeGreaterThanOrEqual(20);
+      for (const mode of ["enter-leave", "to-goal", "centre-out", "keys"] as const)
+        expect(levels.filter((level) => level.recipe.mode === mode).length, `${size} ${mode}`).toBeGreaterThanOrEqual(
+          30,
+        );
     }
     const square = new Set(MEIKYUU_MAZE_LEVELS.map((level) => level.code));
     expect(MEIKYUU_TALL_LEVELS.some((level) => square.has(level.code))).toBe(false);
-    expect(findTallLevels({ size: 2, shape: "hex" }).every((level) => level.size === 2 && level.recipe.shape === "hex")).toBe(true);
+    expect(
+      findTallLevels({ size: 2, shape: "hex" }).every((level) => level.size === 2 && level.recipe.shape === "hex"),
+    ).toBe(true);
     expect(buildMaze(MEIKYUU_TALL_LEVELS[0]!.recipe).grid.cells).toBe(MEIKYUU_TALL_LEVELS[0]!.cells);
   });
 });

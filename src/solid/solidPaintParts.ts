@@ -38,7 +38,21 @@ export type SolidPaintState = {
 };
 
 /** The drawing surface the painter needs: a 2D canvas context, or anything shaped like one. */
-export type PaintContext = Pick<CanvasRenderingContext2D, "beginPath" | "moveTo" | "lineTo" | "closePath" | "fill" | "stroke" | "arc" | "fillRect" | "clearRect" | "save" | "restore" | "setTransform"> & {
+export type PaintContext = Pick<
+  CanvasRenderingContext2D,
+  | "beginPath"
+  | "moveTo"
+  | "lineTo"
+  | "closePath"
+  | "fill"
+  | "stroke"
+  | "arc"
+  | "fillRect"
+  | "clearRect"
+  | "save"
+  | "restore"
+  | "setTransform"
+> & {
   fillStyle: string | CanvasGradient | CanvasPattern;
   strokeStyle: string | CanvasGradient | CanvasPattern;
   lineWidth: number;
@@ -98,7 +112,14 @@ export function tangentsOf(maze: SolidMaze, cell: number): [Vec3, Vec3] {
 }
 
 /** A circle lying on the surface at a cell, as the points of its outline put on the picture. */
-export function discOn(frame: SolidFrame, m: readonly number[], maze: SolidMaze, cell: number, radius: number, steps = 16): [number, number][] {
+export function discOn(
+  frame: SolidFrame,
+  m: readonly number[],
+  maze: SolidMaze,
+  cell: number,
+  radius: number,
+  steps = 16,
+): [number, number][] {
   const { grid } = maze;
   const [u, v] = tangentsOf(maze, cell);
   const centre = grid.centres[cell]!;
@@ -106,7 +127,11 @@ export function discOn(frame: SolidFrame, m: readonly number[], maze: SolidMaze,
   const out: [number, number][] = [];
   for (let i = 0; i < steps; i += 1) {
     const a = (i / steps) * 2 * Math.PI;
-    const point: Vec3 = [centre[0] + lift[0] + radius * (Math.cos(a) * u[0] + Math.sin(a) * v[0]), centre[1] + lift[1] + radius * (Math.cos(a) * u[1] + Math.sin(a) * v[1]), centre[2] + lift[2] + radius * (Math.cos(a) * u[2] + Math.sin(a) * v[2])];
+    const point: Vec3 = [
+      centre[0] + lift[0] + radius * (Math.cos(a) * u[0] + Math.sin(a) * v[0]),
+      centre[1] + lift[1] + radius * (Math.cos(a) * u[1] + Math.sin(a) * v[1]),
+      centre[2] + lift[2] + radius * (Math.cos(a) * u[2] + Math.sin(a) * v[2]),
+    ];
     const [x, y] = placeOn(frame, m, point);
     out.push([x, y]);
   }
@@ -144,7 +169,6 @@ export function trace(ctx: PaintContext, maze: SolidMaze, frame: SolidFrame, cel
     drawnTo = at;
   }
 }
-
 
 /** How thick a slab of depth is, in cells' rooms: about two cells of the solid. */
 const SLAB_ROOMS = 1.5;

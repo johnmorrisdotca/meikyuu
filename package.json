@@ -148,7 +148,8 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "lint": "eslint .",
+    "lint": "biome check .",
+    "format": "biome check --write .",
     "typecheck": "tsc -p tsconfig.check.json",
     "test": "vitest run",
     "test:package": "pnpm build && node scripts/check-package.mjs",
@@ -168,15 +169,13 @@
     "size": "node scripts/docs-site.mjs size"
   },
   "devDependencies": {
-    "@eslint/js": "^9.0.0",
+    "@biomejs/biome": "2.6.4",
     "@playwright/test": "^1.63.0",
-    "eslint": "^9.0.0",
-    "typescript": "^5.9.0",
-    "typescript-eslint": "^8.0.0",
-    "vitest": "^5.0.0",
-    "pagefind": "^1.5.2",
+    "esbuild": "^0.28.0",
     "marked": "^18.0.0",
-    "esbuild": "^0.28.0"
+    "pagefind": "^1.5.2",
+    "typescript": "^5.9.0",
+    "vitest": "^5.0.0"
   },
   "packageManager": "pnpm@10.11.0"
 }

@@ -2,11 +2,27 @@
 // hinted and solved. What the page shows is held to what the package says of the same level.
 import { expect, test } from "@playwright/test";
 
-import { at, bare, board, cellPoint, dragCells, events, findMaze, mazeOf, noSidewaysScroll, open, recordEvents, shownWidth, touchDrag } from "./demo.mjs";
+import {
+  at,
+  bare,
+  board,
+  cellPoint,
+  dragCells,
+  events,
+  findMaze,
+  mazeOf,
+  noSidewaysScroll,
+  open,
+  recordEvents,
+  shownWidth,
+  touchDrag,
+} from "./demo.mjs";
 
 const svgOf = (page) => page.locator(`${at("board")} .mk-box svg`);
 
-test("a first visit draws the level the address names, with its walls, its start and its goal, and says how to play it", async ({ page }) => {
+test("a first visit draws the level the address names, with its walls, its start and its goal, and says how to play it", async ({
+  page,
+}) => {
   const errors = await open(page, "?kind=maze&level=40");
   const { level } = mazeOf(40);
   await expect(page.locator(at("board"))).toHaveAttribute("data-level", "40");
@@ -20,7 +36,9 @@ test("a first visit draws the level the address names, with its walls, its start
   await noSidewaysScroll(page);
 });
 
-test("a line is drawn by dragging from the start along the passages, by mouse, and Undo takes the stroke back", async ({ page }) => {
+test("a line is drawn by dragging from the start along the passages, by mouse, and Undo takes the stroke back", async ({
+  page,
+}) => {
   await open(page, "?kind=maze&level=40");
   const { maze, way } = mazeOf(40);
   const svg = svgOf(page);
@@ -70,7 +88,9 @@ test("the line carries on from its end in a second stroke, and Restart clears it
   await expect(page.locator(at("board"))).toHaveAttribute("data-moves", "0");
 });
 
-test("a line drawn the whole way solves it: the page says so, tells the event once, keeps it, and the line is then fixed", async ({ page }) => {
+test("a line drawn the whole way solves it: the page says so, tells the event once, keeps it, and the line is then fixed", async ({
+  page,
+}) => {
   await open(page, "?kind=maze&level=40");
   await recordEvents(page, at("board"), ["meikyuu-move", "meikyuu-solve"]);
   const { maze, way } = mazeOf(40);
@@ -93,7 +113,9 @@ test("a line drawn the whole way solves it: the page says so, tells the event on
 });
 
 for (const how of ["a click on it", "its close button", "Escape"]) {
-  test(`the solved message is closed by ${how}, the words below still say it, and the zoom pad works with it open and after`, async ({ page }) => {
+  test(`the solved message is closed by ${how}, the words below still say it, and the zoom pad works with it open and after`, async ({
+    page,
+  }) => {
     await open(page, "?kind=maze&level=40");
     const { maze, way } = mazeOf(40);
     const svg = svgOf(page);
@@ -125,7 +147,9 @@ for (const how of ["a click on it", "its close button", "Escape"]) {
   });
 }
 
-test("with `banner=\"off\"` a solved maze shows no message, only the words below; on again, it shows", async ({ page }) => {
+test('with `banner="off"` a solved maze shows no message, only the words below; on again, it shows', async ({
+  page,
+}) => {
   const { maze, way } = mazeOf(40);
   await bare(page, `<meikyuu-board id="a" level="40" banner="off" style="max-width:520px"></meikyuu-board>`);
   await page.waitForSelector("#a[data-solved] .mk-box svg[viewBox]");
@@ -152,7 +176,10 @@ test("a line is drawn by touch too, and the page does not scroll under the finge
   expect(await board(page).evaluate((element) => getComputedStyle(element).touchAction)).toBe("none");
 });
 
-test("with the browser's own touch (Chromium), a finger drags a line and the page does not scroll", async ({ page, browserName }) => {
+test("with the browser's own touch (Chromium), a finger drags a line and the page does not scroll", async ({
+  page,
+  browserName,
+}) => {
   test.skip(browserName !== "chromium", "real touch is driven through Chromium's own protocol");
   await open(page, "?kind=maze&level=40");
   const { maze, way } = mazeOf(40);
@@ -164,7 +191,8 @@ test("with the browser's own touch (Chromium), a finger drags a line and the pag
   const touch = (p) => [{ x: p.x, y: p.y, id: 1 }];
   const before = await page.evaluate(() => window.scrollY);
   await client.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: touch(points[0]) });
-  for (const p of points.slice(1)) await client.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: touch(p) });
+  for (const p of points.slice(1))
+    await client.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: touch(p) });
   await client.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
   await expect(page.locator(at("board"))).toHaveAttribute("data-cells", "6");
   expect(await page.evaluate(() => window.scrollY)).toBe(before);
@@ -175,7 +203,9 @@ test("a fast drag that skips cells still follows the corridors: cells between ar
   const { maze, way } = mazeOf(40);
   const svg = svgOf(page);
   // From the start straight to a cell some cells along the way, in one move: the line goes through the cells between, where it can.
-  const straight = way.findIndex((cell, i) => i >= 3 && way.slice(0, i + 1).every((c, j) => j === 0 || maze.links[way[j - 1]].includes(c)));
+  const straight = way.findIndex(
+    (cell, i) => i >= 3 && way.slice(0, i + 1).every((c, j) => j === 0 || maze.links[way[j - 1]].includes(c)),
+  );
   expect(straight).toBeGreaterThan(2);
   const first = await cellPoint(svg, maze, way[0]);
   await page.mouse.move(first.x, first.y);
@@ -226,7 +256,8 @@ test("the arrow keys step the line, Backspace takes a step back, and Ctrl+Z undo
   await expect(page.locator(at("board"))).toHaveAttribute("data-cells", "1");
   const [sx, sy] = maze.grid.centres[way[0]];
   const [nx, ny] = maze.grid.centres[way[1]];
-  const key = Math.abs(nx - sx) > Math.abs(ny - sy) ? (nx > sx ? "ArrowRight" : "ArrowLeft") : ny > sy ? "ArrowDown" : "ArrowUp";
+  const key =
+    Math.abs(nx - sx) > Math.abs(ny - sy) ? (nx > sx ? "ArrowRight" : "ArrowLeft") : ny > sy ? "ArrowDown" : "ArrowUp";
   await page.keyboard.press(key);
   await expect(page.locator(at("board"))).toHaveAttribute("data-cells", "2");
   await page.keyboard.press("Control+z");
@@ -258,7 +289,13 @@ test("nothing the player touches can be selected", async ({ page }) => {
   await open(page, "?kind=maze&level=40");
   const styles = await page.evaluate(() => {
     const read = (selector) => getComputedStyle(document.querySelector(selector)).userSelect;
-    return { host: read('[data-testid="board"]'), box: read(".mk-box"), svg: read(".mk-box svg"), button: read(".mk-button"), trail: read(".mk-trail") };
+    return {
+      host: read('[data-testid="board"]'),
+      box: read(".mk-box"),
+      svg: read(".mk-box svg"),
+      button: read(".mk-button"),
+      trail: read(".mk-trail"),
+    };
   });
   for (const [name, value] of Object.entries(styles)) expect(value, name).toBe("none");
   // A double click on the board selects nothing.
@@ -268,8 +305,13 @@ test("nothing the player touches can be selected", async ({ page }) => {
   expect(await page.evaluate(() => String(getSelection()))).toBe("");
 });
 
-test("a level of keys must have every key picked up before the goal counts, and is solved by fetching each and drawing out", async ({ page }) => {
-  const found = findMaze(({ level, maze }) => level.recipe.mode === "keys" && maze.grid.cells < 450 && maze.keys.length >= 2, { from: 100, to: 700 });
+test("a level of keys must have every key picked up before the goal counts, and is solved by fetching each and drawing out", async ({
+  page,
+}) => {
+  const found = findMaze(
+    ({ level, maze }) => level.recipe.mode === "keys" && maze.grid.cells < 450 && maze.keys.length >= 2,
+    { from: 100, to: 700 },
+  );
   await open(page, `?kind=maze&level=${found.level.number}`);
   const { maze, way } = found;
   const svg = svgOf(page);

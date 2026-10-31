@@ -63,7 +63,14 @@ export function solidFinders(lists: SolidLevelLists): {
   const kinds = Object.keys(lists) as SolidKind[];
   return {
     solidLevelsOf: (kind, size) => lists[kind]?.[size] ?? [],
-    solidLevelOf: (kind, size, n) => (Number.isInteger(n) ? lists[kind]?.[size]?.[n - 1] ?? null : null),
-    findSolidLevels: (filter = {}) => kinds.filter((kind) => filter.kind === undefined || kind === filter.kind).flatMap((kind) => SOLID_SIZE_NAMES.filter((size) => filter.size === undefined || size === filter.size).flatMap((size) => [...lists[kind]![size]])),
+    solidLevelOf: (kind, size, n) => (Number.isInteger(n) ? (lists[kind]?.[size]?.[n - 1] ?? null) : null),
+    findSolidLevels: (filter = {}) =>
+      kinds
+        .filter((kind) => filter.kind === undefined || kind === filter.kind)
+        .flatMap((kind) =>
+          SOLID_SIZE_NAMES.filter((size) => filter.size === undefined || size === filter.size).flatMap((size) => [
+            ...lists[kind]![size],
+          ]),
+        ),
   };
 }

@@ -82,7 +82,21 @@ export type Box = { readonly x: number; readonly y: number; readonly w: number; 
  * console.log(MEIKYUU_SHAPES);
  * ```
  */
-export const MEIKYUU_SHAPES = ["square", "hex", "triangle", "circle", "heart", "leaf", "star", "ring", "diamond", "cross", "moon", "hexagon", "pyramid"] as const;
+export const MEIKYUU_SHAPES = [
+  "square",
+  "hex",
+  "triangle",
+  "circle",
+  "heart",
+  "leaf",
+  "star",
+  "ring",
+  "diamond",
+  "cross",
+  "moon",
+  "hexagon",
+  "pyramid",
+] as const;
 /** A supported flat grid geometry or cut-out mask.
  *
  * @example
@@ -180,7 +194,15 @@ export function centreCell(grid: Grid): number {
 }
 
 /** Build a grid from the parts a shape makes; `neighbours` is read off `sides`. */
-export function makeGrid(parts: { shape: MeikyuuShape; w: number; h: number; centres: Point[]; sides: Side[][]; box: Box; at: (x: number, y: number) => number }): Grid {
+export function makeGrid(parts: {
+  shape: MeikyuuShape;
+  w: number;
+  h: number;
+  centres: Point[];
+  sides: Side[][];
+  box: Box;
+  at: (x: number, y: number) => number;
+}): Grid {
   const neighbours = parts.sides.map((sides) => sides.filter((side) => side.to >= 0).map((side) => side.to));
   return { ...parts, cells: parts.centres.length, neighbours };
 }
@@ -225,7 +247,9 @@ export function subGrid(grid: Grid, keep: (cell: number) => boolean, shape: Meik
     }
   }
   const centres = old.map((cell) => grid.centres[cell]!);
-  const sides = old.map((cell) => grid.sides[cell]!.map((side) => ({ to: side.to < 0 ? -1 : renumbered[side.to]!, wall: side.wall })));
+  const sides = old.map((cell) =>
+    grid.sides[cell]!.map((side) => ({ to: side.to < 0 ? -1 : renumbered[side.to]!, wall: side.wall })),
+  );
   // The box shrinks to what is left, so a heart is fitted by its own outline and not its raster's.
   let x0 = Infinity;
   let y0 = Infinity;

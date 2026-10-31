@@ -5,13 +5,42 @@ import { MEIKYUU_SHAPES, type MeikyuuShape } from "./grid.ts";
 import { MEIKYUU_TALL_LEVELS } from "./levels-tall.ts";
 import { MEIKYUU_MAZE_LEVELS } from "./levels.ts";
 import { MEIKYUU_MODES, buildMaze, solutionOf, type Maze } from "./maze.ts";
-import { autoTurn, cellsAlong, resolveTurn, toDisplay, toLogical, turnedBox, turnFor, turnTransform, unturnedBox, type Turn } from "./orientation.ts";
+import {
+  autoTurn,
+  cellsAlong,
+  resolveTurn,
+  toDisplay,
+  toLogical,
+  turnedBox,
+  turnFor,
+  turnTransform,
+  unturnedBox,
+  type Turn,
+} from "./orientation.ts";
 import { lineToSteps, stepsToLine } from "./steps.ts";
 
-const SIZES: Record<MeikyuuShape, [number, number]> = { square: [9, 6], hex: [8, 6], triangle: [10, 5], circle: [5, 5], heart: [14, 14], leaf: [14, 14], star: [16, 16], ring: [12, 12], diamond: [12, 12], cross: [11, 11], moon: [14, 14], hexagon: [3, 3], pyramid: [6, 6] };
+const SIZES: Record<MeikyuuShape, [number, number]> = {
+  square: [9, 6],
+  hex: [8, 6],
+  triangle: [10, 5],
+  circle: [5, 5],
+  heart: [14, 14],
+  leaf: [14, 14],
+  star: [16, 16],
+  ring: [12, 12],
+  diamond: [12, 12],
+  cross: [11, 11],
+  moon: [14, 14],
+  hexagon: [3, 3],
+  pyramid: [6, 6],
+};
 
 /** A line drawn as a finger draws it on a board shown at a turn: down on the start, and moved through the middle of each cell in the picture, one point at a time. */
-function drawnAt(maze: Maze, cells: readonly number[], turn: Turn): { path: readonly number[]; steps: string | null; solved: boolean } {
+function drawnAt(
+  maze: Maze,
+  cells: readonly number[],
+  turn: Turn,
+): { path: readonly number[]; steps: string | null; solved: boolean } {
   let game = pressMaze(newMazeGame(maze), cells[0]!);
   for (let i = 1; i < cells.length; i += 1) {
     const from = toDisplay(turn, maze.grid.centres[cells[i - 1]!]!);
@@ -25,7 +54,11 @@ function drawnAt(maze: Maze, cells: readonly number[], turn: Turn): { path: read
 describe("turning a maze a quarter", () => {
   it("carries a point there and back, and a rectangle with it", () => {
     for (const turn of [0, 1] as const) {
-      for (const point of [[0, 0], [3, 4], [-2.5, 7.25]] as const) {
+      for (const point of [
+        [0, 0],
+        [3, 4],
+        [-2.5, 7.25],
+      ] as const) {
         const back = toLogical(turn, toDisplay(turn, point));
         expect(back[0]).toBeCloseTo(point[0], 12);
         expect(back[1]).toBeCloseTo(point[1], 12);
@@ -74,7 +107,15 @@ describe("a line drawn on a board that is turned is the line drawn on one that i
     it(`${shape}: the same cells, the same steps, solved, whichever way it is shown`, () => {
       const [w, h] = SIZES[shape];
       for (const mode of MEIKYUU_MODES) {
-        const maze = buildMaze({ shape, w, h, algorithm: "wilson", mode, seed: 31, ...(mode === "keys" ? { keys: 2 } : {}) });
+        const maze = buildMaze({
+          shape,
+          w,
+          h,
+          algorithm: "wilson",
+          mode,
+          seed: 31,
+          ...(mode === "keys" ? { keys: 2 } : {}),
+        });
         const way = solutionOf(maze);
         const reference = playSolution(newMazeGame(maze));
         const made = drawnAt(maze, way, 0);
@@ -96,7 +137,10 @@ describe("a line drawn on a board that is turned is the line drawn on one that i
   }
 
   it("holds for a spread of tall levels and square levels, drawn upright and lying down", () => {
-    for (const level of [...MEIKYUU_TALL_LEVELS.filter((_, i) => i % 61 === 0), ...MEIKYUU_MAZE_LEVELS.filter((_, i) => i % 83 === 0)]) {
+    for (const level of [
+      ...MEIKYUU_TALL_LEVELS.filter((_, i) => i % 61 === 0),
+      ...MEIKYUU_MAZE_LEVELS.filter((_, i) => i % 83 === 0),
+    ]) {
       const maze = buildMaze(level.recipe);
       if (maze.keys.length > 0) continue;
       const way = solutionOf(maze);

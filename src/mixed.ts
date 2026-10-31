@@ -1,4 +1,11 @@
-import { arrowRecipeCode, makeArrows, measureArrows, parseArrowRecipe, type ArrowBoard, type ArrowRecipe } from "./arrows.ts";
+import {
+  arrowRecipeCode,
+  makeArrows,
+  measureArrows,
+  parseArrowRecipe,
+  type ArrowBoard,
+  type ArrowRecipe,
+} from "./arrows.ts";
 import { newArrowGame, unlockArrows, type ArrowGame } from "./arrowGame.ts";
 import { newMazeGame, type MazeGame } from "./game.ts";
 import { buildMaze, parseRecipe, recipeCode, type Maze, type MazeRecipe } from "./maze.ts";

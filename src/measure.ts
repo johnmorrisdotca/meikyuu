@@ -113,7 +113,20 @@ export function measureMaze(maze: MazeCore): MazeMeasure {
     else if (open.length > 2) junctions += 1;
   }
   const effort = solution.length + wasted + 2 * decisions + detour;
-  return { cells, deadEnds, deadEndShare: deadEnds / cells, junctions, river: straight / cells, solution: solution.length, decisions, branches, longestBranch, wasted, detour, effort };
+  return {
+    cells,
+    deadEnds,
+    deadEndShare: deadEnds / cells,
+    junctions,
+    river: straight / cells,
+    solution: solution.length,
+    decisions,
+    branches,
+    longestBranch,
+    wasted,
+    detour,
+    effort,
+  };
 }
 
 /** The easiest effort a level is given a rating for, and the hardest: 1 and 100 are these.

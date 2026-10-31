@@ -88,7 +88,16 @@ export const ARROW_HEARTS = 3;
  * ```
  */
 export function newArrowGame(board: ArrowBoard, hearts: number = ARROW_HEARTS): ArrowGame {
-  return { board, present: board.arrows.map(() => true), hearts, heartsAtStart: hearts, unlocked: !board.locked.some(Boolean), status: "playing", taken: [], mistakes: 0 };
+  return {
+    board,
+    present: board.arrows.map(() => true),
+    hearts,
+    heartsAtStart: hearts,
+    unlocked: !board.locked.some(Boolean),
+    status: "playing",
+    taken: [],
+    mistakes: 0,
+  };
 }
 
 /** The arrows on the way out of `id` that are still on the board.
@@ -186,17 +195,26 @@ export function heldByLocks(game: ArrowGame, id: number): boolean {
  * ```
  */
 export function tapArrow(game: ArrowGame, id: number): ArrowTap {
-  if (game.status !== "playing" || id < 0 || id >= game.present.length || !game.present[id]) return { game, result: "ignored" };
+  if (game.status !== "playing" || id < 0 || id >= game.present.length || !game.present[id])
+    return { game, result: "ignored" };
   if (game.board.locked[id] && !game.unlocked) return { game, result: "locked" };
   const blockers = blockedBy(game, id);
   if (blockers.length > 0) {
-    if (!game.unlocked && heldByLocks(game, id)) return { game, result: "locked", by: blockers.find((other) => game.board.locked[other]) ?? blockers[0]! };
+    if (!game.unlocked && heldByLocks(game, id))
+      return { game, result: "locked", by: blockers.find((other) => game.board.locked[other]) ?? blockers[0]! };
     const hearts = game.hearts - 1;
-    return { game: { ...game, hearts, mistakes: game.mistakes + 1, status: hearts <= 0 ? "lost" : "playing" }, result: "blocked", by: blockers[0]! };
+    return {
+      game: { ...game, hearts, mistakes: game.mistakes + 1, status: hearts <= 0 ? "lost" : "playing" },
+      result: "blocked",
+      by: blockers[0]!,
+    };
   }
   const present = game.present.map((here, other) => here && other !== id);
   const cleared = !present.some(Boolean);
-  return { game: { ...game, present, taken: [...game.taken, id], status: cleared ? "cleared" : "playing" }, result: "removed" };
+  return {
+    game: { ...game, present, taken: [...game.taken, id], status: cleared ? "cleared" : "playing" },
+    result: "removed",
+  };
 }
 
 /** Let the locked arrows be tapped.
@@ -240,7 +258,12 @@ export function unlockArrows(game: ArrowGame): ArrowGame {
 export function undoArrow(game: ArrowGame): ArrowGame {
   const last = game.taken[game.taken.length - 1];
   if (last === undefined || game.status === "lost") return game;
-  return { ...game, present: game.present.map((here, id) => here || id === last), taken: game.taken.slice(0, -1), status: "playing" };
+  return {
+    ...game,
+    present: game.present.map((here, id) => here || id === last),
+    taken: game.taken.slice(0, -1),
+    status: "playing",
+  };
 }
 
 /** Restore every native arrow and the original hearts, clearing mistakes and removals.

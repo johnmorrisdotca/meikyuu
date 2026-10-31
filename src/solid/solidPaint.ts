@@ -1,5 +1,18 @@
 import { paintSolidOrdered } from "./solidPaintOrdered.ts";
-import { SHADES, openEdges, discOn, roomPixels, trace, shadeAt, shadeOf, placeOn, tangentsOf, type PaintContext, type SolidColours, type SolidPaintState } from "./solidPaintParts.ts";
+import {
+  SHADES,
+  openEdges,
+  discOn,
+  roomPixels,
+  trace,
+  shadeAt,
+  shadeOf,
+  placeOn,
+  tangentsOf,
+  type PaintContext,
+  type SolidColours,
+  type SolidPaintState,
+} from "./solidPaintParts.ts";
 import type { SolidMaze } from "./solidMaze.ts";
 import type { SolidFrame } from "./solidView.ts";
 import { quatMatrix } from "./vec.ts";
@@ -21,13 +34,20 @@ export { placeOn, shadeAt, shadeOf, tangentsOf };
 export type { PaintContext, Rgb, SolidColours, SolidPaintState } from "./solidPaintParts.ts";
 
 /** The shade a cell is filled with, bucketed. */
-const shadeBucket = (frame: SolidFrame, cell: number): number => Math.min(SHADES - 1, Math.floor(shadeAt(frame.facing[cell]!) * SHADES));
+const shadeBucket = (frame: SolidFrame, cell: number): number =>
+  Math.min(SHADES - 1, Math.floor(shadeAt(frame.facing[cell]!) * SHADES));
 
 const BUCKETS = new WeakMap<SolidFrame, Uint8Array>();
 const SEAMS = new WeakMap<SolidFrame, Int8Array>();
 
 /** Paint the solid, as the frame has it, with the game on it. */
-export function paintSolid(ctx: PaintContext, maze: SolidMaze, frame: SolidFrame, colours: SolidColours, state: SolidPaintState): void {
+export function paintSolid(
+  ctx: PaintContext,
+  maze: SolidMaze,
+  frame: SolidFrame,
+  colours: SolidColours,
+  state: SolidPaintState,
+): void {
   const { grid } = maze;
   if (!grid.convex) {
     paintSolidOrdered(ctx, maze, frame, colours, state);

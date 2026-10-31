@@ -61,7 +61,8 @@ function rescored(rows: readonly Row[]): Row[] {
   return rows.map(([code, effort, cells]) => [code, effort, cells, scoreOf(code, false).score]);
 }
 
-const line = (indent: string, [code, effort, cells, score]: Row): string => `${indent}["${code}", ${effort}, ${cells}, ${score}],`;
+const line = (indent: string, [code, effort, cells, score]: Row): string =>
+  `${indent}["${code}", ${effort}, ${cells}, ${score}],`;
 const block = (indent: string, rows: readonly Row[]): string => rows.map((row) => line(indent, row)).join("\n");
 
 /** The comment lines at the head of a file, which say how it was made. */
@@ -75,21 +76,35 @@ const files: { name: string; text: string }[] = [];
 // The square maze list: four sizes in blocks of 256, each a block of its own.
 {
   const out: Row[] = [];
-  for (let size = 0; size < MEIKYUU_MAZE_ROWS.length / 256; size += 1) out.push(...ordered(MEIKYUU_MAZE_ROWS.slice(size * 256, size * 256 + 256)));
-  const h = head("mazes.data.ts").replace("in the order of the effort it measures\n// (never easier to draw than the one before)", "in the order of the score it is given\n// (see difficulty.ts; scripts/meikyuu-rescore.ts puts it in order)");
-  files.push({ name: "mazes.data.ts", text: `${h}export const MEIKYUU_MAZE_ROWS: readonly (readonly [string, number, number, number])[] = [\n${block("  ", out)}\n];\n` });
+  for (let size = 0; size < MEIKYUU_MAZE_ROWS.length / 256; size += 1)
+    out.push(...ordered(MEIKYUU_MAZE_ROWS.slice(size * 256, size * 256 + 256)));
+  const h = head("mazes.data.ts").replace(
+    "in the order of the effort it measures\n// (never easier to draw than the one before)",
+    "in the order of the score it is given\n// (see difficulty.ts; scripts/meikyuu-rescore.ts puts it in order)",
+  );
+  files.push({
+    name: "mazes.data.ts",
+    text: `${h}export const MEIKYUU_MAZE_ROWS: readonly (readonly [string, number, number, number])[] = [\n${block("  ", out)}\n];\n`,
+  });
 }
 
 // The tall list, six sizes of 256.
 {
   const out: Row[] = [];
-  for (let size = 0; size < MEIKYUU_TALL_ROWS.length / 256; size += 1) out.push(...ordered(MEIKYUU_TALL_ROWS.slice(size * 256, size * 256 + 256)));
-  files.push({ name: "tall.data.ts", text: `${head("tall.data.ts")}export const MEIKYUU_TALL_ROWS: readonly (readonly [string, number, number, number])[] = [\n${block("  ", out)}\n];\n` });
+  for (let size = 0; size < MEIKYUU_TALL_ROWS.length / 256; size += 1)
+    out.push(...ordered(MEIKYUU_TALL_ROWS.slice(size * 256, size * 256 + 256)));
+  files.push({
+    name: "tall.data.ts",
+    text: `${head("tall.data.ts")}export const MEIKYUU_TALL_ROWS: readonly (readonly [string, number, number, number])[] = [\n${block("  ", out)}\n];\n`,
+  });
 }
 
 // The colossal lists.
 {
-  const h = head("colossal.data.ts").replace("in the order of the effort it measures\n// (never easier to draw than the one before)", "in the order of the score it is given\n// (see difficulty.ts; scripts/meikyuu-rescore.ts puts it in order)");
+  const h = head("colossal.data.ts").replace(
+    "in the order of the effort it measures\n// (never easier to draw than the one before)",
+    "in the order of the score it is given\n// (see difficulty.ts; scripts/meikyuu-rescore.ts puts it in order)",
+  );
   files.push({
     name: "colossal.data.ts",
     text: `${h}export const MEIKYUU_COLOSSAL_ROWS: readonly (readonly [string, number, number, number])[] = [\n${block("  ", ordered(MEIKYUU_COLOSSAL_ROWS))}\n];\nexport const MEIKYUU_COLOSSAL_TALL_ROWS: readonly (readonly [string, number, number, number])[] = [\n${block("  ", ordered(MEIKYUU_COLOSSAL_TALL_ROWS))}\n];\n`,
@@ -98,19 +113,31 @@ const files: { name: string; text: string }[] = [];
 
 // The solids, in their three files: a solid, then a size.
 {
-  const sources = { first: MEIKYUU_SOLID_ROWS, dice: MEIKYUU_SOLID_DICE_ROWS, shapes: MEIKYUU_SOLID_SHAPE_ROWS } as const;
+  const sources = {
+    first: MEIKYUU_SOLID_ROWS,
+    dice: MEIKYUU_SOLID_DICE_ROWS,
+    shapes: MEIKYUU_SOLID_SHAPE_ROWS,
+  } as const;
   for (const [group, file] of Object.entries(SOLID_GROUP_FILES)) {
     const rows = sources[group as keyof typeof sources] as Record<string, Record<string, readonly Row[]>>;
     const kinds = Object.keys(rows).map((kind) => {
-      const sizes = Object.entries(rows[kind]!).map(([size, list]) => `    ${size}: [\n${block("      ", ordered(list, true))}\n    ],`);
+      const sizes = Object.entries(rows[kind]!).map(
+        ([size, list]) => `    ${size}: [\n${block("      ", ordered(list, true))}\n    ],`,
+      );
       return `  ${/-/.test(kind) ? `"${kind}"` : kind}: {\n${sizes.join("\n")}\n  },`;
     });
-    files.push({ name: file.name, text: `${head(file.name)}export const ${file.constant}: Record<string, Record<string, readonly (readonly [string, number, number, number])[]>> = {\n${kinds.join("\n")}\n};\n` });
+    files.push({
+      name: file.name,
+      text: `${head(file.name)}export const ${file.constant}: Record<string, Record<string, readonly (readonly [string, number, number, number])[]>> = {\n${kinds.join("\n")}\n};\n`,
+    });
   }
 }
 
 // The 1.0.0 list: its own order, a new score column.
-files.push({ name: "legacy.data.ts", text: `${head("legacy.data.ts")}export const MEIKYUU_LEGACY_MAZE_ROWS: readonly (readonly [string, number, number, number])[] = [\n${block("  ", rescored(MEIKYUU_LEGACY_MAZE_ROWS))}\n];\n` });
+files.push({
+  name: "legacy.data.ts",
+  text: `${head("legacy.data.ts")}export const MEIKYUU_LEGACY_MAZE_ROWS: readonly (readonly [string, number, number, number])[] = [\n${block("  ", rescored(MEIKYUU_LEGACY_MAZE_ROWS))}\n];\n`,
+});
 
 let stale = 0;
 for (const { name, text } of files) {

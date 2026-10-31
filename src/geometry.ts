@@ -33,7 +33,9 @@ export const fixed = (n: number): string => String(Math.round(n * 100) / 100);
 export function wallPath(wall: Wall): string {
   const [ax, ay] = wall.a;
   const [bx, by] = wall.b;
-  return wall.r === undefined ? `M${fixed(ax)} ${fixed(ay)}L${fixed(bx)} ${fixed(by)}` : `M${fixed(ax)} ${fixed(ay)}A${fixed(wall.r)} ${fixed(wall.r)} 0 0 1 ${fixed(bx)} ${fixed(by)}`;
+  return wall.r === undefined
+    ? `M${fixed(ax)} ${fixed(ay)}L${fixed(bx)} ${fixed(by)}`
+    : `M${fixed(ax)} ${fixed(ay)}A${fixed(wall.r)} ${fixed(wall.r)} 0 0 1 ${fixed(bx)} ${fixed(by)}`;
 }
 
 /** Every wall of the maze that is standing: between cells that are not joined, and round the outside, except the doors. Each is listed once.
@@ -84,7 +86,9 @@ export function standingWalls(maze: Maze): Wall[] {
  * ```
  */
 export function linePath(grid: Grid, cells: readonly number[]): string {
-  return cells.map((cell, index) => `${index === 0 ? "M" : "L"}${fixed(grid.centres[cell]![0])} ${fixed(grid.centres[cell]![1])}`).join("");
+  return cells
+    .map((cell, index) => `${index === 0 ? "M" : "L"}${fixed(grid.centres[cell]![0])} ${fixed(grid.centres[cell]![1])}`)
+    .join("");
 }
 
 /** Where a door is: the middle of its gap in the wall, and the way out through it as a unit vector.

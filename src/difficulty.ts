@@ -74,7 +74,14 @@ export type MazeDifficulty = {
  * console.log(DIFFICULTY_WEIGHTS);
  * ```
  */
-export const DIFFICULTY_WEIGHTS = { reach: 0.4, forks: 0.15, traps: 0.15, waste: 0.15, depth: 0.075, turns: 0.075 } as const;
+export const DIFFICULTY_WEIGHTS = {
+  reach: 0.4,
+  forks: 0.15,
+  traps: 0.15,
+  waste: 0.15,
+  depth: 0.075,
+  turns: 0.075,
+} as const;
 
 /** The count at which a term reaches its full weight, on its log scale.
  *
@@ -142,7 +149,9 @@ function straightGuess(maze: MazeCore, onWay: Uint8Array, distance: (cell: numbe
   while (stack.length > 0) {
     const cell = stack[stack.length - 1]!;
     if (cell === maze.goal) break;
-    const options = maze.links[cell]!.filter((next) => seen[next] === 0).sort((a, b) => distance(a) - distance(b) || a - b);
+    const options = maze.links[cell]!.filter((next) => seen[next] === 0).sort(
+      (a, b) => distance(a) - distance(b) || a - b,
+    );
     const next = options[0];
     if (next === undefined) {
       stack.pop();
@@ -218,17 +227,35 @@ export function difficultyOfGraph(maze: MazeCore, geometry: MazeGeometry): MazeD
     depth: share(measure.longestBranch, DIFFICULTY_CEILINGS.depth),
     turns: share(turns, DIFFICULTY_CEILINGS.turns),
   };
-  const raw = terms.reach * DIFFICULTY_WEIGHTS.reach + terms.forks * DIFFICULTY_WEIGHTS.forks + terms.traps * DIFFICULTY_WEIGHTS.traps + terms.waste * DIFFICULTY_WEIGHTS.waste + terms.depth * DIFFICULTY_WEIGHTS.depth + terms.turns * DIFFICULTY_WEIGHTS.turns;
+  const raw =
+    terms.reach * DIFFICULTY_WEIGHTS.reach +
+    terms.forks * DIFFICULTY_WEIGHTS.forks +
+    terms.traps * DIFFICULTY_WEIGHTS.traps +
+    terms.waste * DIFFICULTY_WEIGHTS.waste +
+    terms.depth * DIFFICULTY_WEIGHTS.depth +
+    terms.turns * DIFFICULTY_WEIGHTS.turns;
   const base = Math.min(100, Math.max(0, 100 * raw));
   // The cells the answer draws: the way to the goal, and the way to each key.
   const route = new Set<number>(way);
   if (maze.keys.length > 0) {
     const { before } = walk(maze.links, maze.start);
-    for (const key of maze.keys) for (let cell = key; cell !== -1 && !route.has(cell); cell = before[cell]!) route.add(cell);
+    for (const key of maze.keys)
+      for (let cell = key; cell !== -1 && !route.has(cell); cell = before[cell]!) route.add(cell);
   }
   const coverage = coverageOf(geometry.points, [...route]);
   const exact = base * coverage.factor;
-  return { score: Math.round(exact), exact, base, coverage, terms, straight: waste === 0, traps, waste, turns, measure };
+  return {
+    score: Math.round(exact),
+    exact,
+    base,
+    coverage,
+    terms,
+    straight: waste === 0,
+    traps,
+    waste,
+    turns,
+    measure,
+  };
 }
 
 /**
@@ -270,7 +297,11 @@ export const MEIKYUU_EASY_PLACES = 86;
  */
 export function easyFloorAt(place: number): { traps: number; decisions: number; waste: number } {
   const k = Math.min(Math.max(place, 1), MEIKYUU_EASY_PLACES);
-  return { traps: MEIKYUU_LEAST.traps + Math.floor(k / 45), decisions: MEIKYUU_LEAST.decisions + Math.floor(k / 30), waste: MEIKYUU_LEAST.waste + Math.floor(k / 20) };
+  return {
+    traps: MEIKYUU_LEAST.traps + Math.floor(k / 45),
+    decisions: MEIKYUU_LEAST.decisions + Math.floor(k / 30),
+    waste: MEIKYUU_LEAST.waste + Math.floor(k / 20),
+  };
 }
 
 /** Whether a maze is too easy to be a level: it falls short of any of `MEIKYUU_LEAST`, or, with a `place` in the easy third of a size, of `easyFloorAt(place)`.
@@ -290,7 +321,14 @@ export function easyFloorAt(place: number): { traps: number; decisions: number; 
  */
 export function isTooEasy(difficulty: MazeDifficulty, place?: number): boolean {
   const { measure } = difficulty;
-  if (difficulty.waste < MEIKYUU_LEAST.waste || difficulty.traps < MEIKYUU_LEAST.traps || measure.decisions < MEIKYUU_LEAST.decisions || measure.branches < MEIKYUU_LEAST.branches || measure.deadEnds < MEIKYUU_LEAST.deadEnds) return true;
+  if (
+    difficulty.waste < MEIKYUU_LEAST.waste ||
+    difficulty.traps < MEIKYUU_LEAST.traps ||
+    measure.decisions < MEIKYUU_LEAST.decisions ||
+    measure.branches < MEIKYUU_LEAST.branches ||
+    measure.deadEnds < MEIKYUU_LEAST.deadEnds
+  )
+    return true;
   if (place === undefined || place > MEIKYUU_EASY_PLACES) return false;
   const floor = easyFloorAt(place);
   return difficulty.traps < floor.traps || measure.decisions < floor.decisions || difficulty.waste < floor.waste;

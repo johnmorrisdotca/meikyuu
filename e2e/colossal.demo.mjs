@@ -40,7 +40,19 @@ async function draw(page, maze, cells, { lift = true, perFrame = 12 } = {}) {
       };
       const send = (type, cell) => {
         const p = place(cell);
-        box.dispatchEvent(new PointerEvent(type, { pointerId: 5, pointerType: "touch", isPrimary: true, button: 0, buttons: type === "pointerup" ? 0 : 1, clientX: p.x, clientY: p.y, bubbles: true, cancelable: true }));
+        box.dispatchEvent(
+          new PointerEvent(type, {
+            pointerId: 5,
+            pointerType: "touch",
+            isPrimary: true,
+            button: 0,
+            buttons: type === "pointerup" ? 0 : 1,
+            clientX: p.x,
+            clientY: p.y,
+            bubbles: true,
+            cancelable: true,
+          }),
+        );
       };
       send("pointerdown", cells[0]);
       for (let i = 1; i < cells.length; i += perFrame) {
@@ -53,11 +65,20 @@ async function draw(page, maze, cells, { lift = true, perFrame = 12 } = {}) {
   );
 }
 
-for (const [name, kind, list] of [["square", "colossal", MEIKYUU_COLOSSAL_LEVELS], ["tall", "colossal-tall", MEIKYUU_COLOSSAL_TALL_LEVELS]]) {
-  test(`the biggest ${name} colossal maze opens at about its size, takes a long line drawn and drawn back with the line's own text, and is solved`, async ({ page, browserName }) => {
+for (const [name, kind, list] of [
+  ["square", "colossal", MEIKYUU_COLOSSAL_LEVELS],
+  ["tall", "colossal-tall", MEIKYUU_COLOSSAL_TALL_LEVELS],
+]) {
+  test(`the biggest ${name} colossal maze opens at about its size, takes a long line drawn and drawn back with the line's own text, and is solved`, async ({
+    page,
+    browserName,
+  }) => {
     // WebKit on Linux paints in software, and an SVG of this size makes every frame take tens of seconds there: the same stall is in the earlier release's huge mazes (e2e/zoom.demo.mjs's smoothness
     // check fails there on 2.0.1 too), and WebKit on a Mac, Chromium on Linux and on a Mac are all at the frame rate (docs/LEVELS.md). So the long line is drawn in the other engines.
-    test.skip(browserName === "webkit" && process.platform === "linux", "WebKit's software painting on Linux cannot repaint a maze this big in a frame");
+    test.skip(
+      browserName === "webkit" && process.platform === "linux",
+      "WebKit's software painting on Linux cannot repaint a maze this big in a frame",
+    );
     const { level, maze, way } = longest(list);
     expect(way.length).toBeGreaterThan(1000);
     const errors = await open(page, `?kind=${kind}&level=${level.number}`);
@@ -88,7 +109,9 @@ for (const [name, kind, list] of [["square", "colossal", MEIKYUU_COLOSSAL_LEVELS
   });
 }
 
-test("a colossal maze is zoomed, moved and fitted again, and only the walls on screen are in the page", async ({ page }) => {
+test("a colossal maze is zoomed, moved and fitted again, and only the walls on screen are in the page", async ({
+  page,
+}) => {
   await open(page, "?kind=colossal&level=1");
   const svg = svgOf(page);
   const shown = async () => Number((await svg.getAttribute("viewBox")).split(" ")[2]);

@@ -6,9 +6,38 @@ import { measureMaze } from "../measure.ts";
 import { decodeRun, encodeRun, layStone, stoneRulesOf } from "../stones.ts";
 import { lineToSteps, stepsToLine } from "../steps.ts";
 import { SOLID_KINDS, solidCells, type SolidKind } from "./solidGrid.ts";
-import { buildSolidMaze, checkSolidAnswer, parseSolidRecipe, SOLID_ALGORITHMS, solidAnswerSteps, solidDifficultyOf, solidRecipeCode, solidSolutionOf, type SolidRecipe } from "./solidMaze.ts";
+import {
+  buildSolidMaze,
+  checkSolidAnswer,
+  parseSolidRecipe,
+  SOLID_ALGORITHMS,
+  solidAnswerSteps,
+  solidDifficultyOf,
+  solidRecipeCode,
+  solidSolutionOf,
+  type SolidRecipe,
+} from "./solidMaze.ts";
 
-const SIZE: Record<SolidKind, number> = { cube: 5, sphere: 4, tetrahedron: 5, octahedron: 4, icosahedron: 3, prism: 4, trapezohedron: 4, dodecahedron: 2, "rhombic-dodecahedron": 4, bipyramid: 3, icositetrahedron: 3, triacontahedron: 3, box: 4, cross: 3, ring: 3, torus: 7, star: 3, heart: 4 };
+const SIZE: Record<SolidKind, number> = {
+  cube: 5,
+  sphere: 4,
+  tetrahedron: 5,
+  octahedron: 4,
+  icosahedron: 3,
+  prism: 4,
+  trapezohedron: 4,
+  dodecahedron: 2,
+  "rhombic-dodecahedron": 4,
+  bipyramid: 3,
+  icositetrahedron: 3,
+  triacontahedron: 3,
+  box: 4,
+  cross: 3,
+  ring: 3,
+  torus: 7,
+  star: 3,
+  heart: 4,
+};
 
 describe("a maze over a solid", () => {
   for (const kind of SOLID_KINDS) {
@@ -19,7 +48,9 @@ describe("a maze over a solid", () => {
           expect(maze.links).toHaveLength(solidCells(kind, SIZE[kind]));
           expect(isPerfect(maze.grid, maze.links)).toBe(true);
           // The passages run only between cells that are beside each other, in both directions.
-          maze.links.forEach((open, cell) => open.forEach((next) => expect(maze.grid.neighbours[cell]).toContain(next)));
+          maze.links.forEach((open, cell) =>
+            open.forEach((next) => expect(maze.grid.neighbours[cell]).toContain(next)),
+          );
         }
       });
     }
@@ -54,7 +85,22 @@ describe("a maze over a solid", () => {
   });
 
   it("refuses text that is not a recipe, a solid with fewer than two cuts, an algorithm that needs rows, and a solid too big to make", () => {
-    for (const bad of ["", "cube", "cube:6:prim", "cube:6:prim:1:2", "ball:6:prim:1", "cube:1:prim:1", "cube:6:eller:1", "cube:6:nope:1", "cube:x:prim:1", "cube:6:prim:-1", "cube:6:prim:99999999999", "cube:60:prim:1", "icosahedron:100:prim:1"]) expect(parseSolidRecipe(bad), bad).toBeNull();
+    for (const bad of [
+      "",
+      "cube",
+      "cube:6:prim",
+      "cube:6:prim:1:2",
+      "ball:6:prim:1",
+      "cube:1:prim:1",
+      "cube:6:eller:1",
+      "cube:6:nope:1",
+      "cube:x:prim:1",
+      "cube:6:prim:-1",
+      "cube:6:prim:99999999999",
+      "cube:60:prim:1",
+      "icosahedron:100:prim:1",
+    ])
+      expect(parseSolidRecipe(bad), bad).toBeNull();
     expect(parseSolidRecipe("sphere:8:wilson:7")).toEqual({ kind: "sphere", n: 8, algorithm: "wilson", seed: 7 });
     expect(parseSolidRecipe("cube:31:prim:1")).not.toBeNull();
   });
@@ -84,8 +130,18 @@ describe("a maze over a solid", () => {
     expect(checkSolidAnswer(maze, [...way, way[0]!])).toBe(false);
     expect(checkSolidAnswer(maze, [way[0]!, ...way.slice(2)])).toBe(false);
     expect(checkSolidAnswer(maze, [...way.slice(0, 3), way[1]!, ...way.slice(3)])).toBe(false);
-    expect(checkSolidAnswer(maze, way.map((cell, at) => (at === 2 ? maze.grid.cells + 3 : cell)))).toBe(false);
-    expect(checkSolidAnswer(maze, way.map((cell, at) => (at === 2 ? 1.5 : cell)))).toBe(false);
+    expect(
+      checkSolidAnswer(
+        maze,
+        way.map((cell, at) => (at === 2 ? maze.grid.cells + 3 : cell)),
+      ),
+    ).toBe(false);
+    expect(
+      checkSolidAnswer(
+        maze,
+        way.map((cell, at) => (at === 2 ? 1.5 : cell)),
+      ),
+    ).toBe(false);
     // A line through a wall (to a cell beside this one with no passage) is refused.
     const wall = maze.grid.neighbours[way[1]!]!.find((next) => !maze.links[way[1]!]!.includes(next))!;
     expect(checkSolidAnswer(maze, [way[0]!, way[1]!, wall])).toBe(false);
@@ -150,7 +206,10 @@ describe("a maze over a solid", () => {
   it("a bigger solid is harder: more cells, a longer way, a higher score, on average", () => {
     const mean = (n: number): number => {
       let sum = 0;
-      for (let seed = 1; seed <= 12; seed += 1) sum += solidDifficultyOf(buildSolidMaze({ kind: "cube", n, algorithm: SOLID_ALGORITHMS[seed % SOLID_ALGORITHMS.length]!, seed })).exact;
+      for (let seed = 1; seed <= 12; seed += 1)
+        sum += solidDifficultyOf(
+          buildSolidMaze({ kind: "cube", n, algorithm: SOLID_ALGORITHMS[seed % SOLID_ALGORITHMS.length]!, seed }),
+        ).exact;
       return sum / 12;
     };
     expect(mean(4)).toBeLessThan(mean(7));

@@ -34,15 +34,28 @@ function panel({ x, y, title, series, yMin, yMax, count = 285 }) {
   const ih = PANEL.h - PANEL.top - PANEL.bottom;
   const px = (place) => PANEL.left + ((place - 1) / (count - 1)) * iw;
   const py = (score) => PANEL.top + ih - ((score - yMin) / (yMax - yMin)) * ih;
-  const out = [`<g transform="translate(${x} ${y})">`, `<text class="t" x="${PANEL.left}" y="16" font-weight="600">${title}</text>`];
+  const out = [
+    `<g transform="translate(${x} ${y})">`,
+    `<text class="t" x="${PANEL.left}" y="16" font-weight="600">${title}</text>`,
+  ];
   const step = yMax - yMin > 40 ? 20 : 10;
   for (let v = Math.ceil(yMin / step) * step; v <= yMax; v += step) {
-    out.push(`<line class="g" x1="${PANEL.left}" x2="${PANEL.w - PANEL.right}" y1="${py(v)}" y2="${py(v)}"/><text class="m" x="${PANEL.left - 6}" y="${py(v) + 4}" text-anchor="end">${v}</text>`);
+    out.push(
+      `<line class="g" x1="${PANEL.left}" x2="${PANEL.w - PANEL.right}" y1="${py(v)}" y2="${py(v)}"/><text class="m" x="${PANEL.left - 6}" y="${py(v) + 4}" text-anchor="end">${v}</text>`,
+    );
   }
-  for (const place of [1, 86, 171, 256]) out.push(`<text class="m" x="${px(place)}" y="${PANEL.h - 10}" text-anchor="${place === 1 ? "start" : "middle"}">${place}</text>`);
-  for (const place of [86.5, 171.5]) out.push(`<line class="g" x1="${px(place)}" x2="${px(place)}" y1="${PANEL.top}" y2="${PANEL.top + ih}" stroke-dasharray="2 4"/>`);
+  for (const place of [1, 86, 171, 256])
+    out.push(
+      `<text class="m" x="${px(place)}" y="${PANEL.h - 10}" text-anchor="${place === 1 ? "start" : "middle"}">${place}</text>`,
+    );
+  for (const place of [86.5, 171.5])
+    out.push(
+      `<line class="g" x1="${px(place)}" x2="${px(place)}" y1="${PANEL.top}" y2="${PANEL.top + ih}" stroke-dasharray="2 4"/>`,
+    );
   for (const { cls, points, label } of series) {
-    const d = points.map(([place, score], i) => `${i === 0 ? "M" : "L"}${px(place).toFixed(1)} ${py(score).toFixed(1)}`).join("");
+    const d = points
+      .map(([place, score], i) => `${i === 0 ? "M" : "L"}${px(place).toFixed(1)} ${py(score).toFixed(1)}`)
+      .join("");
     out.push(`<path class="${cls}" d="${d}"><title>${label}</title></path>`);
   }
   out.push("</g>");
@@ -50,7 +63,9 @@ function panel({ x, y, title, series, yMin, yMax, count = 285 }) {
 }
 
 function sheet({ cols, panels, width, height, title, legend }) {
-  const body = panels.map((p, i) => panel({ ...p, x: (i % cols) * PANEL.w + 8, y: Math.floor(i / cols) * PANEL.h + 56 })).join("");
+  const body = panels
+    .map((p, i) => panel({ ...p, x: (i % cols) * PANEL.w + 8, y: Math.floor(i / cols) * PANEL.h + 56 }))
+    .join("");
   const key = legend
     ? `<g transform="translate(8 38)"><line x1="0" x2="22" y1="-4" y2="-4" class="before"/><text class="m" x="28" y="0">1.0.0 (its places, up to 285)</text><line x1="400" x2="422" y1="-4" y2="-4" class="now"/><text class="m" x="428" y="0">now</text></g>`
     : "";
@@ -62,13 +77,47 @@ const points = (levels) => levels.map((level, i) => [i + 1, level.score]);
 const sizes = MEIKYUU_SIZES.map((size) => {
   const before = MEIKYUU_LEGACY_MAZE_LEVELS.filter((level) => level.size === size);
   const now = mazeLevelsOfSize(size);
-  return { title: `${size[0].toUpperCase()}${size.slice(1)}`, yMin: Math.floor(Math.min(before[0].score, now[0].score, 2) / 10) * 10, yMax: 100, series: [{ cls: "before", points: points(before), label: `${size}, 1.0.0` }, { cls: "now", points: points(now), label: `${size}, now` }] };
+  return {
+    title: `${size[0].toUpperCase()}${size.slice(1)}`,
+    yMin: Math.floor(Math.min(before[0].score, now[0].score, 2) / 10) * 10,
+    yMax: 100,
+    series: [
+      { cls: "before", points: points(before), label: `${size}, 1.0.0` },
+      { cls: "now", points: points(now), label: `${size}, now` },
+    ],
+  };
 });
-writeFileSync(join(docs, "score-by-level.svg"), sheet({ cols: 2, panels: sizes, width: 616, height: 56 + 2 * PANEL.h + 12, title: "Score by level of the size, 1.0.0 and now", legend: true }));
+writeFileSync(
+  join(docs, "score-by-level.svg"),
+  sheet({
+    cols: 2,
+    panels: sizes,
+    width: 616,
+    height: 56 + 2 * PANEL.h + 12,
+    title: "Score by level of the size, 1.0.0 and now",
+    legend: true,
+  }),
+);
 
 // 2. Six tall sizes.
-const talls = MEIKYUU_TALL_SIZES.map((s) => ({ count: 256, title: `Tall ${s.label}`, yMin: 20, yMax: 80, series: [{ cls: "now", points: points(tallLevelsOfSize(s.size)), label: `tall ${s.label}` }] }));
-writeFileSync(join(docs, "tall-score-by-level.svg"), sheet({ cols: 3, panels: talls, width: 916, height: 56 + 2 * PANEL.h + 12, title: "Score by level, the six tall sizes", legend: false }));
+const talls = MEIKYUU_TALL_SIZES.map((s) => ({
+  count: 256,
+  title: `Tall ${s.label}`,
+  yMin: 20,
+  yMax: 80,
+  series: [{ cls: "now", points: points(tallLevelsOfSize(s.size)), label: `tall ${s.label}` }],
+}));
+writeFileSync(
+  join(docs, "tall-score-by-level.svg"),
+  sheet({
+    cols: 3,
+    panels: talls,
+    width: 916,
+    height: 56 + 2 * PANEL.h + 12,
+    title: "Score by level, the six tall sizes",
+    legend: false,
+  }),
+);
 
 // 3. The easy third of Small, before and after, drawn.
 const old = MEIKYUU_LEGACY_MAZE_LEVELS.filter((level) => level.size === "small");
@@ -82,7 +131,10 @@ const cell = (level, place, of) => {
   const width = Number(/viewBox="[-\d. ]+ [-\d. ]+ ([\d.]+) /.exec(svg)[1]);
   return `<figure><div style="width:${Math.round(width * 17)}px;margin:0 auto">${svg}</div><figcaption><b>${place}</b> of ${of}<br>${level.cells} cells · score ${level.score}</figcaption></figure>`;
 };
-const row = (title, list, total) => `<h2>${title}</h2><div class="row">${pick(list, 7).map((level) => cell(level, list.indexOf(level) + 1, total)).join("")}</div>`;
+const row = (title, list, total) =>
+  `<h2>${title}</h2><div class="row">${pick(list, 7)
+    .map((level) => cell(level, list.indexOf(level) + 1, total))
+    .join("")}</div>`;
 const html = `<!doctype html><meta charset="utf-8"><style>
 body{margin:0;padding:18px 20px;background:#f4efe4;color:#1f2320;font:14px system-ui,sans-serif;width:1100px}
 h1{font-size:18px;margin:0 0 4px}h2{font-size:14px;margin:16px 0 8px;color:#6b6f68;font-weight:600}
@@ -96,5 +148,8 @@ const page = await browser.newPage({ viewport: { width: 1140, height: 600 }, dev
 await page.setContent(html);
 await page.screenshot({ path: join(docs, "easy-before-after.jpg"), type: "jpeg", quality: 80, fullPage: true });
 await browser.close();
-void existsSync; void readFileSync; void MEIKYUU_MAZE_LEVELS; void MEIKYUU_TALL_LEVELS;
+void existsSync;
+void readFileSync;
+void MEIKYUU_MAZE_LEVELS;
+void MEIKYUU_TALL_LEVELS;
 console.log("wrote docs/score-by-level.svg, docs/tall-score-by-level.svg, docs/easy-before-after.jpg");

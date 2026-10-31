@@ -2,7 +2,14 @@ import { MEIKYUU_SOLID_DICE_ROWS } from "./levels/solid-dice.data.ts";
 import { solidFinders, solidListsOf, type MeikyuuSolidLevel } from "./solid/solidLevelList.ts";
 import { SOLID_KINDS, type SolidKind } from "./solid/solidGrid.ts";
 import { SOLID_MORE_DICE } from "./solid/solidKinds.ts";
-import { MEIKYUU_SOLID_PER_LIST, SOLID_CUTS, SOLID_SIZE_NAMES, solidCellsOf, solidCutOf, type SolidSize } from "./solid/solidSizes.ts";
+import {
+  MEIKYUU_SOLID_PER_LIST,
+  SOLID_CUTS,
+  SOLID_SIZE_NAMES,
+  solidCellsOf,
+  solidCutOf,
+  type SolidSize,
+} from "./solid/solidSizes.ts";
 
 /**
  * THE LEVELS OF THE SEVEN FURTHER DICE: the prism (d3), the pentagonal trapezohedron (d10), the dodecahedron (d12), the rhombic dodecahedron (d12), the octagonal bipyramid (d16), the deltoidal icositetrahedron (d24) and the rhombic triacontahedron (d30). Sixty-four for each of five sizes of each (7 solids, 2,240 levels), in an entry of

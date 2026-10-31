@@ -3,7 +3,21 @@
 // once (one `meikyuu-solve`), the board says so in words, and nothing on the board is said twice.
 import { expect, test } from "@playwright/test";
 
-import { at, cellPoint, dragCells, events, flashes, mazeOf, mixedPlan, noSidewaysScroll, open, recordEvents, recordFlashes, tapArrowOnPage, touchDrag } from "./demo.mjs";
+import {
+  at,
+  cellPoint,
+  dragCells,
+  events,
+  flashes,
+  mazeOf,
+  mixedPlan,
+  noSidewaysScroll,
+  open,
+  recordEvents,
+  recordFlashes,
+  tapArrowOnPage,
+  touchDrag,
+} from "./demo.mjs";
 
 // Level 2 is a cross of 12 arrows with 1 locked, and level 26 a cross of 19 with 3: one lock and several.
 const LEVELS = [2, 26];
@@ -41,7 +55,13 @@ async function takeOff(page, plan, ids) {
 
 /** Every line of words the board shows says each thing once: no two of its lines are the same sentence. */
 async function saidOnce(page) {
-  const lines = (await page.locator(`${at("board")} .mk-says, ${at("board")} .mk-progress, ${at("board")} .mk-messages`).allInnerTexts()).map((each) => each.trim()).filter((each) => each !== "");
+  const lines = (
+    await page
+      .locator(`${at("board")} .mk-says, ${at("board")} .mk-progress, ${at("board")} .mk-messages`)
+      .allInnerTexts()
+  )
+    .map((each) => each.trim())
+    .filter((each) => each !== "");
   expect(new Set(lines).size, lines.join(" / ")).toBe(lines.length);
   // The unlock is told by one line, whichever tab is open.
   expect(lines.filter((each) => each.includes("Unlocked")).length, lines.join(" / ")).toBeLessThanOrEqual(1);
@@ -66,7 +86,9 @@ async function expectFinished(page, { solves = 1 } = {}) {
 }
 
 for (const number of LEVELS) {
-  test(`mixed level ${number}: the labyrinth first, then every arrow, the released ones too: finished once, with its confirmation`, async ({ page }) => {
+  test(`mixed level ${number}: the labyrinth first, then every arrow, the released ones too: finished once, with its confirmation`, async ({
+    page,
+  }) => {
     const errors = await open(page, `?kind=mixed&level=${number}`);
     const plan = await mixedPlan(number);
     await recordEvents(page, at("board"), NAMES);
@@ -84,7 +106,9 @@ for (const number of LEVELS) {
     expect(errors).toEqual([]);
   });
 
-  test(`mixed level ${number}: some arrows, the labyrinth, the rest; the tabs switched again and again on the way`, async ({ page }) => {
+  test(`mixed level ${number}: some arrows, the labyrinth, the rest; the tabs switched again and again on the way`, async ({
+    page,
+  }) => {
     const errors = await open(page, `?kind=mixed&level=${number}`);
     const plan = await mixedPlan(number);
     await recordEvents(page, at("board"), NAMES);
@@ -97,7 +121,8 @@ for (const number of LEVELS) {
     expect(plan.held.length).toBeGreaterThan(0);
     await expect(host(page)).toHaveAttribute("data-left", String(plan.held.length + plan.locked.length));
     await expect(host(page)).toHaveAttribute("data-unlocked", "false");
-    for (const id of plan.locked) await expect(page.locator(`${at("board")} .mk-arrow[data-id="${id}"]`)).toHaveAttribute("data-locked", "true");
+    for (const id of plan.locked)
+      await expect(page.locator(`${at("board")} .mk-arrow[data-id="${id}"]`)).toHaveAttribute("data-locked", "true");
     // Halfway, the labyrinth is looked at, left, and looked at again: its line is where it was.
     await show(page, "maze");
     const half = plan.way.slice(0, Math.floor(plan.way.length / 2));
@@ -134,7 +159,9 @@ for (const number of LEVELS) {
   });
 }
 
-test("an arrow that only the unlock can free costs no heart however often it is tapped, and says what it waits for", async ({ page }) => {
+test("an arrow that only the unlock can free costs no heart however often it is tapped, and says what it waits for", async ({
+  page,
+}) => {
   await open(page, "?kind=mixed&level=2");
   const plan = await mixedPlan(2);
   await recordEvents(page, at("board"), NAMES);
@@ -162,7 +189,9 @@ test("an arrow that only the unlock can free costs no heart however often it is 
   await expectFinished(page);
 });
 
-test("a puzzle lost on a real mistake says so on the arrows and on the labyrinth, whatever else is said; Restart keeps the unlock and the puzzle is then finished once", async ({ page }) => {
+test("a puzzle lost on a real mistake says so on the arrows and on the labyrinth, whatever else is said; Restart keeps the unlock and the puzzle is then finished once", async ({
+  page,
+}) => {
   await open(page, "?kind=mixed&level=2");
   const plan = await mixedPlan(2);
   expect(plan.mistake).toBeGreaterThanOrEqual(0);
@@ -195,7 +224,9 @@ test("a puzzle lost on a real mistake says so on the arrows and on the labyrinth
   expect(await count(page, "meikyuu-unlock")).toBe(1);
 });
 
-test("Undo and Restart after the unlock: the arrows stay free, and finishing again is told again only after a Restart", async ({ page }) => {
+test("Undo and Restart after the unlock: the arrows stay free, and finishing again is told again only after a Restart", async ({
+  page,
+}) => {
   await open(page, "?kind=mixed&level=2");
   const plan = await mixedPlan(2);
   await recordEvents(page, at("board"), NAMES);
@@ -221,7 +252,9 @@ test("Undo and Restart after the unlock: the arrows stay free, and finishing aga
   await expectFinished(page, { solves: 2 });
 });
 
-test("a mixed puzzle played by touch alone: the labyrinth drawn with a finger, the arrows tapped with one", async ({ page }) => {
+test("a mixed puzzle played by touch alone: the labyrinth drawn with a finger, the arrows tapped with one", async ({
+  page,
+}) => {
   await open(page, "?kind=mixed&level=2");
   const plan = await mixedPlan(2);
   await recordEvents(page, at("board"), NAMES);

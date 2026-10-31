@@ -2,7 +2,14 @@ import { MEIKYUU_SOLID_ROWS } from "./levels/solid.data.ts";
 import { solidFinders, solidListsOf, type MeikyuuSolidLevel } from "./solid/solidLevelList.ts";
 import { SOLID_KINDS, type SolidKind } from "./solid/solidGrid.ts";
 import { SOLID_FIRST } from "./solid/solidKinds.ts";
-import { MEIKYUU_SOLID_PER_LIST, SOLID_CUTS, SOLID_SIZE_NAMES, solidCellsOf, solidCutOf, type SolidSize } from "./solid/solidSizes.ts";
+import {
+  MEIKYUU_SOLID_PER_LIST,
+  SOLID_CUTS,
+  SOLID_SIZE_NAMES,
+  solidCellsOf,
+  solidCutOf,
+  type SolidSize,
+} from "./solid/solidSizes.ts";
 
 /**
  * THE LEVELS OF THE SOLIDS: sixty-four for each of five sizes (small, medium, large, huge and colossal) of each solid, in entries of their own so that a page loads the file of the solid it shows.

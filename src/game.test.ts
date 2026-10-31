@@ -1,6 +1,18 @@
 import { describe, expect, it } from "vitest";
 
-import { dragMaze, headOf, hintMaze, liftMaze, newMazeGame, playSolution, pressMaze, restartMaze, tapMaze, undoMaze, type MazeGame } from "./game.ts";
+import {
+  dragMaze,
+  headOf,
+  hintMaze,
+  liftMaze,
+  newMazeGame,
+  playSolution,
+  pressMaze,
+  restartMaze,
+  tapMaze,
+  undoMaze,
+  type MazeGame,
+} from "./game.ts";
 import { buildMaze, solutionOf, walk, type MazeRecipe } from "./maze.ts";
 
 const recipe: MazeRecipe = { shape: "square", w: 8, h: 8, algorithm: "wilson", mode: "to-goal", seed: 12 };
@@ -33,7 +45,9 @@ describe("drawing a line", () => {
     expect(blocked).toBeDefined();
     expect(dragMaze(next, blocked)).toBe(next);
     // And a cell two away is no step either: the page calls for each cell between.
-    const far = maze.grid.neighbours[way[3]!]!.flatMap((cell) => maze.grid.neighbours[cell]!).find((cell) => !game.path.includes(cell) && !maze.grid.neighbours[way[3]!]!.includes(cell))!;
+    const far = maze.grid.neighbours[way[3]!]!.flatMap((cell) => maze.grid.neighbours[cell]!).find(
+      (cell) => !game.path.includes(cell) && !maze.grid.neighbours[way[3]!]!.includes(cell),
+    )!;
     expect(dragMaze(next, far)).toBe(next);
     next = liftMaze(next);
     expect(next.path).toEqual(game.path);
@@ -150,7 +164,11 @@ describe("the hint", () => {
 
   it("says how far to draw back when the line has gone into a wrong branch, and lights the way from there", () => {
     const game = along(Math.floor(way.length / 2));
-    const fork = way.slice(0, game.path.length).findIndex((cell, i) => i > 0 && maze.links[cell]!.length > 2 && maze.links[cell]!.some((next) => !way.includes(next)));
+    const fork = way
+      .slice(0, game.path.length)
+      .findIndex(
+        (cell, i) => i > 0 && maze.links[cell]!.length > 2 && maze.links[cell]!.some((next) => !way.includes(next)),
+      );
     expect(fork).toBeGreaterThan(0);
     const wrong = maze.links[way[fork]!]!.find((next) => !way.includes(next))!;
     let strayed = liftMaze(dragMaze(pressMaze(along(fork + 1), way[fork]!), wrong));

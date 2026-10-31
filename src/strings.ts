@@ -97,7 +97,8 @@ export const MEIKYUU_STRINGS: Record<MeikyuuLanguage, Record<string, string>> = 
     heart: "heart",
     stone: "Stone",
     stoneLabel: "Stone mode: tap a cell beside your line to lay a stone there, or a stone to take it up",
-    stoneHow: "Stone mode. Tap a cell beside your line, up to {n} cells away along the passages, to lay a stone the line cannot enter. Tap a stone to take it up.",
+    stoneHow:
+      "Stone mode. Tap a cell beside your line, up to {n} cells away along the passages, to lay a stone the line cannot enter. Tap a stone to take it up.",
     stonesLeft: "Stones left: {n}.",
     stonesLeftOne: "Stones left: 1.",
     stonesFree: "Stones laid: {n}.",
@@ -130,8 +131,10 @@ export const MEIKYUU_STRINGS: Record<MeikyuuLanguage, Record<string, string>> = 
     solid_torus: "Torus",
     solid_star: "Star",
     solid_heart: "Heart",
-    play_solid: "Draw a line from the green start to the gold goal over the surface. Turn the solid to follow your line round it.",
-    solidHow: "Draw from the green start. Drag away from your line, or use the arrows, to turn the solid. It also turns by itself when your line nears the edge of the side you can see.",
+    play_solid:
+      "Draw a line from the green start to the gold goal over the surface. Turn the solid to follow your line round it.",
+    solidHow:
+      "Draw from the green start. Drag away from your line, or use the arrows, to turn the solid. It also turns by itself when your line nears the edge of the side you can see.",
     solidHidden: "The end of your line is out of sight. Turn the solid, or press Face me.",
     turnLeft: "Turn left",
     turnRight: "Turn right",
@@ -215,7 +218,8 @@ export const MEIKYUU_STRINGS: Record<MeikyuuLanguage, Record<string, string>> = 
     heart: "ハート",
     stone: "石",
     stoneLabel: "石のモード：線のとなりのマスをタップすると石を置き、石をタップすると取り除く",
-    stoneHow: "石のモードです。線のとなりのマス（通路づたいに{n}マスまで）をタップすると、線が入れない石を置けます。石をタップすると取り除きます。",
+    stoneHow:
+      "石のモードです。線のとなりのマス（通路づたいに{n}マスまで）をタップすると、線が入れない石を置けます。石をタップすると取り除きます。",
     stonesLeft: "石はあと{n}個。",
     stonesLeftOne: "石はあと1個。",
     stonesFree: "石を{n}個置きました。",
@@ -249,7 +253,8 @@ export const MEIKYUU_STRINGS: Record<MeikyuuLanguage, Record<string, string>> = 
     solid_star: "星",
     solid_heart: "ハート",
     play_solid: "緑のスタートから金色のゴールまで、表面をたどって線を引きます。線を追って立体を回します。",
-    solidHow: "緑のスタートから線を引きます。線から離れたところをドラッグするか、矢印を使うと立体が回ります。線が見えている面の端に近づくと、立体はひとりでに回ります。",
+    solidHow:
+      "緑のスタートから線を引きます。線から離れたところをドラッグするか、矢印を使うと立体が回ります。線が見えている面の端に近づくと、立体はひとりでに回ります。",
     solidHidden: "線の先が見えない面にあります。立体を回すか「こちらへ」を押してください。",
     turnLeft: "左へ回す",
     turnRight: "右へ回す",
@@ -275,7 +280,11 @@ export const MEIKYUU_STRINGS: Record<MeikyuuLanguage, Record<string, string>> = 
  * ```
  */
 export function meikyuuLanguageOf(tag: string | null | undefined): MeikyuuLanguage {
-  return String(tag ?? "").toLowerCase().startsWith("ja") ? "ja" : "en";
+  return String(tag ?? "")
+    .toLowerCase()
+    .startsWith("ja")
+    ? "ja"
+    : "en";
 }
 
 /** A line in a language, with its `{name}` values filled in, and its `One` form when `n` is 1.
@@ -291,7 +300,11 @@ export function meikyuuLanguageOf(tag: string | null | undefined): MeikyuuLangua
  * console.log(meikyuuSay("en","undo"));
  * ```
  */
-export function meikyuuSay(language: MeikyuuLanguage, key: string, values: Record<string, string | number> = {}): string {
+export function meikyuuSay(
+  language: MeikyuuLanguage,
+  key: string,
+  values: Record<string, string | number> = {},
+): string {
   const table = MEIKYUU_STRINGS[language];
   const one = values["n"] === 1 && `${key}One` in table ? `${key}One` : key;
   const line = table[one] ?? MEIKYUU_STRINGS.en[one] ?? table[key] ?? MEIKYUU_STRINGS.en[key] ?? key;

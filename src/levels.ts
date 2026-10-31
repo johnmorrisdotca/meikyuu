@@ -150,18 +150,20 @@ export const MEIKYUU_LEVELS_PER_SIZE = 256;
  * console.log(MEIKYUU_MAZE_LEVELS.length);
  * ```
  */
-export const MEIKYUU_MAZE_LEVELS: readonly MeikyuuMazeLevel[] = MEIKYUU_MAZE_ROWS.map(([code, effort, cells, score], index) => ({
-  kind: "maze",
-  number: index + 1,
-  code,
-  effort,
-  rating: ratingOf(effort),
-  score,
-  cells,
-  size: sizeOf(cells),
-  inSize: (index % MEIKYUU_LEVELS_PER_SIZE) + 1,
-  recipe: parsed(code, parseRecipe),
-}));
+export const MEIKYUU_MAZE_LEVELS: readonly MeikyuuMazeLevel[] = MEIKYUU_MAZE_ROWS.map(
+  ([code, effort, cells, score], index) => ({
+    kind: "maze",
+    number: index + 1,
+    code,
+    effort,
+    rating: ratingOf(effort),
+    score,
+    cells,
+    size: sizeOf(cells),
+    inSize: (index % MEIKYUU_LEVELS_PER_SIZE) + 1,
+    recipe: parsed(code, parseRecipe),
+  }),
+);
 /** The fixed numbered arrow recipes and their measured effort.
  *
  * @example
@@ -170,7 +172,14 @@ export const MEIKYUU_MAZE_LEVELS: readonly MeikyuuMazeLevel[] = MEIKYUU_MAZE_ROW
  * console.log(MEIKYUU_ARROW_LEVELS.length);
  * ```
  */
-export const MEIKYUU_ARROW_LEVELS: readonly MeikyuuArrowLevel[] = MEIKYUU_ARROW_ROWS.map(([code, effort], index) => ({ kind: "arrows", number: index + 1, code, effort, rating: Math.min(100, Math.max(1, Math.round(1 + (99 * Math.log(effort / 8)) / Math.log(800 / 8)))), recipe: parsed(code, parseArrowRecipe) }));
+export const MEIKYUU_ARROW_LEVELS: readonly MeikyuuArrowLevel[] = MEIKYUU_ARROW_ROWS.map(([code, effort], index) => ({
+  kind: "arrows",
+  number: index + 1,
+  code,
+  effort,
+  rating: Math.min(100, Math.max(1, Math.round(1 + (99 * Math.log(effort / 8)) / Math.log(800 / 8)))),
+  recipe: parsed(code, parseArrowRecipe),
+}));
 /** The fixed numbered mixed-board recipes and their measured effort.
  *
  * @example
@@ -179,7 +188,14 @@ export const MEIKYUU_ARROW_LEVELS: readonly MeikyuuArrowLevel[] = MEIKYUU_ARROW_
  * console.log(MEIKYUU_MIXED_LEVELS.length);
  * ```
  */
-export const MEIKYUU_MIXED_LEVELS: readonly MeikyuuMixedLevel[] = MEIKYUU_MIXED_ROWS.map(([code, effort], index) => ({ kind: "mixed", number: index + 1, code, effort, rating: Math.min(100, Math.max(1, Math.round(1 + (99 * Math.log(effort / 30)) / Math.log(1000 / 30)))), recipe: parsed(code, parseMixedRecipe) }));
+export const MEIKYUU_MIXED_LEVELS: readonly MeikyuuMixedLevel[] = MEIKYUU_MIXED_ROWS.map(([code, effort], index) => ({
+  kind: "mixed",
+  number: index + 1,
+  code,
+  effort,
+  rating: Math.min(100, Math.max(1, Math.round(1 + (99 * Math.log(effort / 30)) / Math.log(1000 / 30)))),
+  recipe: parsed(code, parseMixedRecipe),
+}));
 
 /** How many levels a kind has.
  *
@@ -193,7 +209,11 @@ export const MEIKYUU_MIXED_LEVELS: readonly MeikyuuMixedLevel[] = MEIKYUU_MIXED_
  * ```
  */
 export function levelCount(kind: MeikyuuKind): number {
-  return kind === "maze" ? MEIKYUU_MAZE_LEVELS.length : kind === "arrows" ? MEIKYUU_ARROW_LEVELS.length : MEIKYUU_MIXED_LEVELS.length;
+  return kind === "maze"
+    ? MEIKYUU_MAZE_LEVELS.length
+    : kind === "arrows"
+      ? MEIKYUU_ARROW_LEVELS.length
+      : MEIKYUU_MIXED_LEVELS.length;
 }
 
 /** Every level of a kind.
@@ -279,7 +299,7 @@ export function mazeLevelsOfSize(size: MeikyuuSize): readonly MeikyuuMazeLevel[]
  * ```
  */
 export function mazeLevelOfSize(size: MeikyuuSize, n: number): MeikyuuMazeLevel | null {
-  return Number.isInteger(n) && n >= 1 && n <= MEIKYUU_LEVELS_PER_SIZE ? mazeLevelsOfSize(size)[n - 1] ?? null : null;
+  return Number.isInteger(n) && n >= 1 && n <= MEIKYUU_LEVELS_PER_SIZE ? (mazeLevelsOfSize(size)[n - 1] ?? null) : null;
 }
 
 /** Which third of a size's list a level is in: the easy, medium and hard a site files it under. Place `n` is from 1 of `count`.
@@ -321,6 +341,13 @@ export function bandOf(n: number, count: number = MEIKYUU_LEVELS_PER_SIZE): Meik
  * console.log(findMazeLevels({shape:"square",size:"small"}).length);
  * ```
  */
-export function findMazeLevels(filter: { shape?: MazeRecipe["shape"]; mode?: MazeRecipe["mode"]; size?: MeikyuuSize } = {}): MeikyuuMazeLevel[] {
-  return MEIKYUU_MAZE_LEVELS.filter((level) => (filter.shape === undefined || level.recipe.shape === filter.shape) && (filter.mode === undefined || level.recipe.mode === filter.mode) && (filter.size === undefined || sizeOf(level.cells) === filter.size));
+export function findMazeLevels(
+  filter: { shape?: MazeRecipe["shape"]; mode?: MazeRecipe["mode"]; size?: MeikyuuSize } = {},
+): MeikyuuMazeLevel[] {
+  return MEIKYUU_MAZE_LEVELS.filter(
+    (level) =>
+      (filter.shape === undefined || level.recipe.shape === filter.shape) &&
+      (filter.mode === undefined || level.recipe.mode === filter.mode) &&
+      (filter.size === undefined || sizeOf(level.cells) === filter.size),
+  );
 }

@@ -34,7 +34,14 @@ import { mean, unit, type Vec3 } from "./vec.ts";
  * console.log(SOLID_KINDS);
  * ```
  */
-export const SOLID_KINDS = ["cube", "sphere", "tetrahedron", "octahedron", "icosahedron", ...SOLID_SHAPE_KINDS] as const;
+export const SOLID_KINDS = [
+  "cube",
+  "sphere",
+  "tetrahedron",
+  "octahedron",
+  "icosahedron",
+  ...SOLID_SHAPE_KINDS,
+] as const;
 /** A supported polyhedron, die or shaped surface for a maze.
  *
  * @example
@@ -232,7 +239,16 @@ function sphereParts(n: number): Parts {
     }
     return order;
   });
-  return { kind: "sphere", n, vertices: corners, loops, faceOf: loops.map(() => -1), hull: [], round: true, centre: (polygon) => unit(mean(polygon)) };
+  return {
+    kind: "sphere",
+    n,
+    vertices: corners,
+    loops,
+    faceOf: loops.map(() => -1),
+    hull: [],
+    round: true,
+    centre: (polygon) => unit(mean(polygon)),
+  };
 }
 
 /** Whether a solid can be cut `n` ways: a whole number of at least 2, or 1 where the solid has already sixty cells uncut (the dodecahedron's five to a face).

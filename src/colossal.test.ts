@@ -1,6 +1,16 @@
 import { describe, expect, it } from "vitest";
 
-import { COLOSSAL_CELLS, COLOSSAL_TALL_HEIGHT, COLOSSAL_TALL_WIDTH, colossalLevelOf, colossalTallLevelOf, findColossalLevels, MEIKYUU_COLOSSAL_LEVELS, MEIKYUU_COLOSSAL_PER_LIST, MEIKYUU_COLOSSAL_TALL_LEVELS } from "./levels-colossal.ts";
+import {
+  COLOSSAL_CELLS,
+  COLOSSAL_TALL_HEIGHT,
+  COLOSSAL_TALL_WIDTH,
+  colossalLevelOf,
+  colossalTallLevelOf,
+  findColossalLevels,
+  MEIKYUU_COLOSSAL_LEVELS,
+  MEIKYUU_COLOSSAL_PER_LIST,
+  MEIKYUU_COLOSSAL_TALL_LEVELS,
+} from "./levels-colossal.ts";
 import { MEIKYUU_MAZE_LEVELS } from "./levels.ts";
 import { MEIKYUU_TALL_LEVELS } from "./levels-tall.ts";
 import { buildMaze, layoutCells, MEIKYUU_MOST_CELLS, parseRecipe } from "./maze.ts";
@@ -13,12 +23,13 @@ describe("the colossal levels", () => {
     expect(MEIKYUU_COLOSSAL_PER_LIST).toBe(128);
     expect(MEIKYUU_COLOSSAL_LEVELS.length).toBe(128);
     expect(MEIKYUU_COLOSSAL_TALL_LEVELS.length).toBe(128);
-    for (const list of [MEIKYUU_COLOSSAL_LEVELS, MEIKYUU_COLOSSAL_TALL_LEVELS]) list.forEach((level, index) => {
-      expect(level.number).toBe(index + 1);
-      expect(level.inSize).toBe(index + 1);
-      expect(level.rating).toBeGreaterThanOrEqual(1);
-      expect(level.rating).toBeLessThanOrEqual(100);
-    });
+    for (const list of [MEIKYUU_COLOSSAL_LEVELS, MEIKYUU_COLOSSAL_TALL_LEVELS])
+      list.forEach((level, index) => {
+        expect(level.number).toBe(index + 1);
+        expect(level.inSize).toBe(index + 1);
+        expect(level.rating).toBeGreaterThanOrEqual(1);
+        expect(level.rating).toBeLessThanOrEqual(100);
+      });
     expect(new Set(ALL.map((level) => level.code)).size).toBe(256);
     const others = new Set([...MEIKYUU_MAZE_LEVELS, ...MEIKYUU_TALL_LEVELS].map((level) => level.code));
     expect(ALL.some((level) => others.has(level.code))).toBe(false);
@@ -39,7 +50,11 @@ describe("the colossal levels", () => {
       expect(level.ratio).toBe("square");
     }
     expect(Math.min(...MEIKYUU_COLOSSAL_LEVELS.map((level) => level.cells))).toBeGreaterThan(biggest);
-    expect(MEIKYUU_COLOSSAL_LEVELS.some((level) => level.recipe.shape === "square" && level.recipe.w >= 90 && level.recipe.w <= 110)).toBe(true);
+    expect(
+      MEIKYUU_COLOSSAL_LEVELS.some(
+        (level) => level.recipe.shape === "square" && level.recipe.w >= 90 && level.recipe.w <= 110,
+      ),
+    ).toBe(true);
     expect([COLOSSAL_TALL_WIDTH, COLOSSAL_TALL_HEIGHT]).toEqual([64, 96]);
     for (const level of MEIKYUU_COLOSSAL_TALL_LEVELS) {
       expect(level.ratio, level.code).toBe(TALL_RATIO);
@@ -52,15 +67,19 @@ describe("the colossal levels", () => {
   it("stay inside what a recipe may ask for, and every code is its recipe", () => {
     for (const level of ALL) {
       expect(layoutCells(level.recipe.shape, level.recipe.w, level.recipe.h), level.code).toBeLessThanOrEqual(36_100);
-      expect(layoutCells(level.recipe.shape, level.recipe.w, level.recipe.h), level.code).toBeLessThan(MEIKYUU_MOST_CELLS);
+      expect(layoutCells(level.recipe.shape, level.recipe.w, level.recipe.h), level.code).toBeLessThan(
+        MEIKYUU_MOST_CELLS,
+      );
       expect(parseRecipe(level.code), level.code).toEqual(level.recipe);
     }
   });
 
   it("climb by the score, never scoring under the one before, and the score is the same measure as every other list", () => {
     for (const list of [MEIKYUU_COLOSSAL_LEVELS, MEIKYUU_COLOSSAL_TALL_LEVELS]) {
-      for (let i = 1; i < list.length; i += 1) expect(list[i]!.score, `level ${i + 1}`).toBeGreaterThanOrEqual(list[i - 1]!.score);
-      const mean = (from: number, to: number): number => list.slice(from, to).reduce((a, level) => a + level.score, 0) / (to - from);
+      for (let i = 1; i < list.length; i += 1)
+        expect(list[i]!.score, `level ${i + 1}`).toBeGreaterThanOrEqual(list[i - 1]!.score);
+      const mean = (from: number, to: number): number =>
+        list.slice(from, to).reduce((a, level) => a + level.score, 0) / (to - from);
       expect(mean(0, 43)).toBeLessThan(mean(43, 86));
       expect(mean(43, 86)).toBeLessThan(mean(86, 128));
       expect(list[127]!.score).toBeGreaterThan(list[0]!.score + 8);
@@ -68,14 +87,21 @@ describe("the colossal levels", () => {
     }
     // The biggest colossal maze is harder than the hardest huge one, the smallest is no easier than a middling huge one.
     const huge = MEIKYUU_MAZE_LEVELS.slice(768);
-    expect(Math.max(...MEIKYUU_COLOSSAL_LEVELS.map((level) => level.effort))).toBeGreaterThan(Math.max(...huge.map((level) => level.effort)));
+    expect(Math.max(...MEIKYUU_COLOSSAL_LEVELS.map((level) => level.effort))).toBeGreaterThan(
+      Math.max(...huge.map((level) => level.effort)),
+    );
   });
 
   it("come in every shape and way to play, in both lists", () => {
-    for (const shape of ["square", "hex", "triangle", "circle"] as const) expect(findColossalLevels({ list: "colossal", shape }).length, shape).toBeGreaterThanOrEqual(5);
+    for (const shape of ["square", "hex", "triangle", "circle"] as const)
+      expect(findColossalLevels({ list: "colossal", shape }).length, shape).toBeGreaterThanOrEqual(5);
     expect(new Set(MEIKYUU_COLOSSAL_LEVELS.map((level) => level.recipe.shape)).size).toBeGreaterThanOrEqual(10);
-    for (const mode of ["enter-leave", "to-goal", "centre-out", "keys"] as const) for (const list of ["colossal", "colossal-tall"] as const) expect(findColossalLevels({ list, mode }).length, `${list} ${mode}`).toBeGreaterThanOrEqual(15);
-    expect(new Set(MEIKYUU_COLOSSAL_TALL_LEVELS.map((level) => level.recipe.shape))).toEqual(new Set(["square", "hex", "triangle"]));
+    for (const mode of ["enter-leave", "to-goal", "centre-out", "keys"] as const)
+      for (const list of ["colossal", "colossal-tall"] as const)
+        expect(findColossalLevels({ list, mode }).length, `${list} ${mode}`).toBeGreaterThanOrEqual(15);
+    expect(new Set(MEIKYUU_COLOSSAL_TALL_LEVELS.map((level) => level.recipe.shape))).toEqual(
+      new Set(["square", "hex", "triangle"]),
+    );
     expect(findColossalLevels().length).toBe(256);
   });
 

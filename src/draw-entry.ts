@@ -7,7 +7,13 @@ export { boardLookOf, drawMaze, lookAttributes, lookStyle, marksOf, stonesOf } f
 export type { DrawMazeOptions, MazeLook } from "./draw.ts";
 export { arrowColour, arrowMarkup, drawArrows } from "./drawArrows.ts";
 export type { DrawArrowsOptions } from "./drawArrows.ts";
-export { MEIKYUU_ARROW_COLOURS, MEIKYUU_BOARD_NAMES, MEIKYUU_BOARDS, MEIKYUU_TRAIL_NAMES, MEIKYUU_TRAILS } from "./boards.ts";
+export {
+  MEIKYUU_ARROW_COLOURS,
+  MEIKYUU_BOARD_NAMES,
+  MEIKYUU_BOARDS,
+  MEIKYUU_TRAIL_NAMES,
+  MEIKYUU_TRAILS,
+} from "./boards.ts";
 export type { MeikyuuBoardLook, MeikyuuBoardName, MeikyuuTrailName } from "./boards.ts";
 export { doorPlace, fixed, framed, linePath, standingWalls, wallPath } from "./geometry.ts";
 export { MEIKYUU_STYLE } from "./style.ts";

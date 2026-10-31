@@ -43,7 +43,12 @@ describe("a maze drawn as SVG text", () => {
     const plain = drawMaze(maze);
     expect(plain).not.toContain("mk-trail");
     expect(plain).not.toContain("mk-solution");
-    const drawn = drawMaze(maze, { path: way.slice(0, 5), solution: true, hint: { cells: way.slice(5, 9) }, won: true });
+    const drawn = drawMaze(maze, {
+      path: way.slice(0, 5),
+      solution: true,
+      hint: { cells: way.slice(5, 9) },
+      won: true,
+    });
     expect(drawn).toContain(`d="${linePath(maze.grid, way.slice(0, 5))}"`);
     expect(drawn).toContain("mk-solution");
     expect(drawn).toContain('class="mk-hint"');
@@ -55,7 +60,23 @@ describe("a maze drawn as SVG text", () => {
 
   it("draws every shape, with its walls as lines or arcs", () => {
     for (const shape of MEIKYUU_SHAPES) {
-      const made = buildMaze({ shape, w: shape === "square" || shape === "hex" || shape === "triangle" ? 9 : shape === "circle" ? 5 : shape === "hexagon" ? 3 : shape === "pyramid" ? 6 : 17, h: shape === "triangle" ? 5 : 9, algorithm: "prim", mode: "to-goal", seed: 2 });
+      const made = buildMaze({
+        shape,
+        w:
+          shape === "square" || shape === "hex" || shape === "triangle"
+            ? 9
+            : shape === "circle"
+              ? 5
+              : shape === "hexagon"
+                ? 3
+                : shape === "pyramid"
+                  ? 6
+                  : 17,
+        h: shape === "triangle" ? 5 : 9,
+        algorithm: "prim",
+        mode: "to-goal",
+        seed: 2,
+      });
       const svg = drawMaze(made);
       expect(svg, shape).toContain("<path");
       expect(svg, shape).not.toContain("NaN");
@@ -96,7 +117,9 @@ describe("an arrow board drawn as SVG text", () => {
 
   it("leaves out an arrow that has gone, and shows no lock once they are unlocked", () => {
     const gone = board.arrows.map((_, id) => id !== 0);
-    expect((drawArrows(board, { present: gone }).match(/class="mk-arrow"/g) ?? []).length).toBe(board.arrows.length - 1);
+    expect((drawArrows(board, { present: gone }).match(/class="mk-arrow"/g) ?? []).length).toBe(
+      board.arrows.length - 1,
+    );
     expect(drawArrows(board, { unlocked: true })).not.toContain('data-locked="true"');
     expect(drawArrows(board, { hint: 1 })).toContain('data-hint="true"');
   });
@@ -118,6 +141,10 @@ describe("an arrow board drawn as SVG text", () => {
     const square = buildMaze({ shape: "square", w: 8, h: 8, algorithm: "wilson", mode: "to-goal", seed: 5 });
     expect(drawMaze(square, { orientation: "landscape" })).toBe(drawMaze(square));
     // A wide maze stands up for portrait.
-    expect(drawMaze(buildMaze({ shape: "square", w: 9, h: 6, algorithm: "wilson", mode: "to-goal", seed: 5 }), { orientation: "portrait" })).toContain('data-turned="true"');
+    expect(
+      drawMaze(buildMaze({ shape: "square", w: 9, h: 6, algorithm: "wilson", mode: "to-goal", seed: 5 }), {
+        orientation: "portrait",
+      }),
+    ).toContain('data-turned="true"');
   });
 });

@@ -1,8 +1,32 @@
 import { describe, expect, it } from "vitest";
 
-import { dragMaze, liftMaze, newMazeGame, playSolution, pressMaze, restartMaze, tapMaze, undoMaze, type MazeGame } from "./game.ts";
+import {
+  dragMaze,
+  liftMaze,
+  newMazeGame,
+  playSolution,
+  pressMaze,
+  restartMaze,
+  tapMaze,
+  undoMaze,
+  type MazeGame,
+} from "./game.ts";
 import { buildMaze, solutionOf, walk, type MazeRecipe } from "./maze.ts";
-import { canLayStone, clearStones, decodeRun, encodeRun, hasStone, layStone, stoneLimitFor, stoneRulesOf, stonesLeft, takeStone, toggleStone, withStoneRules, type StoneRules } from "./stones.ts";
+import {
+  canLayStone,
+  clearStones,
+  decodeRun,
+  encodeRun,
+  hasStone,
+  layStone,
+  stoneLimitFor,
+  stoneRulesOf,
+  stonesLeft,
+  takeStone,
+  toggleStone,
+  withStoneRules,
+  type StoneRules,
+} from "./stones.ts";
 
 const recipe: MazeRecipe = { shape: "square", w: 12, h: 12, algorithm: "wilson", mode: "to-goal", seed: 31 };
 const maze = buildMaze(recipe);
@@ -90,20 +114,29 @@ describe("the rules of a stone", () => {
     for (const cell of frontier) distance.set(cell, 0);
     for (let step = 1; step <= 4; step += 1) {
       const next: number[] = [];
-      for (const cell of frontier) for (const other of maze.links[cell]!) if (!distance.has(other)) {
-        distance.set(other, step);
-        next.push(other);
-      }
+      for (const cell of frontier)
+        for (const other of maze.links[cell]!)
+          if (!distance.has(other)) {
+            distance.set(other, step);
+            next.push(other);
+          }
       frontier = next;
     }
     const three = [...distance].find(([, d]) => d === 3)?.[0];
     expect(three).toBeDefined();
     expect(canLayStone(game, three!)).toBe("far");
-    expect(canLayStone(withStoneRules(game, { limit: 3, reach: 1 }), [...distance].find(([, d]) => d === 2)![0])).toBe("far");
-    expect(canLayStone(withStoneRules(game, { limit: 3, reach: 1 }), [...distance].find(([, d]) => d === 1)![0])).toBe("ok");
+    expect(canLayStone(withStoneRules(game, { limit: 3, reach: 1 }), [...distance].find(([, d]) => d === 2)![0])).toBe(
+      "far",
+    );
+    expect(canLayStone(withStoneRules(game, { limit: 3, reach: 1 }), [...distance].find(([, d]) => d === 1)![0])).toBe(
+      "ok",
+    );
     expect(canLayStone(game, [...distance].find(([, d]) => d === 2)![0])).toBe("ok");
     // A cell right beside the line in the picture but shut off by a wall: its neighbour in the grid that is not joined to the head.
-    const walled = maze.grid.neighbours[head]!.find((cell) => !maze.links[head]!.includes(cell) && !near.has(cell) && !game.path.some((on) => maze.links[on]!.includes(cell)));
+    const walled = maze.grid.neighbours[head]!.find(
+      (cell) =>
+        !maze.links[head]!.includes(cell) && !near.has(cell) && !game.path.some((on) => maze.links[on]!.includes(cell)),
+    );
     expect(walled).toBeDefined();
     expect(canLayStone(game, walled!)).toBe("far");
   });
@@ -122,7 +155,9 @@ describe("the rules of a stone", () => {
 
   it("stops at the limit, and taking a stone up gives it back", () => {
     let game = along(Math.min(way.length - 1, 30), { limit: 2, reach: 2 });
-    const cells = game.path.flatMap((cell) => side(cell)).filter((cell, i, all) => all.indexOf(cell) === i && cell !== maze.goal);
+    const cells = game.path
+      .flatMap((cell) => side(cell))
+      .filter((cell, i, all) => all.indexOf(cell) === i && cell !== maze.goal);
     expect(cells.length).toBeGreaterThanOrEqual(3);
     game = layStone(layStone(game, cells[0]!), cells[1]!);
     expect(stonesLeft(game)).toBe(0);
@@ -137,7 +172,9 @@ describe("the rules of a stone", () => {
 
   it("has no limit when it is null", () => {
     let game = along(Math.min(way.length - 1, 40), { limit: null, reach: 2 });
-    const cells = game.path.flatMap((cell) => side(cell)).filter((cell, i, all) => all.indexOf(cell) === i && cell !== maze.goal);
+    const cells = game.path
+      .flatMap((cell) => side(cell))
+      .filter((cell, i, all) => all.indexOf(cell) === i && cell !== maze.goal);
     for (const cell of cells.slice(0, 6)) game = layStone(game, cell);
     expect(game.stones.length).toBe(Math.min(6, cells.length));
     expect(stonesLeft(game)).toBeNull();
@@ -261,7 +298,12 @@ describe("a stone and Undo, Restart and the run kept", () => {
     const { at, into } = fork(2);
     const game = layStone(along(at + 3), into);
     const code = encodeRun(game);
-    expect(code).toBe(`${way.slice(1, at + 3).map((cell, i) => maze.grid.neighbours[way[i]!]!.indexOf(cell).toString(36)).join("")}~${into.toString(36)}`);
+    expect(code).toBe(
+      `${way
+        .slice(1, at + 3)
+        .map((cell, i) => maze.grid.neighbours[way[i]!]!.indexOf(cell).toString(36))
+        .join("")}~${into.toString(36)}`,
+    );
     const back = decodeRun(maze, code, RULES)!;
     expect(back.path).toEqual(game.path);
     expect(back.stones).toEqual(game.stones);
@@ -290,7 +332,11 @@ describe("a stone and Undo, Restart and the run kept", () => {
     expect(decodeRun(maze, `${steps}~${(maze.grid.cells + 5).toString(36)}`, RULES)).toBeNull();
     expect(decodeRun(maze, `${steps}~${into.toString(36)}.${into.toString(36)}`, RULES)).toBeNull();
     // The limit is not asked of a run: two stones come back under a limit of one, and no more can be laid.
-    const two = decodeRun(maze, `${steps}~${[into, ...Array.from(away.order.slice(-1))].map((cell) => cell.toString(36)).join(".")}`, { limit: 1, reach: 2 });
+    const two = decodeRun(
+      maze,
+      `${steps}~${[into, ...Array.from(away.order.slice(-1))].map((cell) => cell.toString(36)).join(".")}`,
+      { limit: 1, reach: 2 },
+    );
     expect(two?.stones.length).toBe(2);
     expect(stonesLeft(two!)).toBe(0);
     expect(decodeRun(maze, `${steps}~${into.toString(36)}`, null)).toBeNull();

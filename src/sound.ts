@@ -11,7 +11,18 @@
  * console.log(MEIKYUU_SOUND_KINDS);
  * ```
  */
-export const MEIKYUU_SOUND_KINDS = ["step", "back", "key", "bump", "fly", "unlock", "solve", "lose", "tap", "stone"] as const;
+export const MEIKYUU_SOUND_KINDS = [
+  "step",
+  "back",
+  "key",
+  "bump",
+  "fly",
+  "unlock",
+  "solve",
+  "lose",
+  "tap",
+  "stone",
+] as const;
 /** One native synthesized board sound.
  *
  * @example
@@ -42,7 +53,10 @@ export type MeikyuuSounds = {
 };
 
 /** What each sound is: its notes in hertz, how long each lasts in seconds, the waveform, and the loudness. */
-const SOUNDS: Record<MeikyuuSoundKind, { notes: number[]; each: number; wave: OscillatorType; gain: number; gap: number }> = {
+const SOUNDS: Record<
+  MeikyuuSoundKind,
+  { notes: number[]; each: number; wave: OscillatorType; gain: number; gap: number }
+> = {
   step: { notes: [520], each: 0.035, wave: "sine", gain: 0.035, gap: 0.045 },
   back: { notes: [380], each: 0.035, wave: "sine", gain: 0.035, gap: 0.045 },
   key: { notes: [660, 880], each: 0.09, wave: "triangle", gain: 0.09, gap: 0.1 },
@@ -72,7 +86,11 @@ export function createMeikyuuSounds(): MeikyuuSounds {
   const lastAt = new Map<MeikyuuSoundKind, number>();
   const contextOf = (): AudioContext | null => {
     if (context !== null) return context;
-    const Audio = typeof window === "undefined" ? undefined : (window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext);
+    const Audio =
+      typeof window === "undefined"
+        ? undefined
+        : (window.AudioContext ??
+          (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext);
     if (Audio === undefined) return null;
     try {
       context = new Audio();
