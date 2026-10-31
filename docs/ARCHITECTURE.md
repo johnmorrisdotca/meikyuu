@@ -45,7 +45,10 @@ src/
 ├── style.ts          the drawing's style: its colours as custom properties, and its few motions
 ├── strings.ts        the words, in English and Japanese, for a screen reader and for the board's buttons
 ├── play-entry.ts     the "/play" entry: a puzzle played in any element
-├── mount.ts          mountMeikyuu: draws a puzzle into an element and plays it, with its buttons, words and events
+├── mount.ts          mountMeikyuu: draws a puzzle into an element and plays it
+├── mountPlay.ts      the words, the drawing and the moves of that board
+├── mountApi.ts       the handle a page keeps: load, undo, the view and the stones
+├── mountSession.ts   the state those three close over
 ├── surface.ts        the box a board is looked at through: pinch, wheel, pan, edge nudging, and hands the rest to the board
 ├── mazeSurface.ts    a maze in the box: tiled walls drawn only while in view, the line, the hint, the marks
 ├── arrowSurface.ts   an arrow board in the box: tapping an arrow, one sliding off, one bumping
@@ -55,13 +58,15 @@ src/
 ├── sound.ts          the sounds, made in the browser
 ├── embed-day.ts       shared UTC date parsing and deterministic date seeds
 ├── element.ts        the "/element" entry: the <meikyuu-board> class
+├── elementOptions.ts the mounted-board option names and the host callbacks the element accepts
 ├── element-define.ts the "/element/define" entry: defines the tag on the page
 ├── version.ts        the package's version
 ├── solid/
 │   ├── vec.ts          points and quaternions: the arithmetic of turning a solid
 │   ├── solidGrid.ts    the surface of a cube, a globe or a solid of triangles as a cell graph, and how a cut is allowed
 │   ├── solidParts.ts   joining polygons into a cell graph, and the lattice of a triangular face
-│   ├── solidShapes.ts  the other thirteen solids: the further dice, a box, a cross, a ring, a torus, a star, a heart
+│   ├── solidShapes.ts  the other thirteen solids: the further dice, a box, a cross and a ring
+│   ├── solidShapesCurved.ts the torus, the star and the heart
 │   ├── solidHeart.ts   the surface of a puffed heart, a distance along each direction
 │   ├── solidKinds.ts   the solids by how they are met: the dice with their sides, the shapes, the first five
 │   ├── solidMaze.ts    a maze over a solid: its recipe, where it starts and ends, how hard it is, the checker
@@ -75,7 +80,10 @@ src/
 │   ├── solidColours.ts the colours the canvas reads from the page's custom properties
 │   ├── solidDraw.ts    a maze over a solid as SVG text
 │   ├── solidStyle.ts   the style of a playable solid, beside the board's
-│   └── solidMount.ts   mountSolid: draws a solid into an element and plays it: turning, drawing, stones, words, events
+│   ├── solidMount.ts   mountSolid: draws a solid into an element and plays it
+│   ├── solidPlay.ts    the words, the drawing and the pointer moves of that solid
+│   ├── solidHandle.ts  the handle a page keeps: load, turn, undo and the stones
+│   └── solidSession.ts the state those three close over
 └── levels/
     ├── mazes.data.ts   the 1,024 maze levels, each a recipe with its effort, its cells and its score
     ├── tall.data.ts    the 1,536 tall levels, the same

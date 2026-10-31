@@ -1,51 +1,19 @@
 import { createBanner } from "../banner.ts";
 import type { MazeLook } from "../draw.ts";
-import {
-  dragMaze,
-  headOf,
-  hintMaze,
-  liftMaze,
-  type MazeGame,
-  newMazeGame,
-  pressMaze,
-  restartMaze,
-  tapMaze,
-  undoMaze,
-} from "../game.ts";
+import { headOf, type MazeGame, newMazeGame } from "../game.ts";
 import { ensureMeikyuuPlayStyle, MEIKYUU_GUTTER, MEIKYUU_RESERVE } from "../mount.ts";
-import { createMeikyuuSounds, type MeikyuuSoundKind, type MeikyuuSounds } from "../sound.ts";
-import {
-  clearStones,
-  decodeRun,
-  encodeRun,
-  type StoneOption,
-  type StoneVerdict,
-  stoneRulesOf,
-  stonesLeft,
-  toggleStone,
-  withStoneRules,
-} from "../stones.ts";
+import { createMeikyuuSounds, type MeikyuuSoundKind } from "../sound.ts";
+import { type StoneOption, type StoneVerdict, stoneRulesOf, stonesLeft } from "../stones.ts";
 import { type MeikyuuLanguage, meikyuuLanguageOf, meikyuuSay } from "../strings.ts";
-import { applyLook, readColours } from "./solidColours.ts";
+import { readColours } from "./solidColours.ts";
+import { solidHandle } from "./solidHandle.ts";
 import { buildSolidMaze, parseSolidRecipe, type SolidMaze, type SolidRecipe } from "./solidMaze.ts";
 import { type PaintContext, paintSolid } from "./solidPaint.ts";
+import { bindSolidPlay } from "./solidPlay.ts";
+import type { SolidSession } from "./solidSession.ts";
 import { SOLID_PLAY_STYLE } from "./solidStyle.ts";
-import {
-  cellSeen,
-  cellsAlongDrag,
-  createFrame,
-  dragTurn,
-  edgeTurn,
-  faceCellTurn,
-  openingTurn,
-  pickCell,
-  projectFrame,
-  SOLID_ZOOM_LEAST,
-  SOLID_ZOOM_MOST,
-  type SolidFrame,
-  stepTurn,
-} from "./solidView.ts";
-import { type Quat, quatAxisAngle, quatMul, quatNormalize, quatSlerp } from "./vec.ts";
+import { cellSeen, createFrame, edgeTurn, openingTurn, projectFrame, type SolidFrame } from "./solidView.ts";
+import { type Quat, quatSlerp } from "./vec.ts";
 
 /**
  * A PLAYABLE MAZE OVER A SOLID IN ANY PAGE: `mountSolid(host, { recipe })` draws a cube, a globe or a solid of triangles with a maze over the whole of
@@ -223,13 +191,13 @@ export type SolidMount = {
 };
 
 /** A finger's reach: a press this close to the start or the end of the line, in pixels, draws. */
-const REACH = 30;
+export const REACH = 30;
 /** How far a pointer may move and still be a tap, in pixels, and how long it may take, in milliseconds. */
-const TAP_SLOP = 8;
-const TAP_TIME = 500;
-const HOLD_TIME = 520;
+export const TAP_SLOP = 8;
+export const TAP_TIME = 500;
+export const HOLD_TIME = 520;
 /** One press of an arrow turns this far, in radians. */
-const TURN_STEP = 0.42;
+export const TURN_STEP = 0.42;
 /** How long a turn or a zoom by button takes, in milliseconds. */
 const GLIDE = 260;
 /** While the solid moves, the canvas has this share of the pixels it has at rest on each side, and the full number comes back this long (milliseconds) after it stops. */
@@ -271,7 +239,7 @@ export function ensureSolidStyle(host: Element): void {
   target.append(style);
 }
 
-function recipeOf(recipe: string | SolidRecipe): SolidRecipe | null {
+export function recipeOf(recipe: string | SolidRecipe): SolidRecipe | null {
   return typeof recipe === "string" ? parseSolidRecipe(recipe) : recipe;
 }
 
@@ -299,63 +267,66 @@ function recipeOf(recipe: string | SolidRecipe): SolidRecipe | null {
  * ```
  */
 export function mountSolid(host: HTMLElement, options: SolidMountOptions): SolidMount | null {
-  const first = recipeOf(options.recipe);
+  const s = {} as SolidSession;
+  s.host = host;
+  s.options = options;
+  const first = recipeOf(s.options.recipe);
   if (first === null) return null;
-  const document = host.ownerDocument;
-  const windowOf = document.defaultView ?? window;
-  ensureSolidStyle(host);
+  s.document = s.host.ownerDocument;
+  s.windowOf = s.document.defaultView ?? window;
+  ensureSolidStyle(s.host);
 
-  let look: MazeLook = { board: options.board, trail: options.trail, wall: options.wall, line: options.line };
-  let tapExtends = options.tap === true;
-  let stoneOption: StoneOption | undefined = options.stones;
-  let stoneModeOn = false;
-  let withHints = options.hints !== false;
-  let edgeOn = options.edgeTurn !== false;
-  let turnOnly = options.turnMode === true;
-  const picture = options.still === true;
-  const drawable = options.draw !== false && !picture;
-  const withControls = options.controls !== false;
-  const withZoom = options.zoom !== false;
-  let sounds: MeikyuuSounds | null = options.sound === true ? createMeikyuuSounds() : null;
-  let explicitLanguage = options.language;
-  let language: MeikyuuLanguage =
-    explicitLanguage ??
-    meikyuuLanguageOf(host.closest("[lang]")?.getAttribute("lang") ?? document.documentElement.lang);
-  const gutter = Math.max(0, options.gutter ?? MEIKYUU_GUTTER);
-  const callbacks = options;
-  const still = (): boolean =>
-    typeof windowOf.matchMedia === "function" && windowOf.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  s.look = { board: s.options.board, trail: s.options.trail, wall: s.options.wall, line: s.options.line };
+  s.tapExtends = s.options.tap === true;
+  s.stoneOption = s.options.stones;
+  s.stoneModeOn = false;
+  s.withHints = s.options.hints !== false;
+  s.edgeOn = s.options.edgeTurn !== false;
+  s.turnOnly = s.options.turnMode === true;
+  s.picture = s.options.still === true;
+  s.drawable = s.options.draw !== false && !s.picture;
+  s.withControls = s.options.controls !== false;
+  s.withZoom = s.options.zoom !== false;
+  s.sounds = s.options.sound === true ? createMeikyuuSounds() : null;
+  s.explicitLanguage = s.options.language;
+  s.language =
+    s.explicitLanguage ??
+    meikyuuLanguageOf(s.host.closest("[lang]")?.getAttribute("lang") ?? s.document.documentElement.lang);
+  s.gutter = Math.max(0, s.options.gutter ?? MEIKYUU_GUTTER);
+  s.callbacks = s.options;
+  s.still = (): boolean =>
+    typeof s.windowOf.matchMedia === "function" && s.windowOf.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   // The parts.
-  host.classList.add("meikyuu-play");
-  host.classList.add("meikyuu-solid");
-  host.replaceChildren();
-  const wrap = create(document, "div", "mk-wrap");
-  const box = create(document, "div", "mk-box");
-  box.tabIndex = picture ? -1 : 0;
-  box.setAttribute("role", picture ? "img" : "group");
-  if (picture) box.dataset.still = "true";
-  const canvas = create(document, "canvas", "meikyuu mk-solid");
-  canvas.setAttribute("aria-hidden", "true");
-  box.append(canvas);
-  const banner = createBanner(document, host, options.banner !== false);
-  wrap.append(box, banner.element);
-  const controls = create(document, "div", "mk-controls");
-  const pad = create(document, "div", "mk-pad");
-  pad.setAttribute("role", "group");
-  const says = create(document, "p", "mk-says");
-  const progress = create(document, "p", "mk-progress");
-  progress.setAttribute("aria-live", "polite");
-  const messages = create(document, "p", "mk-messages");
-  messages.setAttribute("aria-live", "polite");
-  host.append(wrap);
-  if (withControls) host.append(controls, pad, says, progress, messages);
-  host.style.setProperty("--mkp-gutter", `${gutter}px`);
-  if (options.reserve !== undefined) host.style.setProperty("--mkp-reserve", `${options.reserve}px`);
-  else host.style.setProperty("--mkp-reserve", `${MEIKYUU_RESERVE}px`);
+  s.host.classList.add("meikyuu-play");
+  s.host.classList.add("meikyuu-solid");
+  s.host.replaceChildren();
+  s.wrap = create(s.document, "div", "mk-wrap");
+  s.box = create(s.document, "div", "mk-box");
+  s.box.tabIndex = s.picture ? -1 : 0;
+  s.box.setAttribute("role", s.picture ? "img" : "group");
+  if (s.picture) s.box.dataset.still = "true";
+  s.canvas = create(s.document, "canvas", "meikyuu mk-solid");
+  s.canvas.setAttribute("aria-hidden", "true");
+  s.box.append(s.canvas);
+  s.banner = createBanner(s.document, s.host, s.options.banner !== false);
+  s.wrap.append(s.box, s.banner.element);
+  s.controls = create(s.document, "div", "mk-controls");
+  s.pad = create(s.document, "div", "mk-pad");
+  s.pad.setAttribute("role", "group");
+  s.says = create(s.document, "p", "mk-says");
+  s.progress = create(s.document, "p", "mk-progress");
+  s.progress.setAttribute("aria-live", "polite");
+  s.messages = create(s.document, "p", "mk-messages");
+  s.messages.setAttribute("aria-live", "polite");
+  s.host.append(s.wrap);
+  if (s.withControls) s.host.append(s.controls, s.pad, s.says, s.progress, s.messages);
+  s.host.style.setProperty("--mkp-gutter", `${s.gutter}px`);
+  if (s.options.reserve !== undefined) s.host.style.setProperty("--mkp-reserve", `${s.options.reserve}px`);
+  else s.host.style.setProperty("--mkp-reserve", `${MEIKYUU_RESERVE}px`);
 
-  const button = (name: string, onPress: () => void, parent: HTMLElement, text?: string): HTMLButtonElement => {
-    const one = create(document, "button", "mk-button");
+  s.button = (name: string, onPress: () => void, parent: HTMLElement, text?: string): HTMLButtonElement => {
+    const one = create(s.document, "button", "mk-button");
     one.type = "button";
     one.dataset.action = name;
     one.addEventListener("click", onPress);
@@ -363,869 +334,240 @@ export function mountSolid(host: HTMLElement, options: SolidMountOptions): Solid
     parent.append(one);
     return one;
   };
-  const undoButton = button("undo", () => api.undo(), controls);
-  const restartButton = button("restart", () => api.restart(), controls);
-  const hintButton = button("hint", () => api.hint(), controls);
-  const stoneButton = button("stone", () => api.stoneMode(!stoneModeOn), controls);
-  const leftButton = button("turn-left", () => api.turn("left"), pad, "◀");
-  const upButton = button("turn-up", () => api.turn("up"), pad, "▲");
-  const downButton = button("turn-down", () => api.turn("down"), pad, "▼");
-  const rightButton = button("turn-right", () => api.turn("right"), pad, "▶");
-  const faceButton = button("face-me", () => api.faceMe(), pad);
-  const turnOnlyButton = button("turn-only", () => api.turnMode(!turnOnly), pad);
-  const outButton = button("out", () => api.zoomOut(), pad, "−");
-  const inButton = button("in", () => api.zoomIn(), pad, "+");
-  const fitButton = button("fit", () => api.fit(), pad);
+  s.undoButton = s.button("undo", () => s.api.undo(), s.controls);
+  s.restartButton = s.button("restart", () => s.api.restart(), s.controls);
+  s.hintButton = s.button("hint", () => s.api.hint(), s.controls);
+  s.stoneButton = s.button("stone", () => s.api.stoneMode(!s.stoneModeOn), s.controls);
+  s.leftButton = s.button("turn-left", () => s.api.turn("left"), s.pad, "◀");
+  s.upButton = s.button("turn-up", () => s.api.turn("up"), s.pad, "▲");
+  s.downButton = s.button("turn-down", () => s.api.turn("down"), s.pad, "▼");
+  s.rightButton = s.button("turn-right", () => s.api.turn("right"), s.pad, "▶");
+  s.faceButton = s.button("face-me", () => s.api.faceMe(), s.pad);
+  s.turnOnlyButton = s.button("turn-only", () => s.api.turnMode(!s.turnOnly), s.pad);
+  s.outButton = s.button("out", () => s.api.zoomOut(), s.pad, "−");
+  s.inButton = s.button("in", () => s.api.zoomIn(), s.pad, "+");
+  s.fitButton = s.button("fit", () => s.api.fit(), s.pad);
 
   // The state.
-  let recipe: SolidRecipe = first;
-  let maze: SolidMaze = buildSolidMaze(first);
-  let game: MazeGame<SolidMaze> = newMazeGame(maze, stoneRulesOf(stoneOption, maze.grid.cells));
-  let frame: SolidFrame = createFrame(maze.grid);
-  let turned: Quat = openingTurn(maze.grid, maze.start);
-  let zoom = 1;
-  let frameStale = true;
-  let hinted: { back: number; cells: readonly number[] } | null = null;
-  let message: { key: string; values: Record<string, string | number>; warn: boolean } | null = null;
-  let moves = 0;
-  let solveTold = false;
-  let pendingSolve = false;
-  let width = 1;
-  let height = 1;
-  let colours = readColours(canvas);
-  const context = canvas.getContext("2d");
+  s.recipe = first;
+  s.maze = buildSolidMaze(first);
+  s.game = newMazeGame(s.maze, stoneRulesOf(s.stoneOption, s.maze.grid.cells));
+  s.frame = createFrame(s.maze.grid);
+  s.turned = openingTurn(s.maze.grid, s.maze.start);
+  s.zoom = 1;
+  s.frameStale = true;
+  s.hinted = null;
+  s.message = null;
+  s.moves = 0;
+  s.solveTold = false;
+  s.pendingSolve = false;
+  s.width = 1;
+  s.height = 1;
+  s.colours = readColours(s.canvas);
+  s.context = s.canvas.getContext("2d");
 
-  const say = (key: string, values: Record<string, string | number> = {}): string => meikyuuSay(language, key, values);
-  const playSound = (kind: MeikyuuSoundKind): void => sounds?.play(kind);
-  const setMessage = (key: string | null, values: Record<string, string | number> = {}, warn = false): void => {
-    message = key === null ? null : { key, values, warn };
+  s.say = (key: string, values: Record<string, string | number> = {}): string => meikyuuSay(s.language, key, values);
+  s.playSound = (kind: MeikyuuSoundKind): void => s.sounds?.play(kind);
+  s.setMessage = (key: string | null, values: Record<string, string | number> = {}, warn = false): void => {
+    s.message = key === null ? null : { key, values, warn };
   };
-  const detail = (): SolidEventDetail => ({
+  s.detail = (): SolidEventDetail => ({
     kind: "solid",
-    solid: recipe.kind,
-    moves,
-    cells: game.path.length,
-    solved: game.solved,
-    stones: game.stones.length,
-    stonesLeft: stonesLeft(game),
+    solid: s.recipe.kind,
+    moves: s.moves,
+    cells: s.game.path.length,
+    solved: s.game.solved,
+    stones: s.game.stones.length,
+    stonesLeft: stonesLeft(s.game),
   });
-  const tell = (name: string, callback?: (detail: SolidEventDetail) => void): void => {
-    const info = detail();
+  s.tell = (name: string, callback?: (detail: SolidEventDetail) => void): void => {
+    const info = s.detail();
     callback?.(info);
-    host.dispatchEvent(new CustomEvent(name, { detail: info, bubbles: true }));
+    s.host.dispatchEvent(new CustomEvent(name, { detail: info, bubbles: true }));
   };
 
   // The picture: frames are made when asked for, and painted at the next animation frame.
-  let scheduled = 0;
-  let glide: { from: Quat; to: Quat; zoomFrom: number; zoomTo: number; start: number; length: number } | null = null;
-  let lastTick = 0;
-  let pointerOn: { x: number; y: number } | null = null;
-  let drawing = false;
+  s.scheduled = 0;
+  s.glide = null;
+  s.lastTick = 0;
+  s.pointerOn = null;
+  s.drawing = false;
 
-  const frameNow = (): SolidFrame => {
-    if (frameStale) {
-      projectFrame(frame, maze.grid, turned, zoom, width, height);
-      frameStale = false;
+  s.frameNow = (): SolidFrame => {
+    if (s.frameStale) {
+      projectFrame(s.frame, s.maze.grid, s.turned, s.zoom, s.width, s.height);
+      s.frameStale = false;
     }
-    return frame;
+    return s.frame;
   };
-  const invalidate = (): void => {
-    frameStale = true;
-    schedule();
+  s.invalidate = (): void => {
+    s.frameStale = true;
+    s.schedule();
   };
-  const schedule = (): void => {
-    if (scheduled === 0) scheduled = windowOf.requestAnimationFrame(tick);
+  s.schedule = (): void => {
+    if (s.scheduled === 0) s.scheduled = s.windowOf.requestAnimationFrame(tick);
   };
   function paint(): void {
-    if (context === null) return;
-    const now = frameNow();
-    paintSolid(context as unknown as PaintContext, maze, now, colours, {
-      path: game.path,
-      stones: game.stones,
-      hint: hinted,
-      won: game.solved,
-      wall: look.wall ?? 0.12,
-      line: look.line ?? 0.34,
+    if (s.context === null) return;
+    const now = s.frameNow();
+    paintSolid(s.context as unknown as PaintContext, s.maze, now, s.colours, {
+      path: s.game.path,
+      stones: s.game.stones,
+      hint: s.hinted,
+      won: s.game.solved,
+      wall: s.look.wall ?? 0.12,
+      line: s.look.line ?? 0.34,
     });
   }
   function tick(time: number): void {
-    scheduled = 0;
-    const seconds = lastTick === 0 ? 1 / 60 : Math.min(0.05, (time - lastTick) / 1000);
-    lastTick = time;
+    s.scheduled = 0;
+    const seconds = s.lastTick === 0 ? 1 / 60 : Math.min(0.05, (time - s.lastTick) / 1000);
+    s.lastTick = time;
     let moving = false;
-    if (glide !== null) {
-      const t = Math.min(1, (time - glide.start) / glide.length);
+    if (s.glide !== null) {
+      const t = Math.min(1, (time - s.glide.start) / s.glide.length);
       const eased = t * t * (3 - 2 * t);
-      turned = quatSlerp(glide.from, glide.to, eased);
-      zoom = glide.zoomFrom + (glide.zoomTo - glide.zoomFrom) * eased;
-      frameStale = true;
-      if (t >= 1) glide = null;
+      s.turned = quatSlerp(s.glide.from, s.glide.to, eased);
+      s.zoom = s.glide.zoomFrom + (s.glide.zoomTo - s.glide.zoomFrom) * eased;
+      s.frameStale = true;
+      if (t >= 1) s.glide = null;
       else {
         moving = true;
         inMotion();
       }
     }
     // A line being drawn to the edge of the side in view turns the solid toward it, and the finger, still, is then over cells further on.
-    if (drawing && edgeOn && !game.solved) {
-      const head = headOf(game);
+    if (s.drawing && s.edgeOn && !s.game.solved) {
+      const head = headOf(s.game);
       if (head !== null) {
         // On a solid with parts that hide parts a cell the line is running into may be hidden: the solid is then turned to a side it can be seen from.
         const next = edgeTurn(
-          maze.grid,
-          maze.links,
-          turned,
+          s.maze.grid,
+          s.maze.links,
+          s.turned,
           head,
           seconds,
-          maze.grid.convex ? undefined : (cell) => !cellSeen(frameNow(), maze.grid, cell),
+          s.maze.grid.convex ? undefined : (cell) => !cellSeen(s.frameNow(), s.maze.grid, cell),
         );
         if (next !== null) {
-          turned = next;
-          frameStale = true;
+          s.turned = next;
+          s.frameStale = true;
           moving = true;
           inMotion();
-          if (pointerOn !== null) followPointer(pointerOn.x, pointerOn.y);
+          if (s.pointerOn !== null) s.followPointer(s.pointerOn.x, s.pointerOn.y);
         }
       }
     }
     paint();
-    if (moving) schedule();
-    else lastTick = 0;
+    if (moving) s.schedule();
+    else s.lastTick = 0;
   }
   function glideTo(q: Quat, to: number): void {
-    if (still()) {
-      glide = null;
-      turned = q;
-      zoom = to;
-      invalidate();
+    if (s.still()) {
+      s.glide = null;
+      s.turned = q;
+      s.zoom = to;
+      s.invalidate();
       return;
     }
-    glide = { from: turned, to: q, zoomFrom: zoom, zoomTo: to, start: windowOf.performance.now(), length: GLIDE };
+    s.glide = {
+      from: s.turned,
+      to: q,
+      zoomFrom: s.zoom,
+      zoomTo: to,
+      start: s.windowOf.performance.now(),
+      length: GLIDE,
+    };
     inMotion();
-    lastTick = 0;
-    schedule();
+    s.lastTick = 0;
+    s.schedule();
   }
 
   // The box: its size, and the canvas to match. While the solid is moving the canvas is painted at a lower resolution (about half the pixels) and put back a moment after it
   // stops: the picture is the same and a phone is not asked to fill the full number of pixels sixty times a second.
-  let sharp = true;
-  let sharpTimer = 0;
+  s.sharp = true;
+  s.sharpTimer = 0;
   function measure(): void {
-    const rect = box.getBoundingClientRect();
+    const rect = s.box.getBoundingClientRect();
     const w = Math.max(1, Math.round(rect.width));
     const h = Math.max(1, Math.round(rect.height));
-    const dpr = Math.min(2, windowOf.devicePixelRatio || 1) * (sharp ? 1 : MOVING_SHARPNESS);
-    if (w === width && h === height && canvas.width === Math.round(w * dpr)) return;
-    width = w;
-    height = h;
-    canvas.width = Math.round(w * dpr);
-    canvas.height = Math.round(h * dpr);
-    context?.setTransform(canvas.width / w, 0, 0, canvas.height / h, 0, 0);
-    invalidate();
+    const dpr = Math.min(2, s.windowOf.devicePixelRatio || 1) * (s.sharp ? 1 : MOVING_SHARPNESS);
+    if (w === s.width && h === s.height && s.canvas.width === Math.round(w * dpr)) return;
+    s.width = w;
+    s.height = h;
+    s.canvas.width = Math.round(w * dpr);
+    s.canvas.height = Math.round(h * dpr);
+    s.context?.setTransform(s.canvas.width / w, 0, 0, s.canvas.height / h, 0, 0);
+    s.invalidate();
   }
   /** The solid is moving: paint at the lower resolution now, and at the full one again once it has been still for a moment. */
   function inMotion(): void {
-    windowOf.clearTimeout(sharpTimer);
-    if (sharp && Math.min(2, windowOf.devicePixelRatio || 1) > 1) {
-      sharp = false;
+    s.windowOf.clearTimeout(s.sharpTimer);
+    if (s.sharp && Math.min(2, s.windowOf.devicePixelRatio || 1) > 1) {
+      s.sharp = false;
       measure();
     }
-    sharpTimer = windowOf.setTimeout(() => {
-      if (sharp) return;
-      sharp = true;
+    s.sharpTimer = s.windowOf.setTimeout(() => {
+      if (s.sharp) return;
+      s.sharp = true;
       measure();
     }, SHARP_AFTER);
   }
-  const looking = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(measure);
-  looking?.observe(box);
-  windowOf.addEventListener("resize", measure);
+  s.looking = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(measure);
+  s.looking?.observe(s.box);
+  s.windowOf.addEventListener("resize", measure);
 
   // What the line says, in words, and the buttons' states.
-  function words(): void {
-    const solved = game.solved;
-    host.dataset.kind = "solid";
-    host.dataset.solid = recipe.kind;
-    host.dataset.solved = String(solved);
-    host.dataset.moves = String(moves);
-    host.dataset.cells = String(game.path.length);
-    host.dataset.reached = String(game.solved);
-    host.dataset.turnMode = String(turnOnly);
-    host.dataset.stones = String(game.stones.length);
-    host.dataset.stoneMode = String(stoneModeOn && game.rules !== null);
-    if (game.rules !== null) host.dataset.stonesLeft = String(stonesLeft(game) ?? "none");
-    else delete host.dataset.stonesLeft;
-    const label = say("solidLabel", {
-      shape: say(`solid_${recipe.kind}`),
-      n: maze.grid.cells,
-      play: say("play_solid"),
-    });
-    box.setAttribute("aria-label", label);
-    banner.sync(say("solved", { n: moves }), say("closeMessage"), solved);
-    undoButton.textContent = say("undo");
-    restartButton.textContent = say("restart");
-    hintButton.textContent = say("hint");
-    hintButton.hidden = !withHints;
-    stoneButton.hidden = game.rules === null;
-    stoneButton.textContent = say("stone");
-    stoneButton.setAttribute("aria-label", say("stoneLabel"));
-    stoneButton.setAttribute("aria-pressed", String(stoneModeOn && game.rules !== null));
-    stoneButton.disabled = solved;
-    for (const [one, key] of [
-      [leftButton, "turnLeft"],
-      [rightButton, "turnRight"],
-      [upButton, "turnUp"],
-      [downButton, "turnDown"],
-    ] as const)
-      one.setAttribute("aria-label", say(key));
-    pad.setAttribute("aria-label", say("turnPadLabel"));
-    faceButton.textContent = say("faceMe");
-    faceButton.setAttribute("aria-label", say("faceMeLabel"));
-    turnOnlyButton.textContent = say("solidTurnMode");
-    turnOnlyButton.setAttribute("aria-label", say("solidTurnModeLabel"));
-    turnOnlyButton.setAttribute("aria-pressed", String(turnOnly));
-    turnOnlyButton.hidden = !drawable;
-    fitButton.textContent = say("fit");
-    outButton.setAttribute("aria-label", say("zoomOut"));
-    inButton.setAttribute("aria-label", say("zoomIn"));
-    for (const one of [outButton, inButton, fitButton]) one.hidden = !withZoom;
-    outButton.disabled = zoom <= SOLID_ZOOM_LEAST + 1e-6;
-    inButton.disabled = zoom >= SOLID_ZOOM_MOST - 1e-6;
-    fitButton.disabled = Math.abs(zoom - 1) < 1e-6;
-    undoButton.disabled = game.undo.length === 0;
-    restartButton.disabled = game.path.length === 0 && game.strokes === 0 && game.stones.length === 0;
-    hintButton.disabled = solved;
-    if (!withControls) return;
-    const joiner = language === "ja" ? "" : " ";
-    says.textContent = stoneModeOn && game.rules !== null ? say("stoneHow", { n: game.rules.reach }) : say("solidHow");
-    const parts: string[] = [];
-    if (solved) parts.push(say("solved", { n: moves }));
-    else {
-      parts.push(game.path.length === 0 ? say("notStarted") : say("drawn", { n: game.path.length }));
-      if (game.rules !== null) {
-        const left = stonesLeft(game);
-        parts.push(left === null ? say("stonesFree", { n: game.stones.length }) : say("stonesLeft", { n: left }));
-      }
-    }
-    progress.textContent = parts.join(joiner);
-    messages.textContent = message === null ? "" : say(message.key, message.values);
-    messages.dataset.warn = String(message?.warn === true);
-  }
-  function refresh(): void {
-    words();
-    invalidate();
-  }
+  s.paint = paint;
+  s.glideTo = glideTo;
+  s.measure = measure;
+  s.inMotion = inMotion;
+  bindSolidPlay(s);
+  if (!s.picture) s.host.addEventListener("keydown", s.onKey);
 
-  const STONE_WHY: Partial<Record<StoneVerdict, string>> = {
-    far: "stoneFar",
-    "on-line": "stoneOnLine",
-    end: "stoneEnd",
-    limit: "stoneLimit",
-    "no-line": "stoneNoLine",
-    solved: "stoneSolved",
-    drawing: "stoneDrawing",
-    "no-cell": "stoneFar",
-  };
-
-  function stonesMoved(before: MazeGame<SolidMaze>): void {
-    if (before.stones.length === game.stones.length && before.stones.every((cell, at) => cell === game.stones[at]))
-      return;
-    tell("meikyuu-stones", callbacks.onStones);
-  }
-
-  /** A stone asked for on a cell by a tap in the Stone mode or a press-and-hold: laid, taken up or refused with a word. True when that did something the player should see. */
-  function layStoneAt(cell: number, how: "tap" | "hold"): boolean {
-    if (game.rules === null) return false;
-    const before = how === "hold" && game.drawing ? liftMaze(game) : game;
-    const result = toggleStone(before, cell);
-    hinted = null;
-    if (result.how === "refused") {
-      if (how === "hold" && (result.why === "no-line" || result.why === "solved" || result.why === "drawing"))
-        return false;
-      game = before;
-      setMessage(STONE_WHY[result.why] ?? "stoneFar", { n: before.rules?.reach ?? 2 }, true);
-      playSound("bump");
-      refresh();
-      return true;
-    }
-    const prior = game;
-    game = result.game;
-    setMessage(result.how === "laid" ? "stoneLaid" : "stoneTaken");
-    playSound(result.how === "laid" ? "stone" : "back");
-    refresh();
-    stonesMoved(prior);
-    return true;
-  }
-
-  function onChange(next: MazeGame<SolidMaze>, how: "press" | "drag" | "lift" | "tap"): void {
-    const before = game;
-    game = next;
-    if (how === "press" || how === "tap") {
-      hinted = null;
-      setMessage(null);
-    }
-    if (how === "drag" || how === "tap") {
-      if (next.path.length > before.path.length) playSound("step");
-      else if (next.path.length < before.path.length) playSound("back");
-    }
-    if (next.solved && !before.solved) pendingSolve = true;
-    if (how === "lift" || how === "tap") {
-      if (next.strokes !== before.strokes) {
-        moves += 1;
-        tell("meikyuu-move", callbacks.onMove);
-      }
-      if (pendingSolve) {
-        pendingSolve = false;
-        if (!solveTold) {
-          solveTold = true;
-          playSound("solve");
-          tell("meikyuu-solve", callbacks.onSolve);
-        }
-      }
-    }
-    refresh();
-  }
-
-  function begin(next: SolidRecipe): void {
-    recipe = next;
-    maze = buildSolidMaze(next);
-    game = newMazeGame(maze, stoneRulesOf(stoneOption, maze.grid.cells));
-    frame = createFrame(maze.grid);
-    turned = openingTurn(maze.grid, maze.start);
-    zoom = 1;
-    glide = null;
-    hinted = null;
-    message = null;
-    moves = 0;
-    solveTold = false;
-    pendingSolve = false;
-    applyLook(canvas, look);
-    colours = readColours(canvas);
-    measure();
-    refresh();
-  }
-
-  // Pointers.
-  const local = (event: { clientX: number; clientY: number }): [number, number] => {
-    const rect = box.getBoundingClientRect();
-    return [event.clientX - rect.left, event.clientY - rect.top];
-  };
-  const pointers = new Map<number, [number, number]>();
-  type Gesture =
-    | { mode: "draw"; id: number; last: [number, number] }
-    | {
-        mode: "turn";
-        id: number;
-        last: [number, number];
-        from: [number, number];
-        at: number;
-        moved: boolean;
-        hold: number;
-        held: boolean;
-      }
-    | { mode: "pinch"; mid: [number, number]; gap: number; angle: number };
-  let gesture: Gesture | null = null;
-
-  /** Whether a press at a point is on the cell that draws: the end of the line, or the start before there is one. */
-  function pressTarget(x: number, y: number): number | null {
-    if (!drawable || game.solved || turnOnly || stoneModeOn) return null;
-    const target = headOf(game) ?? maze.start;
-    const now = frameNow();
-    if (now.visible[target] === 0) {
-      setMessage("solidHidden", {}, true);
-      words();
-      return null;
-    }
-    if (pickCell(now, maze.grid, x, y) === target) return target;
-    const room = maze.grid.radii[target]! * now.scale * (now.eye / (now.eye - now.cz[target]!));
-    return Math.hypot(x - now.cx[target]!, y - now.cy[target]!) <= Math.max(REACH, room * 1.3) ? target : null;
-  }
-
-  /** Offer the game the cells a finger passed from one point to another. */
-  function followDrag(from: readonly [number, number], to: readonly [number, number]): void {
-    const now = frameNow();
-    let next = game;
-    for (const cell of cellsAlongDrag(now, maze.grid, from, to)) next = dragMaze(next, cell);
-    if (next !== game) onChange(next, "drag");
-  }
-  /** Offer the game the cell under a finger that has not moved while the solid turned under it. */
-  function followPointer(x: number, y: number): void {
-    const cell = pickCell(frameNow(), maze.grid, x, y);
-    if (cell < 0) return;
-    const next = dragMaze(game, cell);
-    if (next !== game) onChange(next, "drag");
-  }
-
-  const endGesture = (lifted: boolean): void => {
-    const was = gesture;
-    gesture = null;
-    drawing = false;
-    pointerOn = null;
-    if (was?.mode === "draw") onChange(liftMaze(game), "lift");
-    else if (was?.mode === "turn") {
-      windowOf.clearTimeout(was.hold);
-      if (lifted && !was.moved && !was.held && windowOf.performance.now() - was.at < TAP_TIME) {
-        const cell = pickCell(frameNow(), maze.grid, was.last[0], was.last[1]);
-        if (cell >= 0) {
-          if (stoneModeOn && game.rules !== null) layStoneAt(cell, "tap");
-          else if (tapExtends && drawable && !game.solved) onChange(tapMaze(game, cell), "tap");
-        }
-      }
-    }
-  };
-
-  const onDown = (event: PointerEvent): void => {
-    if (event.pointerType === "mouse" && event.button !== 0) return;
-    // A pointer the browser does not know (a script's) cannot be captured, and need not be.
-    try {
-      box.setPointerCapture?.(event.pointerId);
-    } catch {
-      /* Not captured; the board still plays. */
-    }
-    const at = local(event);
-    pointers.set(event.pointerId, at);
-    glide = null;
-    if (pointers.size === 2) {
-      endGesture(false);
-      const [a, b] = [...pointers.values()] as [[number, number], [number, number]];
-      gesture = {
-        mode: "pinch",
-        mid: [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2],
-        gap: Math.hypot(a[0] - b[0], a[1] - b[1]) || 1,
-        angle: Math.atan2(b[1] - a[1], b[0] - a[0]),
-      };
-      return;
-    }
-    if (pointers.size > 2) return;
-    const target = pressTarget(at[0], at[1]);
-    if (target !== null) {
-      gesture = { mode: "draw", id: event.pointerId, last: at };
-      drawing = true;
-      pointerOn = { x: at[0], y: at[1] };
-      onChange(pressMaze(game, target), "press");
-      schedule();
-      return;
-    }
-    const turnGesture: Gesture & { mode: "turn" } = {
-      mode: "turn",
-      id: event.pointerId,
-      last: at,
-      from: at,
-      at: windowOf.performance.now(),
-      moved: false,
-      hold: 0,
-      held: false,
-    };
-    // Press and hold lays a stone where the finger is, if the game has stones and the finger is not on the line.
-    if (game.rules !== null) {
-      turnGesture.hold = windowOf.setTimeout(() => {
-        if (gesture !== turnGesture || turnGesture.moved) return;
-        const cell = pickCell(frameNow(), maze.grid, turnGesture.last[0], turnGesture.last[1]);
-        if (cell >= 0 && !game.path.includes(cell) && layStoneAt(cell, "hold")) turnGesture.held = true;
-      }, HOLD_TIME);
-    }
-    gesture = turnGesture;
-  };
-
-  const onMove = (event: PointerEvent): void => {
-    if (!pointers.has(event.pointerId)) return;
-    const at = local(event);
-    pointers.set(event.pointerId, at);
-    const now = gesture;
-    if (now === null) return;
-    if (now.mode === "draw") {
-      pointerOn = { x: at[0], y: at[1] };
-      followDrag(now.last, at);
-      now.last = at;
-    } else if (now.mode === "turn") {
-      if (!now.moved && Math.hypot(at[0] - now.from[0], at[1] - now.from[1]) > TAP_SLOP) now.moved = true;
-      if (!now.moved || now.held) return;
-      turned = dragTurn(frameNow(), turned, now.last, at);
-      now.last = at;
-      inMotion();
-      invalidate();
-    } else if (now.mode === "pinch" && pointers.size >= 2) {
-      const [a, b] = [...pointers.values()] as [[number, number], [number, number]];
-      const mid: [number, number] = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
-      const gap = Math.hypot(a[0] - b[0], a[1] - b[1]) || 1;
-      const angle = Math.atan2(b[1] - a[1], b[0] - a[0]);
-      let q = dragTurn(frameNow(), turned, now.mid, mid);
-      q = quatNormalize(quatMul(quatAxisAngle([0, 0, 1], angle - now.angle), q));
-      turned = q;
-      zoom = Math.min(SOLID_ZOOM_MOST, Math.max(SOLID_ZOOM_LEAST, zoom * (gap / now.gap)));
-      now.mid = mid;
-      now.gap = gap;
-      now.angle = angle;
-      inMotion();
-      invalidate();
-      words();
-    }
-  };
-
-  const onUp = (event: PointerEvent): void => {
-    if (!pointers.has(event.pointerId)) return;
-    pointers.delete(event.pointerId);
-    try {
-      box.releasePointerCapture?.(event.pointerId);
-    } catch {
-      /* Not captured. */
-    }
-    if (gesture?.mode === "pinch") {
-      if (pointers.size < 2) {
-        gesture = null;
-        // The finger left down does not go on to turn or draw: it is let go of, and the next press begins anew.
-        pointers.clear();
-      }
-      return;
-    }
-    endGesture(event.type === "pointerup");
-  };
-
-  const onCancel = (event: PointerEvent): void => onUp(event);
-
-  const onWheel = (event: WheelEvent): void => {
-    event.preventDefault();
-    glide = null;
-    zoom = Math.min(
-      SOLID_ZOOM_MOST,
-      Math.max(SOLID_ZOOM_LEAST, zoom * Math.exp(-event.deltaY * (event.ctrlKey ? 0.01 : 0.0015))),
-    );
-    inMotion();
-    invalidate();
-    words();
-  };
-
-  if (!picture) {
-    box.addEventListener("pointerdown", onDown);
-    box.addEventListener("pointermove", onMove);
-    box.addEventListener("pointerup", onUp);
-    box.addEventListener("pointercancel", onCancel);
-    box.addEventListener("wheel", onWheel, { passive: false });
-  }
-
-  /** The way a key points (dx, dy, y down) as one step of the line: the linked neighbour of the line's end that lies nearest that way on the picture. */
-  function neighbourToward(dx: number, dy: number): number {
-    const head = headOf(game);
-    if (head === null) return -1;
-    const now = frameNow();
-    let best = -1;
-    let bestCosine = 0.5;
-    const candidates = [...maze.links[head]!, ...(game.path.length > 1 ? [game.path[game.path.length - 2]!] : [])];
-    for (const next of candidates) {
-      const vx = now.cx[next]! - now.cx[head]!;
-      const vy = now.cy[next]! - now.cy[head]!;
-      const cosine = (vx * dx + vy * dy) / ((Math.hypot(vx, vy) || 1) * Math.hypot(dx, dy));
-      if (cosine > bestCosine) {
-        bestCosine = cosine;
-        best = next;
-      }
-    }
-    return best;
-  }
-  function stepByKey(dx: number, dy: number): void {
-    if (!drawable || game.solved) return;
-    const head = headOf(game);
-    if (head === null) {
-      if (frameNow().visible[maze.start] === 0) {
-        setMessage("solidHidden", {}, true);
-        words();
-        return;
-      }
-      onChange(liftMaze(pressMaze(game, maze.start)), "tap");
-      return;
-    }
-    if (frameNow().visible[head] === 0) {
-      setMessage("solidHidden", {}, true);
-      words();
-      return;
-    }
-    const next = neighbourToward(dx, dy);
-    if (next >= 0) onChange(liftMaze(dragMaze(pressMaze(game, head), next)), "tap");
-  }
-  const onKey = (event: KeyboardEvent): void => {
-    if ((event.ctrlKey || event.metaKey) && !event.shiftKey && event.key.toLowerCase() === "z") {
-      event.preventDefault();
-      api.undo();
-      return;
-    }
-    if (event.target !== box) return;
-    const turns: Record<string, "left" | "right" | "up" | "down"> = {
-      ArrowLeft: "left",
-      ArrowRight: "right",
-      ArrowUp: "up",
-      ArrowDown: "down",
-    };
-    const steps: Record<string, [number, number]> = { w: [0, -1], s: [0, 1], a: [-1, 0], d: [1, 0] };
-    const key = event.key;
-    if (turns[key] !== undefined) {
-      event.preventDefault();
-      api.turn(turns[key]!);
-    } else if (steps[key.toLowerCase()] !== undefined && !event.ctrlKey && !event.metaKey) {
-      event.preventDefault();
-      const [dx, dy] = steps[key.toLowerCase()]!;
-      if (event.shiftKey && game.rules !== null) {
-        const next = neighbourToward(dx, dy);
-        if (next >= 0) layStoneAt(next, "tap");
-      } else stepByKey(dx, dy);
-    } else if (key === "Enter" || key === " ") {
-      event.preventDefault();
-      if (game.path.length === 0) stepByKey(0, 0);
-    } else if (key === "f" || key === "F" || key === "Home") {
-      event.preventDefault();
-      api.faceMe();
-    } else if (key === "+" || key === "=") api.zoomIn();
-    else if (key === "-" || key === "_") api.zoomOut();
-    else if (key === "Backspace" || key === "Delete") {
-      event.preventDefault();
-      api.undo();
-    }
-  };
-  if (!picture) host.addEventListener("keydown", onKey);
-
-  const watching =
+  s.watching =
     typeof MutationObserver === "undefined"
       ? null
       : new MutationObserver(() => {
-          if (explicitLanguage !== undefined) return;
-          const next = meikyuuLanguageOf(host.closest("[lang]")?.getAttribute("lang") ?? document.documentElement.lang);
-          if (next === language) return;
-          language = next;
-          words();
+          if (s.explicitLanguage !== undefined) return;
+          const next = meikyuuLanguageOf(
+            s.host.closest("[lang]")?.getAttribute("lang") ?? s.document.documentElement.lang,
+          );
+          if (next === s.language) return;
+          s.language = next;
+          s.words();
         });
-  watching?.observe(document.documentElement, { attributes: true, attributeFilter: ["lang"] });
+  s.watching?.observe(s.document.documentElement, { attributes: true, attributeFilter: ["lang"] });
   // The page going light or dark changes the colours the canvas reads.
-  const theme =
+  s.theme =
     typeof MutationObserver === "undefined"
       ? null
       : new MutationObserver(() => {
-          colours = readColours(canvas);
-          invalidate();
+          s.colours = readColours(s.canvas);
+          s.invalidate();
         });
-  theme?.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme", "class", "style"] });
-  const scheme = typeof windowOf.matchMedia === "function" ? windowOf.matchMedia("(prefers-color-scheme: dark)") : null;
-  const onScheme = (): void => {
-    colours = readColours(canvas);
-    invalidate();
+  s.theme?.observe(s.document.documentElement, { attributes: true, attributeFilter: ["data-theme", "class", "style"] });
+  s.scheme = typeof s.windowOf.matchMedia === "function" ? s.windowOf.matchMedia("(prefers-color-scheme: dark)") : null;
+  s.onScheme = (): void => {
+    s.colours = readColours(s.canvas);
+    s.invalidate();
   };
-  scheme?.addEventListener?.("change", onScheme);
+  s.scheme?.addEventListener?.("change", s.onScheme);
 
-  const cellPlace = (cell: number): SolidCellPlace => {
-    const now = frameNow();
+  s.cellPlace = (cell: number): SolidCellPlace => {
+    const now = s.frameNow();
     return {
       x: now.cx[cell]!,
       y: now.cy[cell]!,
-      visible: cellSeen(now, maze.grid, cell),
+      visible: cellSeen(now, s.maze.grid, cell),
       facing: now.facing[cell]!,
-      room: maze.grid.radii[cell]! * now.scale * (now.eye / (now.eye - now.cz[cell]!)),
+      room: s.maze.grid.radii[cell]! * now.scale * (now.eye / (now.eye - now.cz[cell]!)),
     };
   };
 
-  const api: SolidMount = {
-    host,
-    recipe: () => recipe,
-    maze: () => maze,
-    mazeGame: () => game,
-    load: (next) => {
-      const made = recipeOf(next);
-      if (made === null) return false;
-      begin(made);
-      return true;
-    },
-    set: (changes) => {
-      const {
-        tap,
-        sound,
-        hints,
-        banner: showBanner,
-        language: nextLanguage,
-        stones: nextStones,
-        edgeTurn: nextEdge,
-        ...nextLook
-      } = changes;
-      if ("stones" in changes) {
-        stoneOption = nextStones;
-        const before = game;
-        game = withStoneRules(game, stoneRulesOf(stoneOption, maze.grid.cells));
-        if (game.rules === null) stoneModeOn = false;
-        stonesMoved(before);
-      }
-      look = { ...look, ...nextLook };
-      if (tap !== undefined) tapExtends = tap;
-      if (hints !== undefined) withHints = hints;
-      if (showBanner !== undefined) banner.enable(showBanner);
-      if (nextEdge !== undefined) edgeOn = nextEdge;
-      if (sound !== undefined) {
-        if (sound && sounds === null) sounds = createMeikyuuSounds();
-        else if (!sound) {
-          sounds?.destroy();
-          sounds = null;
-        }
-      }
-      if (nextLanguage !== undefined) {
-        explicitLanguage = nextLanguage;
-        language = nextLanguage;
-      }
-      applyLook(canvas, look);
-      colours = readColours(canvas);
-      refresh();
-    },
-    undo: () => {
-      hinted = null;
-      setMessage(null);
-      const next = undoMaze(game);
-      if (next === game) return;
-      const before = game;
-      game = next;
-      playSound("back");
-      refresh();
-      stonesMoved(before);
-    },
-    restart: () => {
-      hinted = null;
-      setMessage(null);
-      const next = restartMaze(game);
-      if (next === game) return;
-      const before = game;
-      game = next;
-      solveTold = false;
-      moves = 0;
-      refresh();
-      stonesMoved(before);
-    },
-    hint: () => {
-      hinted = hintMaze(game, Math.max(6, Math.round(Math.sqrt(maze.grid.cells) / 2)));
-      setMessage(game.path.length === 0 ? "hintStart" : hinted.back > 0 ? "hintBack" : "hintAhead", { n: hinted.back });
-      refresh();
-    },
-    turn: (by) => {
-      const [right, down] =
-        typeof by === "string"
-          ? ({ left: [-TURN_STEP, 0], right: [TURN_STEP, 0], up: [0, -TURN_STEP], down: [0, TURN_STEP] } as const)[by]
-          : [by.right ?? 0, by.down ?? 0];
-      glideTo(stepTurn(glide?.to ?? turned, right, down), glide?.zoomTo ?? zoom);
-    },
-    faceMe: (cell) => {
-      const target = cell ?? headOf(game) ?? maze.start;
-      glideTo(faceCellTurn(maze.grid, turned, target, true), zoom);
-    },
-    zoomIn: () => {
-      glideTo(glide?.to ?? turned, Math.min(SOLID_ZOOM_MOST, (glide?.zoomTo ?? zoom) * 1.4));
-      words();
-    },
-    zoomOut: () => {
-      glideTo(glide?.to ?? turned, Math.max(SOLID_ZOOM_LEAST, (glide?.zoomTo ?? zoom) / 1.4));
-      words();
-    },
-    fit: () => {
-      glideTo(glide?.to ?? turned, 1);
-      words();
-    },
-    turnMode: (on) => {
-      if (on !== undefined) {
-        turnOnly = on;
-        words();
-      }
-      return turnOnly;
-    },
-    edgeTurn: (on) => {
-      if (on !== undefined) edgeOn = on;
-      return edgeOn;
-    },
-    view: (to) => {
-      if (to !== undefined) {
-        glide = null;
-        if (to.q !== undefined) turned = quatNormalize(to.q);
-        if (to.zoom !== undefined) zoom = Math.min(SOLID_ZOOM_MOST, Math.max(SOLID_ZOOM_LEAST, to.zoom));
-        invalidate();
-        words();
-      }
-      return { q: turned, zoom };
-    },
-    place: cellPlace,
-    between: (a, b) => {
-      const side = maze.grid.neighbours[a]?.indexOf(b) ?? -1;
-      if (side < 0) return null;
-      const edge = maze.grid.edges[maze.grid.sideEdge[a]![side]!]!;
-      const now = frameNow();
-      return { x: (now.sx[edge.a]! + now.sx[edge.b]!) / 2, y: (now.sy[edge.a]! + now.sy[edge.b]!) / 2 };
-    },
-    pick: (x, y) => pickCell(frameNow(), maze.grid, x, y),
-    stoneMode: (on) => {
-      const possible = game.rules !== null;
-      if (on !== undefined && (on && possible) !== stoneModeOn) {
-        stoneModeOn = on && possible;
-        words();
-      }
-      return stoneModeOn && possible;
-    },
-    stones: () => game.stones,
-    stonesLeft: () => stonesLeft(game),
-    stone: (cell) => {
-      const result = toggleStone(game, cell);
-      if (result.how === "refused") return result.why;
-      layStoneAt(cell, "tap");
-      return "ok";
-    },
-    clearStones: () => {
-      const before = game;
-      const next = clearStones(before);
-      if (next === before) return;
-      game = next;
-      setMessage(null);
-      refresh();
-      stonesMoved(before);
-    },
-    run: () => encodeRun(game),
-    restore: (code) => {
-      const restored = decodeRun(maze, code, game.rules);
-      if (restored === null) return false;
-      const before = game;
-      game = restored;
-      hinted = null;
-      setMessage(null);
-      moves = restored.strokes;
-      solveTold = restored.solved;
-      pendingSolve = false;
-      refresh();
-      stonesMoved(before);
-      return true;
-    },
-    destroy: () => {
-      windowOf.cancelAnimationFrame(scheduled);
-      if (gesture?.mode === "turn") windowOf.clearTimeout(gesture.hold);
-      box.removeEventListener("pointerdown", onDown);
-      box.removeEventListener("pointermove", onMove);
-      box.removeEventListener("pointerup", onUp);
-      box.removeEventListener("pointercancel", onCancel);
-      box.removeEventListener("wheel", onWheel);
-      host.removeEventListener("keydown", onKey);
-      banner.destroy();
-      windowOf.removeEventListener("resize", measure);
-      looking?.disconnect();
-      watching?.disconnect();
-      theme?.disconnect();
-      scheme?.removeEventListener?.("change", onScheme);
-      sounds?.destroy();
-      host.style.removeProperty("--mkp-gutter");
-      host.style.removeProperty("--mkp-reserve");
-      host.replaceChildren();
-      host.classList.remove("meikyuu-play", "meikyuu-solid");
-      for (const name of [
-        "kind",
-        "solid",
-        "solved",
-        "moves",
-        "cells",
-        "reached",
-        "turnMode",
-        "stones",
-        "stoneMode",
-        "stonesLeft",
-      ])
-        delete host.dataset[name];
-      delete (host as unknown as { meikyuuSolid?: SolidMount }).meikyuuSolid;
-    },
-  };
+  const api = solidHandle(s);
 
-  (host as unknown as { meikyuuSolid?: SolidMount }).meikyuuSolid = api;
-  begin(first);
-  return api;
+  (s.host as unknown as { meikyuuSolid?: SolidMount }).meikyuuSolid = api;
+  s.begin(first);
+  return s.api;
 }

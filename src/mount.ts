@@ -1,46 +1,20 @@
-import {
-  type ArrowGame,
-  arrowsLeft,
-  hintArrow,
-  newArrowGame,
-  restartArrows,
-  tapArrow,
-  undoArrow,
-  unlockArrows,
-} from "./arrowGame.ts";
-import { type ArrowSurface, createArrowSurface } from "./arrowSurface.ts";
-import { type ArrowBoard, type ArrowRecipe, makeArrows, parseArrowRecipe } from "./arrows.ts";
+import { type ArrowGame, arrowsLeft } from "./arrowGame.ts";
+import type { ArrowSurface } from "./arrowSurface.ts";
+import { type ArrowRecipe, parseArrowRecipe } from "./arrows.ts";
 import { createBanner } from "./banner.ts";
 import type { MazeLook } from "./draw.ts";
-import {
-  dragMaze,
-  headOf,
-  hintMaze,
-  liftMaze,
-  type MazeGame,
-  newMazeGame,
-  pressMaze,
-  restartMaze,
-  undoMaze,
-} from "./game.ts";
+import type { MazeGame } from "./game.ts";
 import { levelOf, type MeikyuuKind } from "./levels.ts";
-import { buildMaze, type Maze, type MazeRecipe, parseRecipe } from "./maze.ts";
-import { createMazeSurface, type MazeSurface } from "./mazeSurface.ts";
-import { buildMixed, type MixedRecipe, parseMixedRecipe } from "./mixed.ts";
+import { type MazeRecipe, parseRecipe } from "./maze.ts";
+import type { MazeSurface } from "./mazeSurface.ts";
+import { type MixedRecipe, parseMixedRecipe } from "./mixed.ts";
+import { mountHandle } from "./mountApi.ts";
+import { bindPlay } from "./mountPlay.ts";
+import type { MountSession } from "./mountSession.ts";
 import { type MeikyuuOrientation, resolveTurn, type Turn } from "./orientation.ts";
 import { MEIKYUU_PLAY_STYLE } from "./playStyle.ts";
-import { createMeikyuuSounds, type MeikyuuSoundKind, type MeikyuuSounds } from "./sound.ts";
-import {
-  clearStones,
-  decodeRun,
-  encodeRun,
-  type StoneOption,
-  type StoneVerdict,
-  stoneRulesOf,
-  stonesLeft,
-  toggleStone,
-  withStoneRules,
-} from "./stones.ts";
+import { createMeikyuuSounds, type MeikyuuSoundKind } from "./sound.ts";
+import { type StoneOption, type StoneVerdict, stonesLeft } from "./stones.ts";
 import { type MeikyuuLanguage, meikyuuLanguageOf, meikyuuSay } from "./strings.ts";
 import type { FitMode } from "./viewport.ts";
 
@@ -388,9 +362,6 @@ function create<K extends keyof HTMLElementTagNameMap>(
   return element;
 }
 
-/** How near the way a key press points a neighbour has to be, as a cosine, to be the one stepped to. */
-const KEY_REACH = 0.5;
-
 /** Draw a puzzle into `host` and play it. Returns the handle that drives it, or null for a level or recipe that is none.
  * @param host - The HTMLElement that owns the native interface.
  * @param options - Native settings and callbacks for this mounted interface.
@@ -403,931 +374,284 @@ const KEY_REACH = 0.5;
  * ```
  */
 export function mountMeikyuu(host: HTMLElement, options: MeikyuuMountOptions = {}): MeikyuuMount | null {
-  const first = puzzleOf(options);
+  const s = {} as MountSession;
+  s.host = host;
+  s.options = options;
+  const first = puzzleOf(s.options);
   if (first === null) return null;
-  const document = host.ownerDocument;
-  ensureMeikyuuPlayStyle(host);
+  s.document = s.host.ownerDocument;
+  ensureMeikyuuPlayStyle(s.host);
 
-  let puzzle: MeikyuuPuzzle = first;
-  let look: MazeLook = { board: options.board, trail: options.trail, wall: options.wall, line: options.line };
-  let tapExtends = options.tap === true;
-  let stoneOption: StoneOption | undefined = options.stones;
-  let stoneModeOn = false;
-  let withHints = options.hints !== false;
-  const withControls = options.controls !== false;
-  const withZoom = options.zoom !== false;
-  let sounds: MeikyuuSounds | null = options.sound === true ? createMeikyuuSounds() : null;
-  let orientationSetting: MeikyuuOrientation = options.orientation ?? "auto";
-  let ratioOption: NonNullable<MeikyuuMountOptions["ratio"]> = options.ratio ?? "square";
-  const gutterLeast = Math.max(0, options.gutter ?? MEIKYUU_GUTTER);
-  const gutterMost = Math.max(gutterLeast, MEIKYUU_GUTTER_MAX);
-  let gutterNow = gutterLeast;
-  const reserve = options.reserve ?? MEIKYUU_RESERVE;
-  let panOn = options.pan === true;
-  let edgePanOn = options.edgePan !== false;
-  let fitMode: FitMode = options.fit ?? "both";
-  let turnNow: Turn = 0;
-  let explicitLanguage = options.language;
-  let language: MeikyuuLanguage =
-    explicitLanguage ??
-    meikyuuLanguageOf(host.closest("[lang]")?.getAttribute("lang") ?? document.documentElement.lang);
-  const callbacks = options;
-  const still = (): boolean =>
+  s.puzzle = first;
+  s.look = { board: s.options.board, trail: s.options.trail, wall: s.options.wall, line: s.options.line };
+  s.tapExtends = s.options.tap === true;
+  s.stoneOption = s.options.stones;
+  s.stoneModeOn = false;
+  s.withHints = s.options.hints !== false;
+  s.withControls = s.options.controls !== false;
+  s.withZoom = s.options.zoom !== false;
+  s.sounds = s.options.sound === true ? createMeikyuuSounds() : null;
+  s.orientationSetting = s.options.orientation ?? "auto";
+  s.ratioOption = s.options.ratio ?? "square";
+  s.gutterLeast = Math.max(0, s.options.gutter ?? MEIKYUU_GUTTER);
+  s.gutterMost = Math.max(s.gutterLeast, MEIKYUU_GUTTER_MAX);
+  s.gutterNow = s.gutterLeast;
+  s.reserve = s.options.reserve ?? MEIKYUU_RESERVE;
+  s.panOn = s.options.pan === true;
+  s.edgePanOn = s.options.edgePan !== false;
+  s.fitMode = s.options.fit ?? "both";
+  s.turnNow = 0;
+  s.explicitLanguage = s.options.language;
+  s.language =
+    s.explicitLanguage ??
+    meikyuuLanguageOf(s.host.closest("[lang]")?.getAttribute("lang") ?? s.document.documentElement.lang);
+  s.callbacks = s.options;
+  s.still = (): boolean =>
     typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   // The parts.
-  host.classList.add("meikyuu-play");
-  host.replaceChildren();
-  const tabs = create(document, "div", "mk-tabs");
-  tabs.setAttribute("role", "tablist");
-  const wrap = create(document, "div", "mk-wrap");
-  const box = create(document, "div", "mk-box");
-  box.tabIndex = 0;
-  box.setAttribute("role", "group");
-  const banner = createBanner(document, host, options.banner !== false);
-  wrap.append(box, banner.element);
-  const controls = create(document, "div", "mk-controls");
-  const pad = create(document, "div", "mk-pad");
-  pad.setAttribute("role", "group");
-  const says = create(document, "p", "mk-says");
-  const progress = create(document, "p", "mk-progress");
-  progress.setAttribute("aria-live", "polite");
-  const messages = create(document, "p", "mk-messages");
-  messages.setAttribute("aria-live", "polite");
-  host.append(tabs, wrap);
-  if (withControls) host.append(controls, pad, says, progress, messages);
+  s.host.classList.add("meikyuu-play");
+  s.host.replaceChildren();
+  s.tabs = create(s.document, "div", "mk-tabs");
+  s.tabs.setAttribute("role", "tablist");
+  s.wrap = create(s.document, "div", "mk-wrap");
+  s.box = create(s.document, "div", "mk-box");
+  s.box.tabIndex = 0;
+  s.box.setAttribute("role", "group");
+  s.banner = createBanner(s.document, s.host, s.options.banner !== false);
+  s.wrap.append(s.box, s.banner.element);
+  s.controls = create(s.document, "div", "mk-controls");
+  s.pad = create(s.document, "div", "mk-pad");
+  s.pad.setAttribute("role", "group");
+  s.says = create(s.document, "p", "mk-says");
+  s.progress = create(s.document, "p", "mk-progress");
+  s.progress.setAttribute("aria-live", "polite");
+  s.messages = create(s.document, "p", "mk-messages");
+  s.messages.setAttribute("aria-live", "polite");
+  s.host.append(s.tabs, s.wrap);
+  if (s.withControls) s.host.append(s.controls, s.pad, s.says, s.progress, s.messages);
 
-  const button = (
-    name: string,
-    onPress: () => void,
-    parent: HTMLElement,
-    className = "mk-button",
-  ): HTMLButtonElement => {
-    const one = create(document, "button", className);
+  s.button = (name: string, onPress: () => void, parent: HTMLElement, className = "mk-button"): HTMLButtonElement => {
+    const one = create(s.document, "button", className);
     one.type = "button";
     one.dataset.action = name;
     one.addEventListener("click", onPress);
     parent.append(one);
     return one;
   };
-  const undoButton = button("undo", () => api.undo(), controls);
-  const restartButton = button("restart", () => api.restart(), controls);
-  const hintButton = button("hint", () => api.hint(), controls);
-  const outButton = button("out", () => api.zoomOut(), pad);
-  const inButton = button("in", () => api.zoomIn(), pad);
-  const fitButton = button("fit", () => api.fit(), pad);
-  const panButton = button("pan", () => api.pan(!panOn), pad);
-  const stoneButton = button("stone", () => api.stoneMode(!stoneModeOn), controls);
-  const turnButton = button(
+  s.undoButton = s.button("undo", () => s.api.undo(), s.controls);
+  s.restartButton = s.button("restart", () => s.api.restart(), s.controls);
+  s.hintButton = s.button("hint", () => s.api.hint(), s.controls);
+  s.outButton = s.button("out", () => s.api.zoomOut(), s.pad);
+  s.inButton = s.button("in", () => s.api.zoomIn(), s.pad);
+  s.fitButton = s.button("fit", () => s.api.fit(), s.pad);
+  s.panButton = s.button("pan", () => s.api.pan(!s.panOn), s.pad);
+  s.stoneButton = s.button("stone", () => s.api.stoneMode(!s.stoneModeOn), s.controls);
+  s.turnButton = s.button(
     "turn",
     () =>
-      api.orientation(
-        turnNow === 1
-          ? orientationSetting === "landscape"
+      s.api.orientation(
+        s.turnNow === 1
+          ? s.orientationSetting === "landscape"
             ? "portrait"
             : "landscape"
-          : orientationSetting === "portrait"
+          : s.orientationSetting === "portrait"
             ? "landscape"
             : "portrait",
       ),
-    pad,
+    s.pad,
   );
-  outButton.textContent = "−";
-  inButton.textContent = "+";
-  const arrowsTab = button("tab-arrows", () => api.show("arrows"), tabs, "mk-tab");
-  const mazeTab = button("tab-maze", () => api.show("maze"), tabs, "mk-tab");
-  for (const tab of [arrowsTab, mazeTab]) tab.setAttribute("role", "tab");
+  s.outButton.textContent = "−";
+  s.inButton.textContent = "+";
+  s.arrowsTab = s.button("tab-arrows", () => s.api.show("arrows"), s.tabs, "mk-tab");
+  s.mazeTab = s.button("tab-maze", () => s.api.show("maze"), s.tabs, "mk-tab");
+  for (const tab of [s.arrowsTab, s.mazeTab]) tab.setAttribute("role", "tab");
 
   // The state.
-  let maze: Maze | null = null;
-  let mazeGame: MazeGame | null = null;
-  let board: ArrowBoard | null = null;
-  let arrowGame: ArrowGame | null = null;
-  let viewing: "maze" | "arrows" = "maze";
-  let hintedMaze: { back: number; cells: readonly number[] } | null = null;
-  let hintedArrow: number | null = null;
+  s.maze = null;
+  s.mazeGame = null;
+  s.board = null;
+  s.arrowGame = null;
+  s.viewing = "maze";
+  s.hintedMaze = null;
+  s.hintedArrow = null;
   /** The word of what has just happened, and which board it is about: it is not carried to the other tab of a mixed puzzle. */
-  let message: { key: string; values: Record<string, string | number>; warn: boolean; on: "maze" | "arrows" } | null =
-    null;
-  let pendingSolve = false;
-  let solveTold = false;
-  let moves = 0;
-  let mazeSurface: MazeSurface | null = null;
-  let arrowSurface: ArrowSurface | null = null;
+  s.message = null;
+  s.pendingSolve = false;
+  s.solveTold = false;
+  s.moves = 0;
+  s.mazeSurface = null;
+  s.arrowSurface = null;
 
-  const say = (key: string, values: Record<string, string | number> = {}): string => meikyuuSay(language, key, values);
-  const playSound = (kind: MeikyuuSoundKind): void => sounds?.play(kind);
-  const detail = (): MeikyuuEventDetail => ({
-    kind: puzzle.kind,
-    level: puzzle.level ?? null,
-    moves,
-    cells: mazeGame?.path.length ?? 0,
-    keys: mazeGame?.collected.length ?? 0,
-    keysOf: maze?.keys.length ?? 0,
-    hearts: arrowGame?.hearts ?? null,
-    arrowsLeft: arrowGame === null ? null : arrowsLeft(arrowGame),
-    solved: puzzle.kind === "maze" ? mazeGame?.solved === true : arrowGame?.status === "cleared",
+  s.say = (key: string, values: Record<string, string | number> = {}): string => meikyuuSay(s.language, key, values);
+  s.playSound = (kind: MeikyuuSoundKind): void => s.sounds?.play(kind);
+  s.detail = (): MeikyuuEventDetail => ({
+    kind: s.puzzle.kind,
+    level: s.puzzle.level ?? null,
+    moves: s.moves,
+    cells: s.mazeGame?.path.length ?? 0,
+    keys: s.mazeGame?.collected.length ?? 0,
+    keysOf: s.maze?.keys.length ?? 0,
+    hearts: s.arrowGame?.hearts ?? null,
+    arrowsLeft: s.arrowGame === null ? null : arrowsLeft(s.arrowGame),
+    solved: s.puzzle.kind === "maze" ? s.mazeGame?.solved === true : s.arrowGame?.status === "cleared",
     orientation: shownOrientation(),
-    turned: turnNow === 1,
-    stones: mazeGame?.stones.length ?? 0,
-    stonesLeft: mazeGame === null ? 0 : stonesLeft(mazeGame),
+    turned: s.turnNow === 1,
+    stones: s.mazeGame?.stones.length ?? 0,
+    stonesLeft: s.mazeGame === null ? 0 : stonesLeft(s.mazeGame),
   });
-  const tell = (name: string, callback?: (detail: MeikyuuEventDetail) => void): void => {
-    const info = detail();
+  s.tell = (name: string, callback?: (detail: MeikyuuEventDetail) => void): void => {
+    const info = s.detail();
     callback?.(info);
-    host.dispatchEvent(
+    s.host.dispatchEvent(
       new CustomEvent(name, { detail: JSON.parse(JSON.stringify(info)), bubbles: true, composed: true }),
     );
   };
-  const surfaceNow = (): MazeSurface | ArrowSurface | null => (viewing === "maze" ? mazeSurface : arrowSurface);
+  s.surfaceNow = (): MazeSurface | ArrowSurface | null => (s.viewing === "maze" ? s.mazeSurface : s.arrowSurface);
 
   // The box: its shape, the page beside it, and which way up the maze is shown.
   /** The shape of the box as the maze was made: width over height. */
-  const aspectNow = (): number => {
-    if (viewing !== "maze" || maze === null || ratioOption === "square") return 1;
-    if (ratioOption === "maze") return Math.min(2, Math.max(0.5, maze.grid.box.w / maze.grid.box.h));
-    return ratioOption > 0 ? ratioOption : 1;
+  s.aspectNow = (): number => {
+    if (s.viewing !== "maze" || s.maze === null || s.ratioOption === "square") return 1;
+    if (s.ratioOption === "maze") return Math.min(2, Math.max(0.5, s.maze.grid.box.w / s.maze.grid.box.h));
+    return s.ratioOption > 0 ? s.ratioOption : 1;
   };
   /** The room a board may have: the host's width less the gutters, and the window's height less what else is on the page. */
-  const roomNow = (): { width: number; height: number } | null => {
-    if (host.clientWidth <= 0) return null;
-    const window_ = host.ownerDocument.defaultView ?? window;
+  s.roomNow = (): { width: number; height: number } | null => {
+    if (s.host.clientWidth <= 0) return null;
+    const window_ = s.host.ownerDocument.defaultView ?? window;
     const height = window_.visualViewport?.height ?? window_.innerHeight;
-    return { width: Math.max(1, host.clientWidth - 2 * gutterLeast), height: Math.max(height - reserve, height * 0.6) };
+    return {
+      width: Math.max(1, s.host.clientWidth - 2 * s.gutterLeast),
+      height: Math.max(height - s.reserve, height * 0.6),
+    };
   };
-  const resolveNow = (): Turn =>
-    viewing !== "maze" || maze === null ? 0 : resolveTurn(orientationSetting, maze.grid.box, aspectNow(), roomNow());
+  s.resolveNow = (): Turn =>
+    s.viewing !== "maze" || s.maze === null
+      ? 0
+      : resolveTurn(s.orientationSetting, s.maze.grid.box, s.aspectNow(), s.roomNow());
   /** `portrait` when the maze is taller than wide as it is shown, `landscape` when it is wider. */
   function shownOrientation(): "portrait" | "landscape" | null {
-    if (viewing !== "maze" || maze === null) return null;
-    const { w, h } = maze.grid.box;
-    return (turnNow === 1 ? h > w : w > h) ? "landscape" : "portrait";
+    if (s.viewing !== "maze" || s.maze === null) return null;
+    const { w, h } = s.maze.grid.box;
+    return (s.turnNow === 1 ? h > w : w > h) ? "landscape" : "portrait";
   }
   /** Whether the maze has a shape worth turning: not square within a tenth. */
   function isTurnable(): boolean {
-    if (maze === null) return false;
-    const ratio = maze.grid.box.w / maze.grid.box.h;
+    if (s.maze === null) return false;
+    const ratio = s.maze.grid.box.w / s.maze.grid.box.h;
     return ratio > 1.1 || ratio < 1 / 1.1;
   }
   /** Put the box's shape and gutters where the page's style reads them. */
   function applyBox(): void {
-    const aspect = aspectNow();
-    wrap.style.setProperty("--mkp-aspect", String(turnNow === 1 ? 1 / aspect : aspect));
-    if (gutterNow !== gutterLeast || options.gutter !== undefined)
-      host.style.setProperty("--mkp-gutter", `${gutterNow}px`);
-    else host.style.removeProperty("--mkp-gutter");
-    if (options.reserve !== undefined) host.style.setProperty("--mkp-reserve", `${reserve}px`);
-    host.dataset.turned = String(turnNow === 1);
+    const aspect = s.aspectNow();
+    s.wrap.style.setProperty("--mkp-aspect", String(s.turnNow === 1 ? 1 / aspect : aspect));
+    if (s.gutterNow !== s.gutterLeast || s.options.gutter !== undefined)
+      s.host.style.setProperty("--mkp-gutter", `${s.gutterNow}px`);
+    else s.host.style.removeProperty("--mkp-gutter");
+    if (s.options.reserve !== undefined) s.host.style.setProperty("--mkp-reserve", `${s.reserve}px`);
+    s.host.dataset.turned = String(s.turnNow === 1);
     const shown = shownOrientation();
-    if (shown === null) delete host.dataset.orientation;
-    else host.dataset.orientation = shown;
-    host.dataset.gutter = String(Math.round(gutterNow));
+    if (shown === null) delete s.host.dataset.orientation;
+    else s.host.dataset.orientation = shown;
+    s.host.dataset.gutter = String(Math.round(s.gutterNow));
   }
   /** How much of the page shows beside the box now, in pixels: the nearer of its two sides to the window's edge. */
-  const visibleGutter = (): number => {
-    const rect = box.getBoundingClientRect();
-    return Math.max(0, Math.min(rect.left, (host.ownerDocument.defaultView ?? window).innerWidth - rect.right));
+  s.visibleGutter = (): number => {
+    const rect = s.box.getBoundingClientRect();
+    return Math.max(0, Math.min(rect.left, (s.host.ownerDocument.defaultView ?? window).innerWidth - rect.right));
   };
   /** The gutters come in steps of `MEIKYUU_GUTTER_STEP` from the least: the first step past what shows now, or the last one below it. */
-  const stepUp = (from: number): number =>
+  s.stepUp = (from: number): number =>
     Math.min(
-      gutterMost,
-      gutterLeast + Math.floor((from - gutterLeast) / MEIKYUU_GUTTER_STEP + 1) * MEIKYUU_GUTTER_STEP,
+      s.gutterMost,
+      s.gutterLeast + Math.floor((from - s.gutterLeast) / MEIKYUU_GUTTER_STEP + 1) * MEIKYUU_GUTTER_STEP,
     );
-  const stepDown = (from: number): number =>
+  s.stepDown = (from: number): number =>
     Math.max(
-      gutterLeast,
-      gutterLeast + (Math.ceil((from - gutterLeast) / MEIKYUU_GUTTER_STEP) - 1) * MEIKYUU_GUTTER_STEP,
+      s.gutterLeast,
+      s.gutterLeast + (Math.ceil((from - s.gutterLeast) / MEIKYUU_GUTTER_STEP) - 1) * MEIKYUU_GUTTER_STEP,
     );
   /** Whether a wider gutter would show: the page does not already show the widest beside the box. */
-  const frameCanWiden = (): boolean => gutterNow < gutterMost && visibleGutter() < gutterMost - 1;
+  s.frameCanWiden = (): boolean => s.gutterNow < s.gutterMost && s.visibleGutter() < s.gutterMost - 1;
   function setGutter(px: number): number {
-    const next = Math.min(gutterMost, Math.max(gutterLeast, px));
-    if (Math.abs(next - gutterNow) < 0.01) return gutterNow;
-    gutterNow = next;
+    const next = Math.min(s.gutterMost, Math.max(s.gutterLeast, px));
+    if (Math.abs(next - s.gutterNow) < 0.01) return s.gutterNow;
+    s.gutterNow = next;
     applyBox();
-    words();
-    return gutterNow;
+    s.words();
+    return s.gutterNow;
   }
   /** A pinch the box has no room for: fingers together with the whole maze in the box widens the gutters, and fingers apart narrows them again. */
   function frameZoom(factor: number): boolean {
-    const width = box.clientWidth || 1;
+    const width = s.box.clientWidth || 1;
     if (factor < 1) {
-      if (!frameCanWiden()) return false;
-      setGutter(Math.max(gutterNow, visibleGutter()) + (width * (1 - factor)) / 2);
+      if (!s.frameCanWiden()) return false;
+      setGutter(Math.max(s.gutterNow, s.visibleGutter()) + (width * (1 - factor)) / 2);
       return true;
     }
-    if (gutterNow <= gutterLeast) return false;
-    setGutter(gutterNow - (width * (factor - 1)) / 2);
+    if (s.gutterNow <= s.gutterLeast) return false;
+    setGutter(s.gutterNow - (width * (factor - 1)) / 2);
     return true;
   }
   /** The window or the host changed size: a maze may now fit better the other way up. */
   function reflow(): void {
-    if (viewing !== "maze" || maze === null || mazeSurface === null) return;
-    const next = resolveNow();
-    if (next === turnNow) return;
-    turnNow = next;
+    if (s.viewing !== "maze" || s.maze === null || s.mazeSurface === null) return;
+    const next = s.resolveNow();
+    if (next === s.turnNow) return;
+    s.turnNow = next;
     applyBox();
-    mazeSurface.turn(next);
-    words();
-    tell("meikyuu-orientation");
+    s.mazeSurface.turn(next);
+    s.words();
+    s.tell("meikyuu-orientation");
   }
-  const setMessage = (
+  s.setMessage = (
     key: string | null,
     values: Record<string, string | number> = {},
     warn = false,
-    on: "maze" | "arrows" = viewing,
+    on: "maze" | "arrows" = s.viewing,
   ): void => {
-    message = key === null ? null : { key, values, warn, on };
+    s.message = key === null ? null : { key, values, warn, on };
   };
 
-  // What the line says, in words, and the buttons' states.
-  function words(): void {
-    const mixed = puzzle.kind === "mixed";
-    const onMaze = viewing === "maze";
-    const solved = puzzle.kind === "maze" ? mazeGame?.solved === true : arrowGame?.status === "cleared";
-    host.dataset.kind = puzzle.kind;
-    host.dataset.level = String(puzzle.level ?? "");
-    host.dataset.view = viewing;
-    host.dataset.solved = String(solved);
-    host.dataset.moves = String(moves);
-    if (mazeGame !== null) {
-      host.dataset.cells = String(mazeGame.path.length);
-      host.dataset.keys = String(mazeGame.collected.length);
-      host.dataset.reached = String(mazeGame.solved);
-    }
-    if (arrowGame !== null) {
-      host.dataset.hearts = String(arrowGame.hearts);
-      host.dataset.left = String(arrowsLeft(arrowGame));
-      host.dataset.unlocked = String(arrowGame.unlocked);
-      host.dataset.status = arrowGame.status;
-    }
-    tabs.hidden = !mixed;
-    arrowsTab.textContent = say("tabArrows");
-    mazeTab.textContent = say("tabMaze");
-    arrowsTab.setAttribute("aria-selected", String(!onMaze));
-    mazeTab.setAttribute("aria-selected", String(onMaze));
-    tabs.setAttribute("aria-label", say("tabsLabel"));
-    banner.sync(
-      onMaze && !mixed ? say("solved", { n: moves }) : say("arrowsCleared"),
-      say("closeMessage"),
-      solved && !(mixed && mazeGame?.solved === true && onMaze),
-    );
-    const surface = surfaceNow();
-    const state = surface?.surface.state();
-    undoButton.textContent = say("undo");
-    restartButton.textContent = say("restart");
-    hintButton.textContent = say("hint");
-    hintButton.hidden = !withHints;
-    fitButton.textContent = say("fit");
-    outButton.setAttribute("aria-label", say("zoomOut"));
-    inButton.setAttribute("aria-label", say("zoomIn"));
-    pad.setAttribute("aria-label", say("zoomLabel"));
-    pad.hidden = !withZoom;
-    fitButton.disabled = state?.fitted === true && gutterNow === gutterLeast;
-    outButton.disabled = state?.atLeast === true && !frameCanWiden();
-    inButton.disabled = state?.atMost === true && gutterNow <= gutterLeast;
-    panButton.textContent = say("pan");
-    panButton.setAttribute("aria-label", say("panLabel"));
-    panButton.setAttribute("aria-pressed", String(panOn));
-    turnButton.textContent = say("turn");
-    turnButton.setAttribute("aria-label", say("turnLabel"));
-    turnButton.hidden = options.turnButton !== true || maze === null || viewing !== "maze" || !isTurnable();
-    host.dataset.pan = String(panOn);
-    const stonesOn = viewing === "maze" && mazeGame?.rules != null;
-    stoneButton.hidden = !stonesOn;
-    stoneButton.textContent = say("stone");
-    stoneButton.setAttribute("aria-label", say("stoneLabel"));
-    stoneButton.setAttribute("aria-pressed", String(stoneModeOn && stonesOn));
-    stoneButton.disabled = mazeGame?.solved === true;
-    host.dataset.stones = String(mazeGame?.stones.length ?? 0);
-    host.dataset.stoneMode = String(stoneModeOn && stonesOn);
-    if (stonesOn) host.dataset.stonesLeft = String(stonesLeft(mazeGame!) ?? "none");
-    else delete host.dataset.stonesLeft;
-    const lost = !onMaze && arrowGame?.status === "lost";
-    const finished = !onMaze && arrowGame?.status === "cleared";
-    undoButton.disabled = onMaze
-      ? mazeGame === null || mazeGame.undo.length === 0
-      : arrowGame === null || arrowGame.taken.length === 0 || lost;
-    restartButton.disabled = onMaze
-      ? mazeGame === null || (mazeGame.path.length === 0 && mazeGame.strokes === 0 && mazeGame.stones.length === 0)
-      : arrowGame === null || (arrowGame.taken.length === 0 && arrowGame.mistakes === 0);
-    hintButton.disabled = onMaze ? mazeGame?.solved === true : lost || finished;
-    const label =
-      onMaze && maze !== null
-        ? say("mazeLabel", {
-            shape: say(`shape_${maze.recipe.shape}`),
-            n: maze.grid.cells,
-            play: mixed ? say("mazeForButton") : say(`play_${maze.recipe.mode.replace(/-/g, "_")}`),
-          })
-        : board === null
-          ? ""
-          : say("arrowsLabel", { n: board.arrows.length, shape: say(`shape_${board.recipe.shape}`) });
-    box.setAttribute("aria-label", label);
-    if (!withControls) return;
-    const joiner = language === "ja" ? "" : " ";
-    // The line on how to play, the line of progress, and the word of what has just happened.
-    says.textContent =
-      onMaze && maze !== null && stoneModeOn && mazeGame?.rules != null
-        ? say("stoneHow", { n: mazeGame.rules.reach })
-        : onMaze && maze !== null
-          ? mixed
-            ? say("mazeForButton")
-            : say(`play_${maze.recipe.mode.replace(/-/g, "_")}`)
-          : `${say("arrowsHint")}${mixed && board?.locked.some(Boolean) === true && arrowGame?.unlocked !== true ? `${joiner}${say("lockedCount", { n: board.locked.filter(Boolean).length })}` : ""}`;
-    if (onMaze && mazeGame !== null && maze !== null) {
-      const parts: string[] = [];
-      if (mazeGame.solved)
-        parts.push(
-          mixed
-            ? say(arrowGame?.status === "cleared" ? "arrowsCleared" : "arrowsUnlocked")
-            : say("solved", { n: moves }),
-        );
-      else {
-        parts.push(mazeGame.path.length === 0 ? say("notStarted") : say("drawn", { n: mazeGame.path.length }));
-        if (maze.keys.length > 0) parts.push(say("keysOf", { k: mazeGame.collected.length, total: maze.keys.length }));
-        if (mazeGame.rules !== null) {
-          const left = stonesLeft(mazeGame);
-          parts.push(left === null ? say("stonesFree", { n: mazeGame.stones.length }) : say("stonesLeft", { n: left }));
-        }
-      }
-      progress.textContent = parts.join(joiner);
-    } else if (arrowGame !== null) {
-      const hearts = "♥".repeat(arrowGame.hearts) + "♡".repeat(arrowGame.heartsAtStart - arrowGame.hearts);
-      progress.textContent =
-        arrowGame.status === "cleared"
-          ? say("arrowsCleared")
-          : `${say("arrowsLeft", { n: arrowsLeft(arrowGame) })}${joiner}${say("hearts", { n: arrowGame.hearts, total: arrowGame.heartsAtStart })} ${hearts}`;
-    }
-    // The word of what has just happened is about one board and is said on that board only (the unlock is told on the labyrinth by the line above it,
-    // and on the arrows by this one). A puzzle out of hearts says so from its state, on the arrows and, in a mixed puzzle, on the labyrinth too.
-    const shown = message !== null && message.on === viewing ? message : null;
-    const lostNote = arrowGame?.status === "lost" ? (onMaze ? (mixed ? "arrowsLostAway" : null) : "arrowsLost") : null;
-    const line = lostNote !== null && (!onMaze || shown === null) ? { key: lostNote, values: {}, warn: true } : shown;
-    messages.textContent = line === null ? "" : say(line.key, line.values);
-    messages.dataset.warn = String(line?.warn === true);
-  }
+  s.shownOrientation = shownOrientation;
+  s.isTurnable = isTurnable;
+  s.applyBox = applyBox;
+  s.setGutter = setGutter;
+  s.reflow = reflow;
+  s.frameZoom = frameZoom;
+  bindPlay(s);
+  s.host.addEventListener("keydown", s.onKey);
 
-  function refresh(): void {
-    if (viewing === "maze" && mazeSurface !== null && mazeGame !== null) {
-      mazeSurface.update(mazeGame, hintedMaze, mazeGame.solved && puzzle.kind === "maze");
-    } else if (viewing === "arrows" && arrowSurface !== null && arrowGame !== null)
-      arrowSurface.update(arrowGame, hintedArrow);
-    words();
-  }
-
-  function mountSurface(): void {
-    mazeSurface?.destroy();
-    arrowSurface?.destroy();
-    mazeSurface = null;
-    arrowSurface = null;
-    const viewChanged = (): void => {
-      const state = surfaceNow()?.surface.state();
-      fitButton.disabled = state?.fitted === true && gutterNow === gutterLeast;
-      outButton.disabled = state?.atLeast === true && !frameCanWiden();
-      inButton.disabled = state?.atMost === true && gutterNow <= gutterLeast;
-    };
-    if (viewing === "maze" && maze !== null) {
-      turnNow = resolveNow();
-      applyBox();
-      mazeSurface = createMazeSurface(
-        box,
-        {
-          game: () => mazeGame!,
-          change: onMazeChange,
-          taps: () => tapExtends,
-          stoneMode: () => stoneModeOn && mazeGame?.rules != null,
-          stone: layStoneAt,
-          viewChanged,
-        },
-        maze,
-        look,
-        turnNow,
-        { fit: fitMode, edgePan: edgePanOn, panMode: panOn, frame: { zoom: frameZoom } },
-      );
-    } else if (board !== null) {
-      turnNow = 0;
-      applyBox();
-      arrowSurface = createArrowSurface(box, { tap: onArrowTap, viewChanged }, board, look);
-      if (arrowGame !== null) arrowSurface.update(arrowGame, null);
-    }
-    refresh();
-  }
-
-  /** The word a refused stone is told with. */
-  const STONE_WHY: Partial<Record<StoneVerdict, string>> = {
-    far: "stoneFar",
-    "on-line": "stoneOnLine",
-    end: "stoneEnd",
-    limit: "stoneLimit",
-    "no-line": "stoneNoLine",
-    solved: "stoneSolved",
-    drawing: "stoneDrawing",
-    "no-cell": "stoneFar",
-  };
-
-  /** Tell the page the stones changed, if their number or places did. */
-  function stonesMoved(before: MazeGame | null): void {
-    if (before === null || mazeGame === null) return;
-    if (
-      before.stones.length === mazeGame.stones.length &&
-      before.stones.every((cell, at) => cell === mazeGame!.stones[at])
-    )
-      return;
-    tell("meikyuu-stones", callbacks.onStones);
-  }
-
-  /** A stone asked for on a cell, by a tap in the Stone mode or a press-and-hold: laid, taken up or refused with a word. True when that did something the player should see. */
-  function layStoneAt(cell: number, how: "tap" | "hold"): boolean {
-    if (viewing !== "maze" || mazeGame === null || mazeGame.rules === null) return false;
-    // A hold that began as a stroke (the finger was within reach of the line's end) first ends that stroke, which was never more than a press.
-    const before = how === "hold" && mazeGame.drawing ? liftMaze(mazeGame) : mazeGame;
-    const result = toggleStone(before, cell);
-    hintedMaze = null;
-    if (result.how === "refused") {
-      // A hold is also what a finger does while looking about a big maze: with no line to lay a stone beside, or nothing left to do, it says nothing and moves on.
-      if (how === "hold" && (result.why === "no-line" || result.why === "solved" || result.why === "drawing"))
-        return false;
-      if (before !== mazeGame) mazeGame = before;
-      setMessage(STONE_WHY[result.why] ?? "stoneFar", { n: before.rules?.reach ?? 2 }, true);
-      playSound("bump");
-      refresh();
-      return true;
-    }
-    mazeGame = result.game;
-    setMessage(result.how === "laid" ? "stoneLaid" : "stoneTaken");
-    playSound(result.how === "laid" ? "stone" : "back");
-    refresh();
-    stonesMoved(before);
-    return true;
-  }
-
-  function onMazeChange(next: MazeGame, how: "press" | "drag" | "lift" | "tap"): void {
-    const before = mazeGame!;
-    mazeGame = next;
-    if (how === "press" || how === "tap") {
-      hintedMaze = null;
-      setMessage(null);
-    }
-    if (how === "drag" || how === "tap") {
-      if (next.path.length > before.path.length) playSound("step");
-      else if (next.path.length < before.path.length) playSound("back");
-      if (next.collected.length > before.collected.length) {
-        playSound("key");
-        tell("meikyuu-key", callbacks.onKey);
-      }
-    }
-    if (next.solved && !before.solved) pendingSolve = true;
-    if (how === "lift" || how === "tap") {
-      if (next.strokes !== before.strokes) {
-        moves += 1;
-        tell("meikyuu-move", callbacks.onMove);
-      }
-      if (pendingSolve) {
-        pendingSolve = false;
-        finishMaze();
-      }
-    }
-    refresh();
-  }
-
-  /** The line has reached the goal with every key: a maze is won; a labyrinth in a mixed puzzle gives its button up. */
-  function finishMaze(): void {
-    if (puzzle.kind === "mixed") {
-      if (arrowGame !== null && !arrowGame.unlocked) {
-        arrowGame = unlockArrows(arrowGame);
-        setMessage("arrowsUnlocked", {}, false, "arrows");
-        playSound("unlock");
-        tell("meikyuu-unlock", callbacks.onUnlock);
-      }
-      return;
-    }
-    if (!solveTold) {
-      solveTold = true;
-      playSound("solve");
-      tell("meikyuu-solve", callbacks.onSolve);
-    }
-  }
-
-  function onArrowTap(id: number): void {
-    if (arrowGame === null) return;
-    const tapped = tapArrow(arrowGame, id);
-    if (tapped.result === "ignored") return;
-    arrowGame = tapped.game;
-    hintedArrow = null;
-    if (tapped.result === "removed") {
-      setMessage(null);
-      moves += 1;
-      arrowSurface?.fly(id, still());
-      playSound("fly");
-    } else if (tapped.result === "locked") {
-      setMessage(tapped.by === undefined ? "arrowsLocked" : "arrowsWaiting", {}, true);
-      arrowSurface?.bump(id, tapped.by);
-      playSound("bump");
-    } else {
-      setMessage("arrowsBlocked", {}, true);
-      arrowSurface?.bump(id, tapped.by);
-      playSound("bump");
-      tell("meikyuu-bump", callbacks.onBump);
-    }
-    refresh();
-    if (tapped.result === "removed") tell("meikyuu-move", callbacks.onMove);
-    if (arrowGame.status === "cleared" && !solveTold) {
-      solveTold = true;
-      playSound("solve");
-      tell("meikyuu-solve", callbacks.onSolve);
-    }
-    if (arrowGame.status === "lost") {
-      playSound("lose");
-      tell("meikyuu-lose", callbacks.onLose);
-    }
-  }
-
-  function begin(next: MeikyuuPuzzle): void {
-    puzzle = next;
-    maze = null;
-    mazeGame = null;
-    board = null;
-    arrowGame = null;
-    hintedMaze = null;
-    hintedArrow = null;
-    message = null;
-    pendingSolve = false;
-    solveTold = false;
-    moves = 0;
-    if (next.kind === "maze") {
-      maze = buildMaze(next.recipe);
-      mazeGame = newMazeGame(maze, stoneRulesOf(stoneOption, maze.grid.cells));
-      viewing = "maze";
-    } else if (next.kind === "arrows") {
-      board = makeArrows(next.recipe);
-      arrowGame = newArrowGame(board);
-      viewing = "arrows";
-    } else {
-      const mixed = buildMixed(next.recipe);
-      maze = mixed.maze;
-      mazeGame = newMazeGame(maze, stoneRulesOf(stoneOption, maze.grid.cells));
-      board = mixed.arrows;
-      arrowGame = newArrowGame(board);
-      viewing = "arrows";
-    }
-    mountSurface();
-  }
-
-  /** The way a key points (dx, dy in cells, y down) as one step of the line: to the linked neighbour of the line's end that lies nearest that way. */
-  function stepByKey(dx: number, dy: number): void {
-    if (viewing !== "maze" || maze === null || mazeGame === null || mazeGame.solved) return;
-    const head = headOf(mazeGame) ?? maze.start;
-    if (headOf(mazeGame) === null) {
-      onMazeChange(liftMaze(pressMaze(mazeGame, maze.start)), "tap");
-      return;
-    }
-    const [hx, hy] = maze.grid.centres[head]!;
-    let best = -1;
-    let bestCosine = KEY_REACH;
-    for (const next of maze.links[head]!) {
-      const [nx, ny] = maze.grid.centres[next]!;
-      const length = Math.hypot(nx - hx, ny - hy) || 1;
-      const cosine = ((nx - hx) * dx + (ny - hy) * dy) / (length * Math.hypot(dx, dy));
-      if (cosine > bestCosine) {
-        bestCosine = cosine;
-        best = next;
-      }
-    }
-    // The cell before the end of the line is a way too: stepping toward it draws back.
-    const before = mazeGame.path.length > 1 ? mazeGame.path[mazeGame.path.length - 2]! : -1;
-    if (before >= 0) {
-      const [bx, by] = maze.grid.centres[before]!;
-      const length = Math.hypot(bx - hx, by - hy) || 1;
-      const cosine = ((bx - hx) * dx + (by - hy) * dy) / (length * Math.hypot(dx, dy));
-      if (cosine > bestCosine) best = before;
-    }
-    if (best < 0) return;
-    onMazeChange(liftMaze(dragMaze(pressMaze(mazeGame, head), best)), "tap");
-  }
-
-  /** Shift and an arrow: a stone on (or taken up from) the open neighbour of the line's end that lies nearest that way. */
-  function stoneByKey(dx: number, dy: number): void {
-    if (viewing !== "maze" || maze === null || mazeGame === null) return;
-    const head = headOf(mazeGame);
-    if (head === null) return;
-    const [hx, hy] = maze.grid.centres[head]!;
-    let best = -1;
-    let bestCosine = KEY_REACH;
-    for (const next of maze.links[head]!) {
-      const [nx, ny] = maze.grid.centres[next]!;
-      const length = Math.hypot(nx - hx, ny - hy) || 1;
-      const cosine = ((nx - hx) * dx + (ny - hy) * dy) / (length * Math.hypot(dx, dy));
-      if (cosine > bestCosine) {
-        bestCosine = cosine;
-        best = next;
-      }
-    }
-    if (best >= 0) layStoneAt(best, "tap");
-  }
-
-  const onKey = (event: KeyboardEvent): void => {
-    if ((event.ctrlKey || event.metaKey) && !event.shiftKey && event.key.toLowerCase() === "z") {
-      event.preventDefault();
-      api.undo();
-      return;
-    }
-    if (event.target !== box) return;
-    const arrows: Record<string, [number, number]> = {
-      ArrowUp: [0, -1],
-      ArrowDown: [0, 1],
-      ArrowLeft: [-1, 0],
-      ArrowRight: [1, 0],
-    };
-    const step = arrows[event.key];
-    if (step !== undefined) {
-      event.preventDefault();
-      if (event.shiftKey && mazeGame?.rules != null) stoneByKey(step[0], step[1]);
-      else stepByKey(step[0], step[1]);
-    } else if (event.key === "Enter" || event.key === " ") {
-      event.preventDefault();
-      if (viewing === "maze" && mazeGame !== null && mazeGame.path.length === 0) stepByKey(0, 0);
-    } else if (event.key === "Backspace" || event.key === "Delete") {
-      event.preventDefault();
-      api.undo();
-    }
-  };
-  host.addEventListener("keydown", onKey);
-
-  const watching =
+  s.watching =
     typeof MutationObserver === "undefined"
       ? null
       : new MutationObserver(() => {
-          if (explicitLanguage !== undefined) return;
-          const next = meikyuuLanguageOf(host.closest("[lang]")?.getAttribute("lang") ?? document.documentElement.lang);
-          if (next === language) return;
-          language = next;
-          words();
+          if (s.explicitLanguage !== undefined) return;
+          const next = meikyuuLanguageOf(
+            s.host.closest("[lang]")?.getAttribute("lang") ?? s.document.documentElement.lang,
+          );
+          if (next === s.language) return;
+          s.language = next;
+          s.words();
         });
-  watching?.observe(document.documentElement, { attributes: true, attributeFilter: ["lang"] });
+  s.watching?.observe(s.document.documentElement, { attributes: true, attributeFilter: ["lang"] });
 
-  const looking = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(reflow);
-  looking?.observe(host);
-  const windowOf = host.ownerDocument.defaultView ?? window;
-  windowOf.addEventListener("resize", reflow);
-  windowOf.visualViewport?.addEventListener("resize", reflow);
+  s.looking = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(reflow);
+  s.looking?.observe(s.host);
+  s.windowOf = s.host.ownerDocument.defaultView ?? window;
+  s.windowOf.addEventListener("resize", reflow);
+  s.windowOf.visualViewport?.addEventListener("resize", reflow);
 
-  const orientationNow = (): {
+  s.orientationNow = (): {
     setting: MeikyuuOrientation;
     orientation: "portrait" | "landscape";
     turned: boolean;
-  } => ({ setting: orientationSetting, orientation: shownOrientation() ?? "portrait", turned: turnNow === 1 });
+  } => ({ setting: s.orientationSetting, orientation: shownOrientation() ?? "portrait", turned: s.turnNow === 1 });
 
-  const api: MeikyuuMount = {
-    host,
-    kind: () => puzzle.kind,
-    puzzle: () => puzzle,
-    mazeGame: () => mazeGame,
-    arrowGame: () => arrowGame,
-    load: (next) => {
-      const made = puzzleOf(next);
-      if (made === null) return false;
-      if (next.ratio !== undefined) ratioOption = next.ratio;
-      begin(made);
-      return true;
-    },
-    set: (changes) => {
-      const {
-        tap,
-        sound,
-        hints,
-        banner: showBanner,
-        language: nextLanguage,
-        ratio,
-        stones: nextStones,
-        ...nextLook
-      } = changes;
-      if ("stones" in changes) {
-        stoneOption = nextStones;
-        if (mazeGame !== null && maze !== null) {
-          const before = mazeGame;
-          mazeGame = withStoneRules(mazeGame, stoneRulesOf(stoneOption, maze.grid.cells));
-          if (mazeGame.rules === null) stoneModeOn = false;
-          stonesMoved(before);
-        }
-      }
-      look = { ...look, ...nextLook };
-      if (ratio !== undefined && ratio !== ratioOption) {
-        ratioOption = ratio;
-        turnNow = resolveNow();
-        applyBox();
-        mazeSurface?.turn(turnNow);
-      }
-      if (tap !== undefined) tapExtends = tap;
-      if (hints !== undefined) withHints = hints;
-      if (showBanner !== undefined) banner.enable(showBanner);
-      if (sound !== undefined) {
-        if (sound && sounds === null) sounds = createMeikyuuSounds();
-        else if (!sound) {
-          sounds?.destroy();
-          sounds = null;
-        }
-      }
-      if (nextLanguage !== undefined) {
-        explicitLanguage = nextLanguage;
-        language = nextLanguage;
-      }
-      mazeSurface?.look(look);
-      arrowSurface?.look(look);
-      words();
-    },
-    undo: () => {
-      hintedMaze = null;
-      hintedArrow = null;
-      setMessage(null);
-      if (viewing === "maze" && mazeGame !== null) {
-        const next = undoMaze(mazeGame);
-        if (next === mazeGame) return;
-        const before = mazeGame;
-        mazeGame = next;
-        playSound("back");
-        refresh();
-        stonesMoved(before);
-        return;
-      }
-      if (arrowGame !== null) {
-        const next = undoArrow(arrowGame);
-        if (next === arrowGame) return;
-        arrowGame = next;
-        playSound("back");
-      }
-      refresh();
-    },
-    restart: () => {
-      hintedMaze = null;
-      hintedArrow = null;
-      setMessage(null);
-      if (viewing === "maze" && mazeGame !== null) {
-        const next = restartMaze(mazeGame);
-        if (next === mazeGame) return;
-        const before = mazeGame;
-        mazeGame = next;
-        if (puzzle.kind === "maze") {
-          solveTold = false;
-          moves = 0;
-        }
-        refresh();
-        stonesMoved(before);
-        return;
-      }
-      if (arrowGame !== null) {
-        arrowGame = restartArrows(arrowGame);
-        solveTold = false;
-        moves = 0;
-        // Arrows taken are back on the board: draw it afresh.
-        mountSurface();
-        return;
-      }
-      refresh();
-    },
-    hint: () => {
-      if (viewing === "maze" && mazeGame !== null) {
-        hintedMaze = hintMaze(mazeGame, Math.max(6, Math.round(Math.sqrt(maze?.grid.cells ?? 100) / 2)));
-        setMessage(mazeGame.path.length === 0 ? "hintStart" : hintedMaze.back > 0 ? "hintBack" : "hintAhead", {
-          n: hintedMaze.back,
-        });
-      } else if (arrowGame !== null) {
-        hintedArrow = hintArrow(arrowGame);
-        setMessage(hintedArrow === null ? "arrowsLocked" : "arrowsHint", {}, hintedArrow === null);
-      }
-      refresh();
-    },
-    fit: (mode) => {
-      if (mode !== undefined && mazeSurface !== null) {
-        fitMode = mode;
-        mazeSurface.surface.setFit(mode);
-      } else surfaceNow()?.surface.fit();
-      setGutter(gutterLeast);
-      words();
-    },
-    zoomIn: () => {
-      if (gutterNow > gutterLeast) setGutter(stepDown(gutterNow));
-      else surfaceNow()?.surface.zoom(1.5);
-    },
-    zoomOut: () => {
-      const state = surfaceNow()?.surface.state();
-      if (state?.atLeast === true && frameCanWiden()) setGutter(stepUp(Math.max(gutterNow, visibleGutter())));
-      else surfaceNow()?.surface.zoom(1 / 1.5);
-    },
-    gutter: (px) => (px === undefined ? gutterNow : setGutter(px)),
-    pan: (on) => {
-      if (on !== undefined) {
-        panOn = on;
-        mazeSurface?.surface.setPanMode(on);
-        words();
-      }
-      return panOn;
-    },
-    edgePan: (on) => {
-      if (on !== undefined) {
-        edgePanOn = on;
-        mazeSurface?.surface.setEdgePan(on);
-      }
-      return edgePanOn;
-    },
-    orientation: (setting) => {
-      if (setting !== undefined && setting !== orientationSetting) {
-        orientationSetting = setting;
-        reflow();
-        words();
-      }
-      return orientationNow();
-    },
-    stoneMode: (on) => {
-      const possible = viewing === "maze" && mazeGame?.rules != null;
-      if (on !== undefined && (on && possible) !== stoneModeOn) {
-        stoneModeOn = on && possible;
-        words();
-      } else if (on === false && stoneModeOn) {
-        stoneModeOn = false;
-        words();
-      }
-      return stoneModeOn && possible;
-    },
-    stones: () => mazeGame?.stones ?? [],
-    stonesLeft: () => (mazeGame === null ? 0 : stonesLeft(mazeGame)),
-    stone: (cell) => {
-      if (viewing !== "maze" || mazeGame === null) return "off";
-      const result = toggleStone(mazeGame, cell);
-      if (result.how === "refused") return result.why;
-      layStoneAt(cell, "tap");
-      return "ok";
-    },
-    clearStones: () => {
-      if (mazeGame === null) return;
-      const before = mazeGame;
-      const next = clearStones(before);
-      if (next === before) return;
-      mazeGame = next;
-      setMessage(null);
-      refresh();
-      stonesMoved(before);
-    },
-    run: () => (mazeGame === null ? "" : encodeRun(mazeGame)),
-    restore: (code) => {
-      if (viewing !== "maze" || maze === null || mazeGame === null) return false;
-      const restored = decodeRun(maze, code, mazeGame.rules);
-      if (restored === null) return false;
-      const before = mazeGame;
-      mazeGame = restored;
-      hintedMaze = null;
-      setMessage(null);
-      moves = restored.strokes;
-      solveTold = restored.solved && puzzle.kind === "maze";
-      pendingSolve = false;
-      refresh();
-      stonesMoved(before);
-      return true;
-    },
-    show: (which) => {
-      if (puzzle.kind !== "mixed" || which === viewing) return;
-      viewing = which;
-      mountSurface();
-    },
-    destroy: () => {
-      mazeSurface?.destroy();
-      arrowSurface?.destroy();
-      sounds?.destroy();
-      watching?.disconnect();
-      looking?.disconnect();
-      windowOf.removeEventListener("resize", reflow);
-      windowOf.visualViewport?.removeEventListener("resize", reflow);
-      host.removeEventListener("keydown", onKey);
-      banner.destroy();
-      host.style.removeProperty("--mkp-gutter");
-      host.style.removeProperty("--mkp-reserve");
-      host.replaceChildren();
-      host.classList.remove("meikyuu-play");
-      for (const name of [
-        "kind",
-        "level",
-        "view",
-        "solved",
-        "moves",
-        "cells",
-        "keys",
-        "reached",
-        "hearts",
-        "left",
-        "unlocked",
-        "status",
-        "orientation",
-        "turned",
-        "gutter",
-        "pan",
-        "stones",
-        "stoneMode",
-        "stonesLeft",
-      ])
-        delete host.dataset[name];
-    },
-  };
+  const api = mountHandle(s);
+  s.api = api;
 
-  begin(first);
-  return api;
+  s.begin(first);
+  return s.api;
 }

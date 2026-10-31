@@ -1,12 +1,15 @@
 import { MEIKYUU_BOARD_NAMES, MEIKYUU_TRAIL_NAMES, type MeikyuuBoardName, type MeikyuuTrailName } from "./boards.ts";
+import { MEIKYUU_EMBED_OPTION_KEYS, type MeikyuuElementOptions } from "./elementOptions.ts";
 import { dailySeed, embedDay } from "./embed-day.ts";
 import { levelCount, MEIKYUU_KINDS, type MeikyuuKind } from "./levels.ts";
-import { type MeikyuuMount, type MeikyuuMountOptions, mountMeikyuu } from "./mount.ts";
+import { type MeikyuuMount, mountMeikyuu } from "./mount.ts";
 import { MEIKYUU_ORIENTATIONS, type MeikyuuOrientation } from "./orientation.ts";
 import { MEIKYUU_PLAY_STYLE } from "./playStyle.ts";
 import type { StoneOption } from "./stones.ts";
 import type { MeikyuuLanguage } from "./strings.ts";
 import { FIT_MODES, type FitMode } from "./viewport.ts";
+
+export { MEIKYUU_EMBED_OPTION_KEYS, type MeikyuuElementOptions };
 
 /**
  * THE `<meikyuu-board>` ELEMENT: a playable Meikyuu board in a tag, with no framework.
@@ -55,69 +58,6 @@ const numberOf = (value: string | null): number | undefined =>
   value === null || value.trim() === "" || !Number.isFinite(Number(value)) ? undefined : Number(value);
 const oneOf = <T extends string>(value: string | null, allowed: readonly T[]): T | undefined =>
   allowed.includes(value as T) ? (value as T) : undefined;
-
-/** The real mounted-board options, checked by TypeScript and the embed builder.
- * @example
- * ```ts
- * import { MEIKYUU_EMBED_OPTION_KEYS } from "@johnmorrisdotca/meikyuu/element";
- * console.log(typeof MEIKYUU_EMBED_OPTION_KEYS); // object
- * ```
- */
-export const MEIKYUU_EMBED_OPTION_KEYS = Object.keys({
-  kind: true,
-  level: true,
-  recipe: true,
-  tap: true,
-  hints: true,
-  banner: true,
-  controls: true,
-  zoom: true,
-  ratio: true,
-  orientation: true,
-  gutter: true,
-  reserve: true,
-  fit: true,
-  edgePan: true,
-  pan: true,
-  turnButton: true,
-  sound: true,
-  stones: true,
-  language: true,
-  board: true,
-  trail: true,
-  wall: true,
-  line: true,
-  onMove: true,
-  onSolve: true,
-  onKey: true,
-  onUnlock: true,
-  onBump: true,
-  onLose: true,
-  onStones: true,
-} satisfies Record<keyof MeikyuuMountOptions, boolean>);
-/** Host callbacks; the same actions emit native events.
- * @example
- * ```ts
- * import type { MeikyuuElementOptions } from "@johnmorrisdotca/meikyuu/element";
- * const options: MeikyuuElementOptions = {};
- * console.log(Object.keys(options).length); // 0
- * ```
- */
-export type MeikyuuElementOptions = Pick<
-  MeikyuuMountOptions,
-  | "onMove"
-  | "onSolve"
-  | "onKey"
-  | "onUnlock"
-  | "onBump"
-  | "onLose"
-  | "onStones"
-  | "wall"
-  | "line"
-  | "board"
-  | "trail"
-  | "recipe"
->;
 
 /** Native custom element with reflected setup and presentation.
  * @example

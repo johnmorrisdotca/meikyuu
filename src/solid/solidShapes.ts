@@ -1,6 +1,5 @@
-import { heartDirection } from "./solidHeart.ts";
-import type { Loop, Parts } from "./solidParts.ts";
-import { baseSolid, latticeOf, outward, PHI, trianglesOf } from "./solidParts.ts";
+import { type Loop, type Parts, PHI } from "./solidParts.ts";
+import { heart, star, torus } from "./solidShapesCurved.ts";
 import { cross, dot, mean, sub, unit, type Vec3 } from "./vec.ts";
 
 /**
@@ -47,7 +46,7 @@ export const BOX_SIDES = [3, 2, 1] as const;
 /** How much taller than a cut of the triangle's side the prism is: its length in cells along the axis is `PRISM_LENGTH` times the cut. */
 export const PRISM_LENGTH = 2;
 /** The outline of the star: its tips are one from the middle, its inner corners this far. */
-const STAR_INNER = 0.5;
+export const STAR_INNER = 0.5;
 
 /** How many cells the thickness of a star has to a cut of `n`: about six tenths of the length of the outline's side. */
 export function starRows(n: number): number {
@@ -94,7 +93,7 @@ const lerp = (a: Vec3, b: Vec3, t: number): Vec3 => [
   a[2] + (b[2] - a[2]) * t,
 ];
 
-class Mesh {
+export class Mesh {
   readonly vertices: Vec3[] = [];
   readonly loops: Loop[] = [];
   readonly faceOf: number[] = [];
@@ -338,8 +337,8 @@ const C36 = (1 + S5) / 4;
 const S36 = Math.sqrt(10 - 2 * S5) / 4;
 const C72 = (S5 - 1) / 4;
 const S72 = Math.sqrt(10 + 2 * S5) / 4;
-const COS36 = [1, C36, C72, -C72, -C36, -1, -C36, -C72, C72, C36] as const;
-const SIN36 = [0, S36, S72, S72, S36, 0, -S36, -S72, -S72, -S36] as const;
+export const COS36 = [1, C36, C72, -C72, -C36, -1, -C36, -C72, C72, C36] as const;
+export const SIN36 = [0, S36, S72, S72, S36, 0, -S36, -S72, -S72, -S36] as const;
 
 /** The pentagonal trapezohedron, the ten-sided die: ten kites, each cut `n` by `n` (10 n^2 cells). Its apexes are one and a tenth from the middle and its two rings of five are the height at which every kite is flat. */
 function trapezohedron(n: number): Parts {
@@ -497,103 +496,6 @@ function ring(n: number): Parts {
   for (let z = 0; z < 1; z += 1)
     for (let y = 0; y < 3; y += 1) for (let x = 0; x < 3; x += 1) if (!(x === 1 && y === 1)) filled.push([x, y, z]);
   return voxels("ring", n, filled, [1.5, 1.5, 0.5]);
-}
-
-/** How far the middle of the torus's tube is from its middle, and how thick the tube is: a ring about two and a half times as wide as the tube is thick. */
-const TORUS_ROUND = 1;
-const TORUS_TUBE = 0.38;
-
-/**
- * The torus, a doughnut: a tube bent into a ring, `3 n` cells round the ring and `n` round the tube (3 n^2 cells), a cell about as long as it is wide at the outside of the ring
- * and narrower inside the hole. Not a convex solid: the far side of the ring shows through its hole.
- */
-function torus(n: number): Parts {
-  const around = 3 * n;
-  const mesh = new Mesh([]);
-  const at = (i: number, j: number): number => {
-    const a = i % around;
-    const b = j % n;
-    return mesh.at(`t${a},${b}`, () => {
-      const theta = (2 * Math.PI * a) / around;
-      const phi = (2 * Math.PI * b) / n;
-      const rho = TORUS_ROUND + TORUS_TUBE * Math.cos(phi);
-      return [rho * Math.cos(theta), rho * Math.sin(theta), TORUS_TUBE * Math.sin(phi)];
-    });
-  };
-  for (let j = 0; j < n; j += 1)
-    for (let i = 0; i < around; i += 1) mesh.add([at(i, j), at(i + 1, j), at(i + 1, j + 1), at(i, j + 1)], 0);
-  return {
-    kind: "torus",
-    n,
-    vertices: mesh.vertices,
-    loops: mesh.loops,
-    faceOf: mesh.faceOf,
-    hull: [],
-    round: false,
-    oriented: true,
-    convex: false,
-  };
-}
-
-/** The star: a five pointed star, tips up, as thick as a little over half the length of a side of its outline (10 n^2 + 10 n h cells for h = `starRows(n)`). */
-function star(n: number): Parts {
-  const h = starRows(n);
-  const outline: [number, number][] = [];
-  for (let t = 0; t < 10; t += 1) {
-    const radius = t % 2 === 0 ? 1 : STAR_INNER;
-    // Tips up the screen (y runs down it): the angle of tip `t` is 90 degrees and then 36 degrees a step.
-    outline.push([-SIN36[t]! * radius, -COS36[t]! * radius]);
-  }
-  const side = Math.sqrt((outline[0]![0] - outline[1]![0]) ** 2 + (outline[0]![1] - outline[1]![1]) ** 2);
-  const half = (h * side) / (2 * n);
-  // Corner numbers: 0 to 9 the outline in front (toward the viewer, z positive), 10 to 19 behind, 20 and 21 the middles of the two faces.
-  const points: Vec3[] = [
-    ...outline.map(([x, y]): Vec3 => [x, y, half]),
-    ...outline.map(([x, y]): Vec3 => [x, y, -half]),
-    [0, 0, half],
-    [0, 0, -half],
-  ];
-  const mesh = new Mesh(points);
-  for (let tip = 0; tip < 5; tip += 1) {
-    const t = 2 * tip;
-    mesh.quad(tip, [20, (t + 9) % 10, t, t + 1], n, n);
-    mesh.quad(5 + tip, [21, 10 + ((t + 9) % 10), 10 + t, 10 + t + 1], n, n);
-  }
-  for (let t = 0; t < 10; t += 1) mesh.quad(10 + t, [t, (t + 1) % 10, 10 + ((t + 1) % 10), 10 + t], n, h);
-  return {
-    kind: "star",
-    n,
-    vertices: mesh.vertices,
-    loops: mesh.loops,
-    faceOf: mesh.faceOf,
-    hull: [],
-    round: false,
-    convex: false,
-    upright: true,
-  };
-}
-
-/** The heart: a geodesic globe (an icosahedron cut `n` ways, 20 n^2 triangles) pushed out to the surface of a puffed heart, tips down, cleft up. */
-function heart(n: number): Parts {
-  const { points, faces } = baseSolid("icosahedron");
-  const lattice = latticeOf(points, faces, n);
-  const { loops, faceOf } = trianglesOf(faces.length, n, lattice.at);
-  const sphere = lattice.vertices.map((p) => unit(p));
-  const oriented = loops.map((loop) => outward(loop, sphere));
-  // Out to the heart along each direction, then into the screen's own axes: x across, y down, z toward the viewer.
-  const vertices = sphere.map((d) => heartDirection(d));
-  return {
-    kind: "heart",
-    n,
-    vertices,
-    loops: oriented,
-    faceOf,
-    hull: [],
-    round: false,
-    oriented: true,
-    convex: false,
-    upright: true,
-  };
 }
 
 /** The cells and corners of a shape cut `n` ways. */
