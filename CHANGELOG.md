@@ -6,6 +6,15 @@ All notable changes to this project are written here. The format follows
 
 ## [Unreleased]
 
+### Changed
+
+- Biome replaces ESLint as the formatter and linter, with the family's shared settings in `scripts/biome-family.json`; `pnpm lint` checks formatting too, and `pnpm format` applies it. The code is formatted once to 120 columns. Nothing a user of the package sees has changed.
+- TypeScript targets ES2022, treats an indexed read as possibly missing, and refuses switch fallthrough and unmarked overrides.
+
+### Fixed
+
+- The issue chooser's security link is quoted, so the colon in its description is valid YAML (`.github/ISSUE_TEMPLATE/config.yml`).
+
 ## [3.2.0] - 2026-10-14
 
 The board is a custom element with the family's standard embed attributes and a shared builder, and the package has an English and Japanese documentation site with a checked example for every export. The mazes, recipes, level numbers and saved progress are unchanged.

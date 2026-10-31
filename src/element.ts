@@ -196,14 +196,16 @@ export class MeikyuuBoard extends ElementBase {
       style.setAttribute("data-meikyuu-embed-style", "");
       const rules = (theme: string) =>
         [...MEIKYUU_PLAY_STYLE.matchAll(new RegExp(`:root\\[data-theme="${theme}"\\] ([^{]+)\\{([^}]+)\\}`, "g"))]
-          .map(
-            (match) =>
-              `[data-meikyuu-embed][theme="${theme}"]${match[1].trim() === ".meikyuu-play" ? ".meikyuu-play" : ` ${match[1].trim()}`} {${match[2]}}`,
-          )
+          .map((match) => {
+            const selector = match[1]!;
+            const body = match[2]!;
+            return `[data-meikyuu-embed][theme="${theme}"]${selector.trim() === ".meikyuu-play" ? ".meikyuu-play" : ` ${selector.trim()}`} {${body}}`;
+          })
           .join("\n");
-      const light = [...MEIKYUU_PLAY_STYLE.matchAll(/\.(meikyuu|meikyuu-play) \{([^}]+)\}/g)].filter(
-        (match) => !match[2].includes("#ece8dc") && !match[2].includes("#171a18"),
-      );
+      const light = [...MEIKYUU_PLAY_STYLE.matchAll(/\.(meikyuu|meikyuu-play) \{([^}]+)\}/g)].filter((match) => {
+        const body = match[2]!;
+        return !body.includes("#ece8dc") && !body.includes("#171a18");
+      });
       style.textContent = `@media(prefers-color-scheme:dark){${rules("dark").replaceAll('[theme="dark"]', ':not([theme="light"]):not([theme="dark"])')}}\n${rules("dark")}\n${light.map((match) => `[data-meikyuu-embed][theme="light"]${match[1] === "meikyuu-play" ? ".meikyuu-play" : " .meikyuu"} {${match[2]}}`).join("\n")}\n[data-meikyuu-embed][label]{outline-offset:2px}`;
       target.append(style);
     }
@@ -216,7 +218,7 @@ export class MeikyuuBoard extends ElementBase {
         ["role", this.#labelBefore.role],
         ["aria-label", this.#labelBefore.label],
       ]) {
-        if (value === null) this.removeAttribute(name!);
+        if (value == null) this.removeAttribute(name!);
         else this.setAttribute(name!, value);
       }
       this.#labelBefore = null;

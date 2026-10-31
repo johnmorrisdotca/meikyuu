@@ -80,11 +80,14 @@ export function paintSolidOrdered(
       routeAt[r]![cell] = i;
     });
   });
-  marks[maze.start] |= START;
-  marks[maze.goal] |= GOAL;
-  for (const cell of state.stones) marks[cell] |= STONE;
-  if (head >= 0) marks[head] |= HEAD;
-  else if (state.hint !== null && state.hint.cells.length > 0) marks[state.hint.cells[0]!] |= HINT_FIRST;
+  marks[maze.start] = (marks[maze.start] ?? 0) | START;
+  marks[maze.goal] = (marks[maze.goal] ?? 0) | GOAL;
+  for (const cell of state.stones) marks[cell] = (marks[cell] ?? 0) | STONE;
+  if (head >= 0) marks[head] = (marks[head] ?? 0) | HEAD;
+  else if (state.hint !== null && state.hint.cells.length > 0) {
+    const first = state.hint.cells[0]!;
+    marks[first] = (marks[first] ?? 0) | HINT_FIRST;
+  }
   const open = openEdges(maze);
   const m = quatMatrix(frame.q);
   const bucketOf = (cell: number): number => Math.min(SHADES - 1, Math.floor(shadeAt(frame.facing[cell]!) * SHADES));
