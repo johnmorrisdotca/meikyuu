@@ -155,7 +155,7 @@ export function quatBetween(a: Vec3, b: Vec3): Quat {
   const to = unit(b);
   const d = dot(from, to);
   if (d < -0.999999) {
-    // Opposite: any turn of a half circle about an axis across `a` will do.
+    // Opposite: each turn of a half circle about an axis across `a` will do.
     const across = Math.abs(from[0]) < 0.9 ? cross(from, [1, 0, 0]) : cross(from, [0, 1, 0]);
     return quatAxisAngle(across, Math.PI);
   }

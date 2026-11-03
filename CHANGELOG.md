@@ -6,6 +6,7 @@ All notable changes to this project are written here. The format follows
 
 ## [Unreleased]
 
+- The board and solid sessions that `mountMeikyuu` and `mountSolid` share are typed (no `any`), so Biome reports no warnings; nothing a user of the package sees has changed.
 - The README opens with the package's thumbnail, and the demo carries it as its link preview (og:image) and publishes the card, a dark card and an icon on Pages at `thumbnail.png`, `thumbnail-dark.png` and `icon.png`.
 
 ## [3.2.1] - 2026-10-31

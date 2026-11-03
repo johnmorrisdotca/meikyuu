@@ -3,7 +3,7 @@ import { stoneRulesOf, stonesLeft, toggleStone } from "../stones.ts";
 import { applyLook, readColours } from "./solidColours.ts";
 import { buildSolidMaze, type SolidMaze, type SolidRecipe } from "./solidMaze.ts";
 import { HOLD_TIME, REACH, TAP_SLOP, TAP_TIME } from "./solidMount.ts";
-import type { SolidSession } from "./solidSession.ts";
+import type { SolidGesture, SolidSession } from "./solidSession.ts";
 import {
   cellsAlongDrag,
   createFrame,
@@ -187,19 +187,6 @@ export function bindSolidPlay(s: SolidSession): void {
     return [event.clientX - rect.left, event.clientY - rect.top];
   };
   s.pointers = new Map<number, [number, number]>();
-  type Gesture =
-    | { mode: "draw"; id: number; last: [number, number] }
-    | {
-        mode: "turn";
-        id: number;
-        last: [number, number];
-        from: [number, number];
-        at: number;
-        moved: boolean;
-        hold: number;
-        held: boolean;
-      }
-    | { mode: "pinch"; mid: [number, number]; gap: number; angle: number };
   s.gesture = null;
 
   /** Whether a press at a point is on the cell that draws: the end of the line, or the start before there is one. */
@@ -282,7 +269,7 @@ export function bindSolidPlay(s: SolidSession): void {
       s.schedule();
       return;
     }
-    const turnGesture: Gesture & { mode: "turn" } = {
+    const turnGesture: SolidGesture & { mode: "turn" } = {
       mode: "turn",
       id: event.pointerId,
       last: at,
