@@ -5,6 +5,7 @@
 // the page saying how many cells are drawn, never on a clock. Output: docs/images/<subject>-<desk|phone>-<light|dark>.webp.
 // (The tall mazes' pictures for docs/LEVELS.md are made by scripts/levels-pictures.mjs.)
 
+import { drawMaze } from "../dist/draw-entry.js";
 import { buildMaze, solutionOf } from "../dist/index.js";
 import { MEIKYUU_MAZE_LEVELS } from "../dist/levels.js";
 import { MEIKYUU_TALL_LEVELS } from "../dist/levels-tall.js";
@@ -111,6 +112,20 @@ const solid = (subject, name) => ({
   target: '[data-testid="solid-board"] .mk-box',
 });
 
+/** A level's maze as the package draws it, alone (its own style inside), with `share` of its way drawn. */
+const svgOf = (level, look, share) => {
+  const made = buildMaze(level.recipe);
+  const way = solutionOf(made);
+  return drawMaze(made, { ...look, standalone: true, path: way.slice(0, Math.max(2, Math.floor(way.length * share))) });
+};
+/** The family's thumbnail: four mazes of four shapes, partly drawn through; the icon is the circle alone. */
+const THUMBNAIL_MAZES = [
+  svgOf(circle, { trail: "green" }, 0.55),
+  svgOf(heart, { trail: "red" }, 0.45),
+  svgOf(hex, { trail: "blue" }, 0.5),
+  svgOf(triangle, { trail: "orange" }, 0.5),
+];
+
 await takePictures({
   shots: [
     // A heart-shaped maze, whole, with the first part of its way drawn, under the demo's header with its chooser; on a phone, in dark mode and
@@ -163,5 +178,23 @@ await takePictures({
     solid("torus", "torus"),
     solid("heart", "heart"),
   ],
+  // The family's thumbnail, dark thumbnail and icon (scripts/family-thumbnail.mjs), from the package's own drawMaze.
+  thumbnail: {
+    url: "/?kind=maze&lang=en&help=off",
+    ready: READY,
+    target: "#thumbnail-stage",
+    icon: { target: "#thumbnail-icon" },
+    label: "Meikyuu 迷宮",
+    async prepare(page) {
+      await page.evaluate((mazes) => {
+        const cell = (svg, height) =>
+          `<div style="height:${height}px;display:flex">${svg.replace("<svg ", `<svg style="height:100%;width:auto;display:block;border-radius:10px" `)}</div>`;
+        const stage = `<div id="thumbnail-stage" style="display:flex;gap:22px;align-items:center;padding:12px;width:max-content">${mazes.map((svg) => cell(svg, 230)).join("")}</div>`;
+        const icon = `<div id="thumbnail-icon" style="padding:8px;width:max-content">${cell(mazes[0], 400)}</div>`;
+        document.body.replaceChildren();
+        document.body.insertAdjacentHTML("beforeend", stage + icon);
+      }, THUMBNAIL_MAZES);
+    },
+  },
   only: process.env.ONLY?.split(","),
 });

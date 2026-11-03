@@ -1,3 +1,5 @@
+<p align="center"><a href="https://johnmorrisdotca.github.io/meikyuu/"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/johnmorrisdotca/meikyuu/main/docs/images/thumbnail-dark.png"><img src="https://raw.githubusercontent.com/johnmorrisdotca/meikyuu/main/docs/images/thumbnail.png" alt="Meikyuu: a circular, a heart-shaped, a hexagon and a triangle maze, each drawn part of the way through." width="1200"></picture></a></p>
+
 <h1 align="center">Meikyuu <sub>迷宮</sub> — Maze generator and maze game</h1>
 
 <p align="center"><strong>A maze game for JavaScript and TypeScript.</strong><br>

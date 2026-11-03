@@ -13,6 +13,7 @@ import {
   familyHeader,
   familyUnreviewed,
 } from "./family-template.mjs";
+import { publishThumbnails, thumbnailHead } from "./family-thumbnail.mjs";
 
 const id = "meikyuu";
 const ICON =
@@ -37,6 +38,9 @@ const uses = [
 ];
 const escapeHtml = (text) => text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
+/** What the family's card shows, for a reader who cannot see it (the README's top picture says the same). */
+const ALT = "Meikyuu: a circular, a heart-shaped, a hexagon and a triangle maze, each drawn part of the way through.";
+
 const page = `<!doctype html>
 <html lang="en">
   <head>
@@ -49,6 +53,7 @@ const page = `<!doctype html>
       ogDescription:
         "Draw a line through over a thousand mazes, from tiny to huge, in every shape, and tall ones for a phone. Arrow puzzles and mixed ones too.",
     })}
+    ${thumbnailHead(JSON.parse(readFileSync("package.json", "utf8")), { alt: ALT })}
     <link rel="icon" href="${ICON}" />
     <link rel="stylesheet" href="family.css" />
     <link rel="stylesheet" href="meikyuu.css" />
@@ -158,6 +163,8 @@ mkdirSync("site", { recursive: true });
 cpSync("demo", "site", { recursive: true });
 cpSync("dist", "site/dist", { recursive: true });
 writeFileSync("site/index.html", page);
+// The family's card, dark card and icon, at <site>/thumbnail.png, thumbnail-dark.png and icon.png.
+publishThumbnails(".", "site");
 // The API reference, made from the source: every export of every entry point.
 writeFileSync("site/api.css", API_CSS);
 writeFileSync("site/api.html", apiPage({ id, name: "Meikyuu", icon: ICON }));
