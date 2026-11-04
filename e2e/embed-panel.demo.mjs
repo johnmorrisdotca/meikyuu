@@ -20,7 +20,7 @@ test("the panel holds the family's seven tabs, four sizes, a picker of the three
   page,
 }) => {
   const errors = await open(page);
-  await expect(page.locator(`${P} [role="tab"]`)).toHaveText([
+  await expect(page.locator(`${P} [part="tab"]`)).toHaveText([
     "HTML",
     "ES module",
     "React",
