@@ -61,8 +61,10 @@ test("the wheel zooms about the cursor until its end, the pad zooms and Fit brin
   await page.locator(`${at("board")} [data-action="fit"]`).click();
   await expect.poll(() => shownWidth(svg)).toBeCloseTo(fitted, 1);
   await expect(page.locator(`${at("board")} [data-action="fit"]`)).toBeDisabled();
-  // Zooming out past the whole maze stops a little past it.
-  await page.mouse.move(start.x, start.y);
+  // Zooming out past the whole maze stops a little past it. The box may have moved with the page (a scroll bar), so the pointer goes to its middle.
+  const frame = await board(page).boundingBox();
+  const middle = { x: frame.x + frame.width / 2, y: frame.y + frame.height / 2 };
+  await page.mouse.move(middle.x, middle.y);
   await page.mouse.wheel(0, 3000);
   await page.waitForTimeout(100);
   expect(await shownWidth(svg)).toBeLessThan(fitted * 1.2);
