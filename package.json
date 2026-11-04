@@ -1,6 +1,6 @@
 {
   "name": "@johnmorrisdotca/meikyuu",
-  "version": "3.2.1",
+  "version": "3.3.0",
   "description": "Meikyuu 迷宮 — Maze generator and maze game: made by seven algorithms, seeded square, hex, triangle and circular grids, cut-out shapes, arrow puzzles, mixed boards and 3D surfaces, drawn through by finger or mouse. TypeScript, zero dependencies.",
   "keywords": [
     "3d",
@@ -165,18 +165,38 @@
     "pictures:levels": "pnpm site && node scripts/levels-pictures.mjs",
     "screenshots:readme": "pnpm site && node scripts/readme-pictures.mjs",
     "test:readme": "pnpm build && node scripts/check-readme-examples.mjs",
+    "test:usage": "pnpm build && pnpm site && node scripts/check-usage.mjs",
+    "check:standard": "node scripts/check-standard.mjs",
     "docs:site": "pnpm build && node scripts/docs-site.mjs build",
     "docs:check": "pnpm build && node scripts/docs-site.mjs check",
     "size": "node scripts/docs-site.mjs size"
   },
   "devDependencies": {
+    "@angular/common": "^22.2.4",
+    "@angular/compiler": "^22.2.4",
+    "@angular/core": "^22.2.4",
+    "@angular/platform-browser": "^22.2.4",
     "@biomejs/biome": "2.6.4",
+    "@johnmorrisdotca/kazoku-ui": "^0.15.1",
     "@playwright/test": "^1.63.0",
+    "@sveltejs/vite-plugin-svelte": "^7.3.1",
+    "@types/node": "^24.19.2",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-vue": "^6.0.10",
     "esbuild": "^0.28.0",
     "marked": "^18.0.0",
     "pagefind": "^1.5.2",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "rxjs": "^7.8.2",
+    "svelte": "^5.57.3",
     "typescript": "^5.9.0",
-    "vitest": "^5.0.0"
+    "vite": "^8.3.5",
+    "vitest": "^5.0.0",
+    "vue": "^3.5.44",
+    "webpack": "^5.112.2",
+    "webpack-cli": "^7.3.1"
   },
   "packageManager": "pnpm@10.11.0"
 }

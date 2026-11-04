@@ -117,6 +117,9 @@ const WORDS = {
       `${name} · ${size} · level ${place} of ${MEIKYUU_SOLID_PER_LIST} · ${cells} cells · difficulty ${score} of 100`,
     tagTitle: "As a tag",
     tagText: "The same board in one element, with no framework: an arrow puzzle, level 6.",
+    embedTitle: "Put it in your page",
+    embedText:
+      "Choose a kind of puzzle, a level and a board, a size, and how your page is made, then copy the code. The picture beside the code is made from the same choices.",
     foot: "Every level is a short recipe that rebuilds the same maze in every browser, and each size is checked on every build to get a little harder, level by level. Your progress stays on this device.",
   },
   ja: {
@@ -189,6 +192,9 @@ const WORDS = {
       `${name}・${size}・レベル${place}／${MEIKYUU_SOLID_PER_LIST}・${cells}マス・難しさ${score}／100`,
     tagTitle: "タグとして",
     tagText: "同じ盤面を、フレームワークなしの一つの要素で。矢印パズルのレベル6です。",
+    embedTitle: "自分のページに入れる",
+    embedText:
+      "パズルの種類、レベル、盤の見た目、表示の大きさ、ページの作り方を選んで、コードをコピーします。コードの横の絵は、同じ選択からできています。",
     foot: "どのレベルも、どのブラウザでも同じ迷路を作り直せる短いレシピです。どの大きさも、レベルが進むごとに少しずつ難しくなることを、ビルドのたびに確かめています。進み具合はこの端末に残ります。",
   },
 };

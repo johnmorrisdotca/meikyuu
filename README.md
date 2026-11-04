@@ -326,6 +326,8 @@ defineProps({ level: Number });
 <meikyuu-board bind:this={board} level={level} board="wood"></meikyuu-board>
 ```
 
+Each way of using it is a file in [`examples/`](./examples), built, type-checked or run against the package as npm packs it (`pnpm test:usage`), and its guide holds the same text word for word: [script tag](./docs/guides/html-and-cdn.md), [iframe](./docs/guides/embed-in-an-iframe.md), [Vite and webpack](./docs/guides/bundlers.md), [React, Vue, Svelte and Angular](./docs/guides/frameworks.md), [TypeScript and Node](./docs/guides/typescript-and-node.md).
+
 Angular (a standalone component with `CUSTOM_ELEMENTS_SCHEMA`), Next.js and other server-rendering frameworks (import the define entry from a client component, or call `mountMeikyuu` in an effect) are in [docs/FRAMEWORKS.md](docs/FRAMEWORKS.md).
 
 The cookbook, with the output of each example, is under [Examples](#examples).
@@ -702,10 +704,9 @@ English and Japanese, chosen by the `language` option, the host's `lang` or the 
 playing, zoom, pan, the element); the **arrow puzzles** (eight pictures, 300 levels, drawing, playing with hearts, hint, undo and an animation); and the **mixed puzzles** (100 levels, locked arrows, a labyrinth with its button, two tabs).
 What is **not**, and could come next:
 
-- The arrow and mixed lists are smaller than the maze list (300 and 100 levels, against 1,024), and the arrows' top levels are about as hard as each other, since a board over about 45 cells across is more than a phone can hold.
+- The arrow and mixed lists are smaller than the maze list (300 and 100 levels, against 1,024), and the arrows' top levels are about as hard as each other.
 - A mixed puzzle has one unlock button that frees every locked arrow; a puzzle with several buttons for several groups of locks is not made.
-- The Japanese in the demo and in the package's words is written by the author of the package and has not been read by a native reader: corrections are welcome (the issue template says how).
-- No sound recordings. The sounds are tones made in the browser; a recorded set could be added if one that is public domain is found.
+- No sound recordings: the sounds are tones made in the browser.
 - Mazes with loops (braids) and weaves are not made, and neither is a maze whose layers turn like a Rubik's cube: the solids' mazes are over a surface that stays as it is.
 
 ## Architecture
@@ -736,7 +737,7 @@ Nobody is listed yet. Using Meikyuu in something? Open an *Add my project* issue
 ### The family
 
 <!-- family:start (made by scripts/family-readme.mjs from scripts/family-template.mjs; change those, not this) -->
-Meikyuu is one of thirty-two packages, each made for the same site, each at
+Meikyuu is one of thirty-three packages, each made for the same site, each at
 [github.com/johnmorrisdotca](https://github.com/johnmorrisdotca) or [github.com/spxis](https://github.com/spxis). The code of every one is MIT.
 
 **Games — board**
@@ -780,6 +781,7 @@ Meikyuu is one of thirty-two packages, each made for the same site, each at
 **Geography & data**
 
 - [address-plus](https://github.com/johnmorrisdotca/address-plus) (アドレスプラス): parse and format addresses in the United States, Canada, Japan, Australia, France, Germany and the United Kingdom. [Demo](https://johnmorrisdotca.github.io/address-plus/).
+- [Chikyu Earth](https://github.com/johnmorrisdotca/chikyu-earth) (地球): a line-drawn globe that turns at the Earth's own rate, with an optional realistic Earth from space and markers for any place. [Demo](https://johnmorrisdotca.github.io/chikyu-earth/).
 - [Chizu](https://github.com/johnmorrisdotca/chizu) (地図): maps of the world and of countries' regions, in English and Japanese, with a quiz and callouts. [Demo](https://johnmorrisdotca.github.io/chizu/).
 - [Hata](https://github.com/johnmorrisdotca/hata) (旗): country and regional flags as SVG, at their true proportions and keyed by ISO code. [Demo](https://johnmorrisdotca.github.io/hata/).
 - [Kuni](https://github.com/johnmorrisdotca/kuni) (国): countries and their regions, with ISO codes and names in English and Japanese. [Demo](https://johnmorrisdotca.github.io/kuni/).
@@ -796,7 +798,7 @@ Meikyuu is one of thirty-two packages, each made for the same site, each at
 - [REST in Pieces](https://github.com/spxis/rest-in-pieces) (レスト・イン・ピーシーズ): seeded test data and REST APIs for frontend development, with latency and error drills. [Demo](https://spxis.github.io/rest-in-pieces/).
 
 
-**This package is Meikyuu.** The demos of all thirty-two share one header and footer, so each links the rest.
+**This package is Meikyuu.** The demos of all thirty-three share one header and footer, so each links the rest.
 <!-- family:end -->
 
 ## Development
@@ -822,7 +824,7 @@ Please follow the [code of conduct](./CODE_OF_CONDUCT.md). A recipe that makes t
 
 See [CHANGELOG.md](./CHANGELOG.md).
 
-The latest release, 3.2.1, changes nothing a player sees.
+The latest release, 3.3.0, makes the wheel zoom and adds an embed panel and tested usage examples; 3.2.1 changes nothing a player sees.
 
 ## Licence
 

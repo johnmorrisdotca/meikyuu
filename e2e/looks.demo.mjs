@@ -39,11 +39,11 @@ test("Japanese: the buttons, the lines under the board and the shapes are in Jap
   const { maze, way } = mazeOf(40);
   await dragCells(page, svgOf(page), maze, way.slice(0, 4));
   await expect(page.locator(`${at("board")} .mk-progress`)).toContainText("4マス描きました");
-  await page.locator('[data-lang="en"]').click();
+  await page.locator('kazoku-language-picker [data-v="en"]').click();
   await expect(page.locator(`${at("board")} [data-action="undo"]`)).toHaveText("Undo");
   await expect(page.locator(`${at("board")} .mk-progress`)).toContainText("4 cells drawn");
   await expect(page.locator(at("board"))).toHaveAttribute("data-cells", "4");
-  await page.locator('[data-lang="ja"]').click();
+  await page.locator('kazoku-language-picker [data-v="ja"]').click();
   await expect(page.locator(`${at("board")} .mk-progress`)).toContainText("4マス");
   // The page itself, and the shapes' names.
   await expect(page.locator("#gallery span").first()).toHaveText("四角");
