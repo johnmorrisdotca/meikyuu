@@ -2,7 +2,7 @@ import { dragMaze, headOf, liftMaze, type MazeGame, newMazeGame, pressMaze, tapM
 import { stoneRulesOf, stonesLeft, toggleStone } from "../stones.ts";
 import { applyLook, readColours } from "./solidColours.ts";
 import { buildSolidMaze, type SolidMaze, type SolidRecipe } from "./solidMaze.ts";
-import { HOLD_TIME, REACH, TAP_SLOP, TAP_TIME } from "./solidMount.ts";
+import { HOLD_TIME, REACH, TAP_SLOP, TAP_TIME, WHEEL_GESTURE_MS } from "./solidMount.ts";
 import type { SolidGesture, SolidSession } from "./solidSession.ts";
 import {
   cellsAlongDrag,
@@ -346,13 +346,20 @@ export function bindSolidPlay(s: SolidSession): void {
 
   s.onCancel = (event: PointerEvent): void => s.onUp(event);
 
+  // The wheel over the solid zooms it. A wheel that starts with the zoom already at its end, or a sideways swipe, is left to the page to scroll.
+  let wheelTaken = Number.NEGATIVE_INFINITY;
   s.onWheel = (event: WheelEvent): void => {
+    const pinch = event.ctrlKey || event.metaKey;
+    if (!pinch && (event.shiftKey || Math.abs(event.deltaX) > Math.abs(event.deltaY))) return;
+    const factor = Math.exp(-event.deltaY * (pinch ? 0.01 : 0.0015));
+    const atEnd = factor >= 1 ? s.zoom >= SOLID_ZOOM_MOST - 1e-6 : s.zoom <= SOLID_ZOOM_LEAST + 1e-6;
+    const now = Number.isFinite(event.timeStamp) ? event.timeStamp : 0;
+    if (!pinch && atEnd && !(now >= wheelTaken && now - wheelTaken < WHEEL_GESTURE_MS)) return;
     event.preventDefault();
+    wheelTaken = now;
+    if (atEnd) return;
     s.glide = null;
-    s.zoom = Math.min(
-      SOLID_ZOOM_MOST,
-      Math.max(SOLID_ZOOM_LEAST, s.zoom * Math.exp(-event.deltaY * (event.ctrlKey ? 0.01 : 0.0015))),
-    );
+    s.zoom = Math.min(SOLID_ZOOM_MOST, Math.max(SOLID_ZOOM_LEAST, s.zoom * factor));
     s.inMotion();
     s.invalidate();
     words();

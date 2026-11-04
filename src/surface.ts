@@ -90,6 +90,8 @@ export type SurfaceOptions = {
 
 /** How far a pointer may move and still be a tap, in pixels, and how long it may take, in milliseconds. */
 const TAP_SLOP = 8;
+/** Wheel steps closer together than this, in milliseconds, belong to one turn of the wheel, so a zoom that reaches its end part-way through does not hand the rest to the page. */
+const WHEEL_GESTURE_MS = 300;
 const TAP_TIME = 500;
 /** How long a pointer must stay where it went down, in milliseconds, to be a press-and-hold. A little over a tap's longest, so a tap is never both. */
 export const HOLD_TIME = 520;
@@ -281,11 +283,22 @@ export function createSurface(
     }
   };
 
+  // The wheel over the board zooms it. A wheel that starts with the zoom already at its end, or a sideways swipe, is left to the page to scroll.
+  let wheelTaken = Number.NEGATIVE_INFINITY;
   const onWheel = (event: WheelEvent): void => {
-    event.preventDefault();
-    const [px, py] = local(event);
+    const pinch = event.ctrlKey || event.metaKey;
+    if (!pinch && (event.shiftKey || Math.abs(event.deltaX) > Math.abs(event.deltaY))) return;
     const lines = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? 400 : 1;
-    setView(zoomedAbout(view, Math.exp(-event.deltaY * lines * (event.ctrlKey ? 0.01 : 0.0016)), px, py, size, pad));
+    const factor = Math.exp(-event.deltaY * lines * (event.ctrlKey ? 0.01 : 0.0016));
+    const { least, most } = scaleLimits(size, pad);
+    const atEnd = factor >= 1 ? view.scale >= most : view.scale <= least;
+    const now = Number.isFinite(event.timeStamp) ? event.timeStamp : 0;
+    if (!pinch && atEnd && !(now >= wheelTaken && now - wheelTaken < WHEEL_GESTURE_MS)) return;
+    event.preventDefault();
+    wheelTaken = now;
+    if (atEnd) return;
+    const [px, py] = local(event);
+    setView(zoomedAbout(view, factor, px, py, size, pad));
   };
 
   /** While a line is drawn near an edge of the box, the view moves toward it a little each frame (more the nearer the edge), and the line carries on under the finger. */

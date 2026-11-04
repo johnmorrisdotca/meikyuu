@@ -196,6 +196,8 @@ export const REACH = 30;
 export const TAP_SLOP = 8;
 export const TAP_TIME = 500;
 export const HOLD_TIME = 520;
+/** Wheel steps closer together than this, in milliseconds, belong to one turn of the wheel, so a zoom that reaches its end part-way through does not hand the rest to the page. */
+export const WHEEL_GESTURE_MS = 300;
 /** One press of an arrow turns this far, in radians. */
 export const TURN_STEP = 0.42;
 /** How long a turn or a zoom by button takes, in milliseconds. */

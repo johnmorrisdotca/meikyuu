@@ -37,7 +37,7 @@ const hugeMaze = findMaze(() => true, { from: 1024, to: 1024 });
 const BIG = centred.level.number;
 const mazeOf = () => centred;
 
-test("the wheel zooms about the cursor, the pad zooms and Fit brings the whole maze back", async ({ page }) => {
+test("the wheel zooms about the cursor until its end, the pad zooms and Fit brings the whole maze back", async ({ page }) => {
   await open(page, `?kind=maze&level=${BIG}`);
   const svg = svgOf(page);
   const fitted = await shownWidth(svg);
@@ -64,6 +64,14 @@ test("the wheel zooms about the cursor, the pad zooms and Fit brings the whole m
   await page.mouse.wheel(0, 3000);
   await page.waitForTimeout(100);
   expect(await shownWidth(svg)).toBeLessThan(fitted * 1.2);
+  // Once the zoom is at its end, the next turn of the wheel belongs to the page.
+  await page.evaluate(() => {
+    window.claims = [];
+    document.addEventListener("wheel", (event) => window.claims.push(event.defaultPrevented));
+  });
+  await page.waitForTimeout(400);
+  await page.mouse.wheel(0, 300);
+  expect(await page.evaluate(() => window.claims)).toEqual([false]);
 });
 
 test("a pinch zooms, and two fingers moving together move the view", async ({ page }) => {
