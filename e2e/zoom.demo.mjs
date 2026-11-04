@@ -37,7 +37,9 @@ const hugeMaze = findMaze(() => true, { from: 1024, to: 1024 });
 const BIG = centred.level.number;
 const mazeOf = () => centred;
 
-test("the wheel zooms about the cursor until its end, the pad zooms and Fit brings the whole maze back", async ({ page }) => {
+test("the wheel zooms about the cursor until its end, the pad zooms and Fit brings the whole maze back", async ({
+  page,
+}) => {
   await open(page, `?kind=maze&level=${BIG}`);
   const svg = svgOf(page);
   const fitted = await shownWidth(svg);
