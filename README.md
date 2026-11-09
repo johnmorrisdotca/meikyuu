@@ -477,51 +477,11 @@ Every colour is a CSS variable on `.meikyuu`, and a board, a line colour and a w
 
 ## The ways to play
 
-Each is a declared field of a level, never inferred from the shape. A way to play decides where the line starts and ends.
-
-| `mode` | The way it is played |
-| --- | --- |
-| `enter-leave` | In at one door in the outer wall, out at another, the two as far apart as the maze allows. |
-| `to-goal` | From a cell inside the maze to a dot hidden deep in it. |
-| `centre-out` | From the middle of the shape out through a door in the outer wall. |
-| `keys` | From inside, picking up every key on the way to a door in the outer wall. A key is at the end of a branch, off the way, so each costs a detour. It is picked up by passing over it, and stays picked up when the line is drawn back. |
-
-Beside the mazes there are two more kinds, each with its own list of levels (`MeikyuuKind`: `maze`, `arrows`, `mixed`):
-
-- **Arrow puzzles.** A picture (a heart, a leaf, a star) made of arrow paths. Tap an arrow and it slides off the board the
-  way its head points, if nothing is in its way; if another arrow is, it bumps and a heart is lost. Clear every arrow. Every puzzle can be
-  cleared: each is built backwards, adding arrows that each have a clear way out at the moment they are added.
-- **Mixed puzzles.** An arrow puzzle in which some arrows are locked, and a labyrinth beside it with an unlock button hidden deep inside.
-  Draw a line through the labyrinth to the button and the locked arrows are freed. In the order of play these come after the plain ones.
+A way to play is a declared field of a level, never inferred from the shape: `enter-leave`, `to-goal`, `centre-out` or `keys` (`mode`). Beside the mazes there are two more kinds, each with its own list of levels (`MeikyuuKind`: `maze`, `arrows`, `mixed`): arrow puzzles, where you tap an arrow and it slides off the board, and mixed puzzles, where some arrows are locked until a labyrinth is solved. The four ways and the two kinds are described in [The ways to play](docs/WAYS_TO_PLAY.md).
 
 ## The shapes
 
-A maze is made on a cell graph, so it can be made on anything. Squares, hexagons, triangles and circles are graphs of their
-own; the rest are one of those with a shape cut out.
-
-| `shape` | What it is |
-| --- | --- |
-| `square` | Square cells, columns by rows. |
-| `hex` | Hexagonal cells, pointy side up, every other row shifted: six neighbours. |
-| `triangle` | Triangular cells, pointing up and down in turn: three neighbours. |
-| `circle` | Rings round a middle cell, a ring having more cells the further out it is; walls between rings are arcs. |
-| `heart`, `leaf`, `star`, `ring`, `diamond`, `cross`, `moon` | Square cells inside an outline, the biggest piece of them that is joined. |
-| `hexagon` | A hexagon of hexagonal cells. |
-| `pyramid` | A big triangle of triangular cells. |
-
-`docs/MAZES.md` has the research: how each is laid out, how the algorithms differ, and how difficulty is measured, with links.
-
-The seven algorithms (`MeikyuuAlgorithm`) each make a perfect maze, one with exactly one way between any two cells, with a texture of its own:
-
-| `algorithm` | Texture |
-| --- | --- |
-| `backtracker` | Long winding passages and very few dead ends: a long, tiring solution. |
-| `hunt` | Hunt-and-kill: much the same, a little less winding. |
-| `growing` | Growing tree, newest cell half the time and a random one the rest: in between. |
-| `prim` | Randomized Prim: very many short dead ends, a short solution. |
-| `kruskal` | Many short dead ends, evenly spread. |
-| `wilson` | Loop-erased random walks: every maze equally likely, so no texture of its own. |
-| `eller` | Row by row: horizontal runs. Square mazes only. |
+A maze is made on a cell graph, so it can be made on anything: squares (`square`), hexagons (`hex`), triangles (`triangle`) and circles (`circle`) are graphs of their own, and `heart`, `leaf`, `star`, `ring`, `diamond`, `cross`, `moon`, `hexagon` and `pyramid` are one of those with a shape cut out. The seven algorithms (`MeikyuuAlgorithm`: `backtracker`, `hunt`, `growing`, `prim`, `kruskal`, `wilson` and `eller`) each make a perfect maze with a texture of its own. Both tables are in [The shapes and the algorithms](docs/SHAPES.md), and `docs/MAZES.md` has the research.
 
 ## Levels and how difficulty is measured
 
