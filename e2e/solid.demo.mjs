@@ -492,7 +492,9 @@ test.describe("the solids", () => {
       "a phone's Chromium, through its protocol",
     );
     test.setTimeout(120_000);
+    await page.clock.install();
     const client = await page.context().newCDPSession(page);
+    await client.send("Performance.enable");
     await client.send("Emulation.setCPUThrottlingRate", { rate: 4 });
     for (const [kind, size, level] of [
       ["cube", "large", 9],
@@ -504,10 +506,10 @@ test.describe("the solids", () => {
     ]) {
       await openSolid(page, kind, size, level);
       await client.send("Emulation.setCPUThrottlingRate", { rate: 4 });
-      const result = await boxOf(page).evaluate(async (box) => {
+      const now = await page.evaluate(() => Date.now());
+      await page.clock.pauseAt(new Date(now + 100));
+      await boxOf(page).evaluate((box) => {
         const rect = box.getBoundingClientRect();
-        const frames = [];
-        let last = performance.now();
         const fire = (type, x, y) =>
           box.dispatchEvent(
             new PointerEvent(type, {
@@ -520,11 +522,10 @@ test.describe("the solids", () => {
             }),
           );
         fire("pointerdown", 5, 5);
-        await new Promise((resolve) => {
+        window.__phoneRate = null;
+        {
           let t = 0;
-          const step = (now) => {
-            frames.push(now - last);
-            last = now;
+          const step = () => {
             t += 1;
             const a = (t / 20) * Math.PI;
             fire(
@@ -533,16 +534,32 @@ test.describe("the solids", () => {
               5 + (rect.height - 10) * (0.5 + 0.5 * Math.cos(a * 0.7)),
             );
             if (t < 120) requestAnimationFrame(step);
-            else resolve();
+            else {
+              fire("pointerup", 5, 5);
+              window.__phoneRate = { frames: t - 1 };
+            }
           };
           requestAnimationFrame(step);
-        });
-        fire("pointerup", 5, 5);
-        frames.shift();
-        return { frames: frames.length, over: frames.filter((f) => f > 20).length, worst: Math.max(...frames) };
+        }
       });
-      // A frame is 16.7 ms; a few slow ones on a busy machine are allowed, a drawing that cannot keep up is not.
-      expect(result.over / result.frames, `${kind}: ${JSON.stringify(result)}`).toBeLessThan(0.15);
+      const threadTime = async () =>
+        (await client.send("Performance.getMetrics")).metrics.find((metric) => metric.name === "ThreadTime").value;
+      let previous = await threadTime();
+      const cpu = [];
+      for (let tick = 0; tick < 120; tick++) {
+        await page.clock.runFor(16);
+        const current = await threadTime();
+        cpu.push((current - previous) * 1000);
+        previous = current;
+      }
+      const result = await page.evaluate(() => window.__phoneRate);
+      await page.clock.resume();
+      expect(result).not.toBeNull();
+      cpu.shift();
+      const measured = { frames: cpu.length, over: cpu.filter((ms) => ms > 20).length, worst: Math.max(...cpu) };
+      // Renderer thread CPU time excludes time when a busy runner does not schedule the page.
+      expect(measured.frames).toBe(result.frames);
+      expect(measured.over / measured.frames, `${kind}: ${JSON.stringify(measured)}`).toBeLessThan(0.15);
       await client.send("Emulation.setCPUThrottlingRate", { rate: 1 });
     }
   });

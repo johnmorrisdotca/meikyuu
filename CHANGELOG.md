@@ -6,6 +6,8 @@ All notable changes to this project are written here. The format follows
 
 ## [Unreleased]
 
+- The phone frame-rate test counts on the page's own clock (MODULES-721).
+
 ## [3.3.0] - 2026-11-03
 
 ### Added
