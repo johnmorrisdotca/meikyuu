@@ -31,6 +31,58 @@ const call = (page, source, argument) =>
     `(async (argument) => { const s = document.querySelector('[data-testid="solid-board"]').meikyuuSolid; ${source} })(${JSON.stringify(argument ?? null)})`,
   );
 
+/** The most the page's own painting may take, per frame, in milliseconds: half of the screen's 16.7, the rest being the browser's to draw the canvas in. */
+const PAINT_BUDGET_MS = 8.3;
+
+/**
+ * Turn the solid by a finger for 120 frames and time the page's own frame callbacks (its painting), by their median. A busy machine delays when frames arrive,
+ * which says nothing of the drawing; it slows the page's own work far less, and the median leaves out the few callbacks it interrupts.
+ */
+const paintCost = (page) =>
+  boxOf(page).evaluate(async (box) => {
+    const rect = box.getBoundingClientRect();
+    const frame = window.requestAnimationFrame.bind(window);
+    const took = [];
+    // The page asks for its frames through the window; the finger's own steps below use the frame saved above, so only the page's callbacks are timed.
+    window.requestAnimationFrame = (callback) =>
+      frame((time) => {
+        const start = performance.now();
+        callback(time);
+        took.push(performance.now() - start);
+      });
+    const fire = (type, x, y) =>
+      box.dispatchEvent(
+        new PointerEvent(type, {
+          pointerId: 1,
+          pointerType: "touch",
+          clientX: rect.left + x,
+          clientY: rect.top + y,
+          bubbles: true,
+          isPrimary: true,
+        }),
+      );
+    fire("pointerdown", 5, 5);
+    await new Promise((resolve) => {
+      let t = 0;
+      const step = () => {
+        t += 1;
+        const a = (t / 20) * Math.PI;
+        fire(
+          "pointermove",
+          5 + (rect.width - 10) * (0.5 + 0.5 * Math.sin(a)),
+          5 + (rect.height - 10) * (0.5 + 0.5 * Math.cos(a * 0.7)),
+        );
+        if (t < 120) frame(step);
+        else resolve();
+      };
+      frame(step);
+    });
+    fire("pointerup", 5, 5);
+    window.requestAnimationFrame = frame;
+    took.sort((a, b) => a - b);
+    return { paints: took.length, median: took[Math.floor(took.length / 2)] };
+  });
+
 /** Where the box is on the page. */
 const rectOf = async (page) => {
   const r = await boxOf(page).boundingBox();
@@ -504,45 +556,9 @@ test.describe("the solids", () => {
     ]) {
       await openSolid(page, kind, size, level);
       await client.send("Emulation.setCPUThrottlingRate", { rate: 4 });
-      const result = await boxOf(page).evaluate(async (box) => {
-        const rect = box.getBoundingClientRect();
-        const frames = [];
-        let last = performance.now();
-        const fire = (type, x, y) =>
-          box.dispatchEvent(
-            new PointerEvent(type, {
-              pointerId: 1,
-              pointerType: "touch",
-              clientX: rect.left + x,
-              clientY: rect.top + y,
-              bubbles: true,
-              isPrimary: true,
-            }),
-          );
-        fire("pointerdown", 5, 5);
-        await new Promise((resolve) => {
-          let t = 0;
-          const step = (now) => {
-            frames.push(now - last);
-            last = now;
-            t += 1;
-            const a = (t / 20) * Math.PI;
-            fire(
-              "pointermove",
-              5 + (rect.width - 10) * (0.5 + 0.5 * Math.sin(a)),
-              5 + (rect.height - 10) * (0.5 + 0.5 * Math.cos(a * 0.7)),
-            );
-            if (t < 120) requestAnimationFrame(step);
-            else resolve();
-          };
-          requestAnimationFrame(step);
-        });
-        fire("pointerup", 5, 5);
-        frames.shift();
-        return { frames: frames.length, over: frames.filter((f) => f > 20).length, worst: Math.max(...frames) };
-      });
-      // A frame is 16.7 ms; a few slow ones on a busy machine are allowed, a drawing that cannot keep up is not.
-      expect(result.over / result.frames, `${kind}: ${JSON.stringify(result)}`).toBeLessThan(0.15);
+      const result = await paintCost(page);
+      expect(result.paints, kind).toBeGreaterThan(100);
+      expect(result.median, `${kind}: ${JSON.stringify(result)}`).toBeLessThan(PAINT_BUDGET_MS);
       await client.send("Emulation.setCPUThrottlingRate", { rate: 1 });
     }
   });
@@ -571,45 +587,9 @@ test.describe("the solids", () => {
       // Zoomed in four times, which the board allows (to six): a colossal cell is a finger wide at four.
       expect(await call(page, "return s.view().zoom;"), kind).toBe(4);
       await client.send("Emulation.setCPUThrottlingRate", { rate: 4 });
-      const result = await boxOf(page).evaluate(async (box) => {
-        const rect = box.getBoundingClientRect();
-        const frames = [];
-        let last = performance.now();
-        const fire = (type, x, y) =>
-          box.dispatchEvent(
-            new PointerEvent(type, {
-              pointerId: 1,
-              pointerType: "touch",
-              clientX: rect.left + x,
-              clientY: rect.top + y,
-              bubbles: true,
-              isPrimary: true,
-            }),
-          );
-        fire("pointerdown", 5, 5);
-        await new Promise((resolve) => {
-          let t = 0;
-          const step = (now) => {
-            frames.push(now - last);
-            last = now;
-            t += 1;
-            const a = (t / 20) * Math.PI;
-            fire(
-              "pointermove",
-              5 + (rect.width - 10) * (0.5 + 0.5 * Math.sin(a)),
-              5 + (rect.height - 10) * (0.5 + 0.5 * Math.cos(a * 0.7)),
-            );
-            if (t < 120) requestAnimationFrame(step);
-            else resolve();
-          };
-          requestAnimationFrame(step);
-        });
-        fire("pointerup", 5, 5);
-        frames.shift();
-        return { frames: frames.length, over: frames.filter((f) => f > 34).length, worst: Math.max(...frames) };
-      });
-      // Two frames of the screen's rate (34 ms), at four times slower than a laptop and in software; a few slow ones on a busy machine are allowed, a drawing that cannot keep up is not.
-      expect(result.over / result.frames, `${kind}: ${JSON.stringify(result)}`).toBeLessThan(0.25);
+      const result = await paintCost(page);
+      expect(result.paints, kind).toBeGreaterThan(100);
+      expect(result.median, `${kind}: ${JSON.stringify(result)}`).toBeLessThan(PAINT_BUDGET_MS);
       await client.send("Emulation.setCPUThrottlingRate", { rate: 1 });
     }
   });

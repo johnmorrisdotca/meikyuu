@@ -6,6 +6,8 @@ All notable changes to this project are written here. The format follows
 
 ## [Unreleased]
 
+- The two phone frame-rate tests time the page's own painting, by the median over 120 frames, instead of counting late frames, which a busy runner made fail without any change to the drawing.
+
 ## [3.3.0] - 2026-11-03
 
 ### Added
